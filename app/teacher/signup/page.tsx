@@ -13,7 +13,14 @@ export default function TeacherSignup() {
     e.preventDefault()
     setError(null)
     setLoading(true)
-    const { error } = await supabase.auth.signUp({ email, password })
+    const callback = `${window.location.origin}/auth/callback`
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: callback
+      }
+    })
     setLoading(false)
     if (error) setError(error.message)
     else alert('Check your email to confirm registration.')
@@ -49,4 +56,3 @@ export default function TeacherSignup() {
     </div>
   )
 }
-
