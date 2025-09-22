@@ -16,7 +16,7 @@ export default function AuthCallback() {
       return
     }
     // Exchange code/hash for a session (works for email links and oauth)
-    supabase.auth.exchangeCodeForSession().then(({ error }) => {
+    supabase.auth.exchangeCodeForSession(window.location.href).then(({ error }) => {
       if (error) {
         setMessage(error.message)
         return
@@ -33,3 +33,4 @@ export default function AuthCallback() {
     </div>
   )
 }
+
