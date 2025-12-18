@@ -274,7 +274,12 @@ export default function StudentExam() {
             </button>
             <span className="font-bold text-eel">Fermi Competition</span>
           </div>
-          <Timer deadline={deadline} onTimeUp={handleTimeUp} urgentThreshold={5} />
+          <div className="flex items-center gap-2">
+            <Timer deadline={deadline} onTimeUp={handleTimeUp} urgentThreshold={5} />
+            {!hintsUnlocked && (
+              <span className="text-xs text-wolf hidden sm:inline">Hints at halftime</span>
+            )}
+          </div>
         </div>
         <ProgressBar current={answeredCount} total={questions.length} />
       </div>
