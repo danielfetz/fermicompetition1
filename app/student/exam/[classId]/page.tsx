@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Timer from '@/components/Timer'
 import ProgressBar from '@/components/ProgressBar'
@@ -21,26 +21,129 @@ export default function StudentExam() {
   const [error, setError] = useState<string | null>(null)
   const [showHint, setShowHint] = useState(false)
   const [inputValue, setInputValue] = useState('')
+  const [loading, setLoading] = useState(true)
+  const initialized = useRef(false)
 
-  // Load questions and set 40 min timer
+  // Load questions, session, and existing answers
   useEffect(() => {
+    if (initialized.current) return
+    initialized.current = true
+
     async function init() {
       const token = localStorage.getItem('studentToken')
       if (!token) {
         router.push('/student/login')
         return
       }
-      const res = await fetch(`/api/questions?classId=${classId}`)
-      if (!res.ok) {
-        setError('Failed to load questions')
-        return
+
+      try {
+        // Fetch questions and session in parallel
+        const [questionsRes, sessionRes] = await Promise.all([
+          fetch(`/api/questions?classId=${classId}`),
+          fetch('/api/student/session', {
+            headers: { Authorization: `Bearer ${token}` }
+          })
+        ])
+
+        if (!questionsRes.ok) {
+          setError('Failed to load questions')
+          setLoading(false)
+          return
+        }
+
+        const questionsData = await questionsRes.json()
+        setQuestions(questionsData.questions)
+
+        if (sessionRes.ok) {
+          const sessionData = await sessionRes.json()
+
+          // Set deadline from session
+          const endsAt = new Date(sessionData.session.endsAt).getTime()
+          setDeadline(endsAt)
+
+          // Load existing answers
+          if (sessionData.answers && Object.keys(sessionData.answers).length > 0) {
+            const loadedAnswers: Record<string, Answer> = {}
+            for (const [questionId, answerData] of Object.entries(sessionData.answers)) {
+              const data = answerData as { value: number; confidence_pct: number }
+              loadedAnswers[questionId] = {
+                question_id: questionId,
+                value: data.value,
+                confidence_pct: data.confidence_pct as ConfidenceLevel
+              }
+            }
+            setAnswers(loadedAnswers)
+
+            // Set input value for first question if it has an answer
+            const firstQuestion = questionsData.questions[0]
+            if (firstQuestion && loadedAnswers[firstQuestion.id]) {
+              setInputValue(loadedAnswers[firstQuestion.id].value.toString())
+            }
+          }
+        } else {
+          const sessionError = await sessionRes.json()
+          if (sessionError.error === 'Exam already completed' || sessionError.error === 'Exam already submitted') {
+            router.push('/student/done')
+            return
+          }
+          // If session creation failed for another reason, set a fallback deadline
+          setDeadline(Date.now() + 40 * 60 * 1000)
+        }
+      } catch (err) {
+        console.error('Error initializing exam:', err)
+        setError('Failed to initialize exam')
       }
-      const data = await res.json()
-      setQuestions(data.questions)
-      if (!deadline) setDeadline(Date.now() + 40 * 60 * 1000)
+
+      setLoading(false)
     }
+
     init()
-  }, [classId, router, deadline])
+  }, [classId, router])
+
+  // Auto-save answers periodically
+  const saveAnswers = useCallback(async () => {
+    const token = localStorage.getItem('studentToken')
+    if (!token || Object.keys(answers).length === 0) return
+
+    const payload = { answers: Object.values(answers) }
+    try {
+      await fetch('/api/student/answers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(payload)
+      })
+    } catch (err) {
+      console.error('Auto-save failed:', err)
+    }
+  }, [answers])
+
+  // Auto-save every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (Object.keys(answers).length > 0) {
+        saveAnswers()
+      }
+    }, 30000)
+
+    return () => clearInterval(interval)
+  }, [answers, saveAnswers])
+
+  // Save on page unload
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (Object.keys(answers).length > 0) {
+        const token = localStorage.getItem('studentToken')
+        if (token) {
+          // Use sendBeacon for reliable save on unload
+          const payload = JSON.stringify({ answers: Object.values(answers) })
+          navigator.sendBeacon('/api/student/answers', new Blob([payload], { type: 'application/json' }))
+        }
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [answers])
 
   const submit = useCallback(async () => {
     if (submitting) return
@@ -93,6 +196,9 @@ export default function StudentExam() {
   }
 
   function goToQuestion(index: number) {
+    // Save current answer before switching
+    saveAnswers()
+
     setCurrentIndex(index)
     const q = questions[index]
     if (q && answers[q.id]) {
@@ -117,7 +223,7 @@ export default function StudentExam() {
 
   const answeredCount = Object.keys(answers).filter(k => answers[k].value !== 0).length
 
-  if (questions.length === 0) {
+  if (loading || questions.length === 0) {
     return (
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="card text-center py-12">
@@ -136,7 +242,8 @@ export default function StudentExam() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => {
-                if (confirm('Are you sure you want to leave? Your answers will be lost.')) {
+                saveAnswers()
+                if (confirm('Are you sure you want to leave? Your progress has been saved.')) {
                   router.push('/student/login')
                 }
               }}
