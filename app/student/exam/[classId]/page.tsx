@@ -39,7 +39,9 @@ export default function StudentExam() {
       try {
         // Fetch questions and session in parallel
         const [questionsRes, sessionRes] = await Promise.all([
-          fetch(`/api/questions?classId=${classId}`),
+          fetch(`/api/questions?classId=${classId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          }),
           fetch('/api/student/session', {
             headers: { Authorization: `Bearer ${token}` }
           })

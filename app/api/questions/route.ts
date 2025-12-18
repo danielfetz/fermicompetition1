@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServiceRole } from '@/lib/supabaseServer'
+import { verifyStudentToken } from '@/lib/jwt'
 
 type FermiQuestion = {
   id: string
@@ -12,6 +13,7 @@ type FermiQuestion = {
 type ClassQuestionRaw = {
   id: string
   order: number
+  competition_mode: string
   fermi_questions: FermiQuestion | FermiQuestion[] | null
 }
 
@@ -28,12 +30,34 @@ export async function GET(req: NextRequest) {
 
   const supa = createSupabaseServiceRole()
 
-  // Get questions through class_questions join to fermi_questions
+  // Get student's competition mode from token if provided
+  let competitionMode: 'mock' | 'real' = 'mock'
+  const auth = req.headers.get('authorization')
+  const token = auth?.startsWith('Bearer ') ? auth.slice(7) : null
+
+  if (token) {
+    const payload = verifyStudentToken(token)
+    if (payload) {
+      // Get student's competition mode
+      const { data: student } = await supa
+        .from('students')
+        .select('competition_mode')
+        .eq('id', payload.studentId)
+        .single()
+
+      if (student?.competition_mode) {
+        competitionMode = student.competition_mode as 'mock' | 'real'
+      }
+    }
+  }
+
+  // Get questions through class_questions join to fermi_questions, filtered by competition_mode
   const { data: classQuestions, error } = await supa
     .from('class_questions')
     .select(`
       id,
       order,
+      competition_mode,
       fermi_questions (
         id,
         prompt,
@@ -43,6 +67,7 @@ export async function GET(req: NextRequest) {
       )
     `)
     .eq('class_id', classId)
+    .eq('competition_mode', competitionMode)
     .order('order', { ascending: true })
 
   if (error) {
@@ -50,17 +75,18 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 
-  // If no questions found for this class, try to seed them first
+  // If no questions found for this class and mode, try to seed them first
   if (!classQuestions || classQuestions.length === 0) {
-    // Seed default questions for this class
-    await supa.rpc('seed_class_questions', { p_class_id: classId })
+    // Seed questions for this class and competition mode
+    await supa.rpc('seed_class_questions', { p_class_id: classId, p_mode: competitionMode })
 
-    // Try fetching again
+    // Try fetching again with competition mode filter
     const { data: seededQuestions, error: seededError } = await supa
       .from('class_questions')
       .select(`
         id,
         order,
+        competition_mode,
         fermi_questions (
           id,
           prompt,
@@ -70,6 +96,7 @@ export async function GET(req: NextRequest) {
         )
       `)
       .eq('class_id', classId)
+      .eq('competition_mode', competitionMode)
       .order('order', { ascending: true })
 
     if (seededError) {
