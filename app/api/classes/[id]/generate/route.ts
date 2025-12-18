@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServer, createSupabaseServiceRole } from '@/lib/supabaseServer'
-import { generateStudentCredentials } from '@/lib/password'
+import { generateStudentCredentials, parseUsername } from '@/lib/password'
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const { count = 10, competition_mode = 'mock' } = await req.json().catch(() => ({}))
@@ -46,15 +46,20 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   if (cErr || !cls) return NextResponse.json({ error: 'Class not found' }, { status: 404 })
   if (cls.teacher_id !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  // Fetch ALL existing usernames to ensure global uniqueness
-  const { data: existingStudents } = await service
-    .from('students')
-    .select('username')
+  // Efficiently get max numbers for each base username pattern
+  // Uses a database function that aggregates on the server side
+  const { data: maxNumbers } = await service.rpc('get_username_max_numbers')
 
-  const existingUsernames = new Set(existingStudents?.map(s => s.username) || [])
+  // Build map of base -> max number
+  const existingMaxNumbers = new Map<string, number>()
+  if (maxNumbers) {
+    for (const row of maxNumbers as { base: string; max_num: number }[]) {
+      existingMaxNumbers.set(row.base, row.max_num)
+    }
+  }
 
   // Generate fun scientist-themed credentials with globally unique usernames
-  const generatedCredentials = await generateStudentCredentials(count, existingUsernames)
+  const generatedCredentials = await generateStudentCredentials(count, existingMaxNumbers)
 
   const credentials: { username: string; password: string }[] = []
   const rows: {

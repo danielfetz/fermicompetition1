@@ -106,16 +106,18 @@ export function generateUsername(prefix: string, index: number) {
 }
 
 // Generate batch of fun credentials for students with globally unique usernames
+// Takes a map of base username -> highest existing number for efficient lookup
 export async function generateStudentCredentials(
   count: number,
-  existingUsernames: Set<string>
+  existingMaxNumbers: Map<string, number>
 ): Promise<{
   username: string
   plainPassword: string
   passwordHash: string
 }[]> {
   const credentials = []
-  const usedUsernames = new Set(existingUsernames)
+  // Track numbers we're using in this batch
+  const usedNumbers = new Map<string, number>(existingMaxNumbers)
 
   for (let i = 0; i < count; i++) {
     // Pick random adjective and scientist
@@ -123,16 +125,12 @@ export async function generateStudentCredentials(
     const scientist = SCIENTISTS[Math.floor(Math.random() * SCIENTISTS.length)]
     const baseUsername = `${adjective}${scientist}`.toLowerCase()
 
-    // Find the next available number for this base username
-    let number = 1
-    let username = `${baseUsername}${number.toString().padStart(2, '0')}`
+    // Get the next available number for this base
+    const currentMax = usedNumbers.get(baseUsername) || 0
+    const nextNumber = currentMax + 1
+    const username = `${baseUsername}${nextNumber.toString().padStart(2, '0')}`
 
-    while (usedUsernames.has(username)) {
-      number++
-      username = `${baseUsername}${number.toString().padStart(2, '0')}`
-    }
-
-    usedUsernames.add(username)
+    usedNumbers.set(baseUsername, nextNumber)
 
     const plainPassword = generateReadablePassword(8)
     const passwordHash = await hashPassword(plainPassword)
@@ -145,4 +143,11 @@ export async function generateStudentCredentials(
   }
 
   return credentials
+}
+
+// Helper to extract base username and number from a full username
+export function parseUsername(username: string): { base: string; number: number } | null {
+  const match = username.match(/^(.+?)(\d+)$/)
+  if (!match) return null
+  return { base: match[1], number: parseInt(match[2], 10) }
 }
