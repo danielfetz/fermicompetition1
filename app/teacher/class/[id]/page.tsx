@@ -28,15 +28,17 @@ export default async function ClassDetail({ params }: Params) {
 
   if (!cls) return notFound()
 
+  // Fetch all students (both mock and real) - filtering happens client-side
   const { data: students } = await supabase
     .from('students')
-    .select('id, username, full_name, has_completed_exam, plain_password')
+    .select('id, username, full_name, has_completed_exam, plain_password, competition_mode')
     .eq('class_id', cls.id)
     .order('username')
 
+  // Fetch all scores - filtering happens client-side
   const { data: scores } = await supabase
     .from('student_scores')
-    .select('student_id, correct_count, total_answered, score_percentage')
+    .select('student_id, correct_count, total_answered, score_percentage, competition_mode')
     .eq('class_id', cls.id)
 
   return (
@@ -44,6 +46,7 @@ export default async function ClassDetail({ params }: Params) {
       classId={cls.id}
       className={cls.name}
       schoolName={cls.school_name}
+      numStudents={cls.num_students}
       students={students || []}
       scores={scores || []}
       realUnlocked={realUnlocked}

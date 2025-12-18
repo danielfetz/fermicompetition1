@@ -3,16 +3,35 @@ import { createSupabaseServer, createSupabaseServiceRole } from '@/lib/supabaseS
 import { generateStudentCredentials } from '@/lib/password'
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const { count = 10 } = await req.json().catch(() => ({}))
+  const { count = 10, competition_mode = 'mock' } = await req.json().catch(() => ({}))
 
   // Validate count
   if (count < 1 || count > 200) {
     return NextResponse.json({ error: 'Count must be between 1 and 200' }, { status: 400 })
   }
 
+  // Validate competition_mode
+  if (competition_mode !== 'mock' && competition_mode !== 'real') {
+    return NextResponse.json({ error: 'Invalid competition mode' }, { status: 400 })
+  }
+
   const supabase = createSupabaseServer()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  // For real competition mode, check if teacher has it unlocked
+  if (competition_mode === 'real') {
+    const { data: profile } = await supabase
+      .from('teacher_profiles')
+      .select('real_competition_unlocked, master_code_id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    const hasAccess = !!(profile?.real_competition_unlocked || profile?.master_code_id)
+    if (!hasAccess) {
+      return NextResponse.json({ error: 'Real competition not unlocked' }, { status: 403 })
+    }
+  }
 
   const service = createSupabaseServiceRole()
 
@@ -34,6 +53,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     username: string
     password_hash: string
     plain_password: string
+    competition_mode: string
   }[] = []
 
   for (const cred of generatedCredentials) {
@@ -42,7 +62,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       class_id: cls.id,
       username: cred.username,
       password_hash: cred.passwordHash,
-      plain_password: cred.plainPassword
+      plain_password: cred.plainPassword,
+      competition_mode: competition_mode
     })
   }
 
@@ -56,8 +77,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ error: insertErr.message }, { status: 400 })
   }
 
-  // Seed the class with default Fermi questions if not already done
-  await service.rpc('seed_class_questions', { p_class_id: cls.id })
+  // Seed the class with questions for this competition mode if not already done
+  await service.rpc('seed_class_questions', { p_class_id: cls.id, p_mode: competition_mode })
 
-  return NextResponse.json({ credentials })
+  return NextResponse.json({ credentials, competition_mode })
 }
