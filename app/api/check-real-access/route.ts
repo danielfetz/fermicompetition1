@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createSupabaseServer } from '@/lib/supabaseServer'
+import { createSupabaseServer, createSupabaseServiceRole } from '@/lib/supabaseServer'
 
 export async function GET() {
   const supabase = createSupabaseServer()
@@ -9,7 +9,9 @@ export async function GET() {
     return NextResponse.json({ unlocked: false, reason: 'not_authenticated' })
   }
 
-  const { data: profile, error } = await supabase
+  // Use service role to bypass RLS - we've already verified the user above
+  const service = createSupabaseServiceRole()
+  const { data: profile, error } = await service
     .from('teacher_profiles')
     .select('real_competition_unlocked, master_code_id, teacher_code_id')
     .eq('user_id', user.id)

@@ -19,9 +19,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const service = createSupabaseServiceRole()
+
   // For real competition mode, check if teacher has it unlocked
+  // Use service role to bypass RLS - we've already verified the user above
   if (competition_mode === 'real') {
-    const { data: profile } = await supabase
+    const { data: profile } = await service
       .from('teacher_profiles')
       .select('real_competition_unlocked, master_code_id, teacher_code_id')
       .eq('user_id', user.id)
@@ -33,8 +36,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       return NextResponse.json({ error: 'Real competition not unlocked' }, { status: 403 })
     }
   }
-
-  const service = createSupabaseServiceRole()
 
   // Check class exists and belongs to teacher
   const { data: cls, error: cErr } = await service
