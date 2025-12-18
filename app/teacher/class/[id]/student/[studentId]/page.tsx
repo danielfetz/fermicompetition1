@@ -2,7 +2,7 @@ import { createSupabaseServer } from '@/lib/supabaseServer'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 
-type Params = { params: { id: string, studentId: string }; searchParams: { mode?: string } }
+type Params = { params: { id: string, studentId: string } }
 
 type FermiQuestion = {
   id: string
@@ -35,14 +35,25 @@ function getPercentageDiff(answer: number | null | undefined, correct: number | 
   return { value: diff, label: diff <= 1 ? '<1%' : `${Math.round(diff)}%`, color }
 }
 
-export default async function EditStudent({ params, searchParams }: Params) {
-  const mode = searchParams.mode === 'real' ? 'real' : 'mock'
+export default async function EditStudent({ params }: Params) {
   const supabase = createSupabaseServer()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) notFound()
 
-  const [{ data: student }, { data: classQuestions }, { data: answers }] = await Promise.all([
-    supabase.from('students').select('id, full_name, username, class_id').eq('id', params.studentId).single(),
+  // First get the student to determine their competition mode
+  const { data: student } = await supabase
+    .from('students')
+    .select('id, full_name, username, class_id, competition_mode')
+    .eq('id', params.studentId)
+    .single()
+
+  if (!student) return notFound()
+
+  // Get the student's competition mode (default to mock)
+  const studentMode = student.competition_mode || 'mock'
+
+  // Now fetch questions filtered by the student's mode, and their answers
+  const [{ data: classQuestions }, { data: answers }] = await Promise.all([
     supabase.from('class_questions').select(`
       id,
       order,
@@ -51,11 +62,9 @@ export default async function EditStudent({ params, searchParams }: Params) {
         prompt,
         correct_value
       )
-    `).eq('class_id', params.id).order('order'),
+    `).eq('class_id', params.id).eq('competition_mode', studentMode).order('order'),
     supabase.from('answers').select('class_question_id, value, confidence_pct').eq('student_id', params.studentId)
   ])
-
-  if (!student) return notFound()
 
   // Cast to proper type
   const questions = (classQuestions || []) as ClassQuestion[]
@@ -64,7 +73,7 @@ export default async function EditStudent({ params, searchParams }: Params) {
   return (
     <div className="space-y-6">
       <div>
-        <Link href={`/teacher/class/${params.id}?mode=${mode}`} className="text-sm font-semibold text-duo-blue hover:underline mb-2 inline-flex items-center gap-1">
+        <Link href={`/teacher/class/${params.id}?mode=${studentMode}`} className="text-sm font-semibold text-duo-blue hover:underline mb-2 inline-flex items-center gap-1">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
@@ -127,7 +136,7 @@ export default async function EditStudent({ params, searchParams }: Params) {
             </tbody>
           </table>
           <input type="hidden" name="class_id" value={params.id} />
-          <input type="hidden" name="mode" value={mode} />
+          <input type="hidden" name="mode" value={studentMode} />
           <div className="flex items-center gap-4">
             <button className="btn btn-primary">Save Changes</button>
             <span className="text-sm text-wolf">Remember to save before leaving</span>
