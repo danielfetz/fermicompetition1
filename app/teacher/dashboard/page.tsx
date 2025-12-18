@@ -2,11 +2,22 @@ import { redirect } from 'next/navigation'
 import { createSupabaseServer } from '@/lib/supabaseServer'
 import Link from 'next/link'
 import FermiMascot from '@/components/FermiMascot'
+import CoordinatorSection from '@/components/CoordinatorSection'
 
 export default async function Dashboard() {
   const supabase = createSupabaseServer()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/teacher/login')
+
+  // Fetch teacher profile
+  const { data: profile } = await supabase
+    .from('teacher_profiles')
+    .select('*, master_codes(*), teacher_codes(*)')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  const isCoordinator = !!profile?.master_code_id
+  const hasCode = !!(profile?.teacher_code_id || profile?.master_code_id)
 
   const { data: classes } = await supabase
     .from('classes')
@@ -28,6 +39,14 @@ export default async function Dashboard() {
           New Class
         </Link>
       </div>
+
+      {/* Coordinator Section - Only shown for master code holders */}
+      {isCoordinator && (
+        <CoordinatorSection
+          masterCodeId={profile.master_code_id!}
+          masterCodeName={profile.master_codes?.name}
+        />
+      )}
 
       {/* Classes Grid */}
       {classes?.length ? (
@@ -105,8 +124,23 @@ export default async function Dashboard() {
         </div>
       )}
 
-      {/* Logout */}
-      <div className="text-center">
+      {/* Code Status & Actions */}
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 border-t border-swan">
+        {hasCode ? (
+          <div className="flex items-center gap-2 text-sm text-duo-green">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {isCoordinator ? 'Coordinator Code Active' : 'Competition Code Active'}
+          </div>
+        ) : (
+          <Link href="/teacher/enter-code" className="btn btn-outline text-duo-blue border-duo-blue hover:bg-duo-blue hover:text-white">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+            </svg>
+            Enter Code
+          </Link>
+        )}
         <form action="/api/auth/logout" method="POST">
           <button type="submit" className="btn btn-ghost text-wolf">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

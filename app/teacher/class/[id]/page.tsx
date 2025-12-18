@@ -10,6 +10,15 @@ export default async function ClassDetail({ params }: Params) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) notFound()
 
+  // Fetch teacher profile to check if real competition is unlocked
+  const { data: profile } = await supabase
+    .from('teacher_profiles')
+    .select('real_competition_unlocked')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  const realUnlocked = profile?.real_competition_unlocked ?? false
+
   const { data: cls } = await supabase
     .from('classes')
     .select('id, name, num_students, school_name')
@@ -47,7 +56,7 @@ export default async function ClassDetail({ params }: Params) {
           {cls.school_name && <p className="text-wolf">{cls.school_name}</p>}
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <CompetitionModeToggle classId={cls.id} />
+          <CompetitionModeToggle classId={cls.id} realUnlocked={realUnlocked} />
           <Link className="btn btn-primary" href={`/teacher/class/${cls.id}/generate`}>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
