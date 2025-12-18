@@ -52,8 +52,8 @@ const config: Config = {
       },
       boxShadow: {
         'duo': '0 4px 0 0 rgba(0, 0, 0, 0.2)',
-        'duo-green': '0 4px 0 0 #63b824',
-        'duo-blue': '0 4px 0 0 #2997cb',
+        'duo-green': '0 4px 0 0 #58A700',
+        'duo-blue': '0 4px 0 0 #1899D6',
         'duo-yellow': '0 4px 0 0 #CE9E00',
         'duo-red': '0 4px 0 0 #EA2B2B',
         'duo-purple': '0 4px 0 0 #A560E8',

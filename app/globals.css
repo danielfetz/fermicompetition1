@@ -41,6 +41,7 @@ html, body {
 /* Primary Green Button */
 .btn-primary {
   @apply bg-duo-green text-white shadow-duo-green;
+  --tw-shadow-color: #63b824;
 }
 .btn-primary:hover:not(:disabled) {
   @apply bg-duo-green-dark;
@@ -52,6 +53,7 @@ html, body {
 /* Secondary Blue Button */
 .btn-secondary {
   @apply bg-duo-blue text-white shadow-duo-blue;
+  --tw-shadow-color: #2997cb;
 }
 .btn-secondary:hover:not(:disabled) {
   @apply bg-duo-blue-dark;

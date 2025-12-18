@@ -3,28 +3,58 @@ import { notFound } from 'next/navigation'
 
 type Params = { params: { id: string, studentId: string } }
 
+type FermiQuestion = {
+  id: string
+  prompt: string
+  correct_value: number
+}
+
+type ClassQuestion = {
+  id: string
+  order: number
+  fermi_questions: FermiQuestion | FermiQuestion[] | null
+}
+
+// Helper to extract fermi question from either single object or array
+function getFermiQuestion(fq: FermiQuestion | FermiQuestion[] | null): FermiQuestion | null {
+  if (!fq) return null
+  if (Array.isArray(fq)) return fq[0] || null
+  return fq
+}
+
 export default async function EditStudent({ params }: Params) {
   const supabase = createSupabaseServer()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) notFound()
 
-  const [{ data: student }, { data: questions }, { data: answers }] = await Promise.all([
+  const [{ data: student }, { data: classQuestions }, { data: answers }] = await Promise.all([
     supabase.from('students').select('id, full_name, username, class_id').eq('id', params.studentId).single(),
-    supabase.from('questions').select('id, prompt, correct_value, order').eq('class_id', params.id).order('order'),
-    supabase.from('answers').select('question_id, value, confidence_pct').eq('student_id', params.studentId)
+    supabase.from('class_questions').select(`
+      id,
+      order,
+      fermi_questions (
+        id,
+        prompt,
+        correct_value
+      )
+    `).eq('class_id', params.id).order('order'),
+    supabase.from('answers').select('class_question_id, value, confidence_pct').eq('student_id', params.studentId)
   ])
 
   if (!student) return notFound()
-  const answerMap = new Map(answers?.map(a => [a.question_id, a]))
+
+  // Cast to proper type
+  const questions = (classQuestions || []) as ClassQuestion[]
+  const answerMap = new Map(answers?.map(a => [a.class_question_id, a]))
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-extrabold">Edit {student.username}</h1>
+      <h1 className="text-2xl font-extrabold">Edit {student.full_name || student.username}</h1>
       <div className="card overflow-x-auto">
         <form action={`/api/teacher/student/${student.id}/answers`} method="post" className="space-y-4">
           <div className="flex items-center gap-3">
             <label className="text-sm text-gray-600 w-28">Full name</label>
-            <input name="full_name" defaultValue={student.full_name ?? ''} className="border rounded p-2 flex-1" placeholder="Full name" />
+            <input name="full_name" defaultValue={student.full_name ?? ''} className="input flex-1" placeholder="Full name" />
           </div>
           <table className="min-w-full text-sm">
             <thead>
@@ -37,29 +67,37 @@ export default async function EditStudent({ params }: Params) {
               </tr>
             </thead>
             <tbody>
-              {questions?.map((q, i) => {
-                const a = answerMap.get(q.id)
+              {questions.map((cq, i) => {
+                const fq = getFermiQuestion(cq.fermi_questions)
+                const a = answerMap.get(cq.id)
                 return (
-                  <tr key={q.id} className="border-t align-top">
+                  <tr key={cq.id} className="border-t align-top">
                     <td className="py-2 pr-4">{i+1}</td>
-                    <td className="py-2 pr-4 max-w-xl">{q.prompt}</td>
-                    <td className="py-2 pr-4"><input name={`value_${q.id}`} defaultValue={a?.value ?? ''} className="border rounded p-1 w-32" type="number" /></td>
+                    <td className="py-2 pr-4 max-w-xl">{fq?.prompt || 'Unknown question'}</td>
                     <td className="py-2 pr-4">
-                      <select name={`conf_${q.id}`} defaultValue={a?.confidence_pct ?? 50} className="border rounded p-1">
+                      <input
+                        name={`value_${cq.id}`}
+                        defaultValue={a?.value ?? ''}
+                        className="input w-32 py-1 px-2"
+                        type="number"
+                        step="any"
+                      />
+                    </td>
+                    <td className="py-2 pr-4">
+                      <select name={`conf_${cq.id}`} defaultValue={a?.confidence_pct ?? 50} className="select py-1 px-2 w-24">
                         {[10,30,50,70,90].map(c => <option key={c} value={c}>{c}%</option>)}
                       </select>
                     </td>
-                    <td className="py-2">{q.correct_value ?? '—'}</td>
+                    <td className="py-2 font-mono text-wolf">{fq?.correct_value ?? '—'}</td>
                   </tr>
                 )
               })}
             </tbody>
           </table>
           <input type="hidden" name="class_id" value={params.id} />
-          <button className="btn btn-primary" formAction={`/api/teacher/student/${student.id}/answers`}>Save</button>
+          <button className="btn btn-primary">Save Changes</button>
         </form>
       </div>
     </div>
   )
 }
-
