@@ -4,53 +4,27 @@ import { upsertAnswersSchema } from '@/lib/validators'
 import { createSupabaseServiceRole } from '@/lib/supabaseServer'
 
 export async function POST(req: NextRequest) {
-  console.log('=== ANSWERS API DEBUG START ===')
-
   // Try to get token from Authorization header first, then from body (for sendBeacon)
   const auth = req.headers.get('authorization')
   let token = auth?.startsWith('Bearer ') ? auth.slice(7) : null
-  console.log('Auth header present:', !!auth, 'Token from header:', !!token)
 
-  let body: unknown = null
-  let bodyParseError: string | null = null
-  try {
-    body = await req.json()
-    console.log('Body parsed successfully:', JSON.stringify(body, null, 2))
-  } catch (e) {
-    bodyParseError = e instanceof Error ? e.message : 'Unknown parse error'
-    console.error('Body parse error:', bodyParseError)
-  }
+  const body = await req.json().catch(() => null)
 
   // If no token in header, check body (for sendBeacon which can't send headers)
-  if (!token && body && typeof body === 'object' && 'token' in body) {
-    token = (body as { token?: string }).token || null
-    console.log('Token from body:', !!token)
+  if (!token && body?.token) {
+    token = body.token
   }
 
-  if (!token) {
-    console.log('No token found - returning 401')
-    return NextResponse.json({ error: 'Missing token', debug: { authHeader: !!auth, bodyParsed: !!body } }, { status: 401 })
-  }
+  if (!token) return NextResponse.json({ error: 'Missing token' }, { status: 401 })
 
   const payload = verifyStudentToken(token)
-  if (!payload) {
-    console.log('Token verification failed - returning 401')
-    return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
-  }
-  console.log('Token verified for student:', payload.studentId)
+  if (!payload) return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
 
   const parsed = upsertAnswersSchema.safeParse(body)
   if (!parsed.success) {
-    console.error('Validation error:', JSON.stringify(parsed.error.errors, null, 2))
-    console.error('Body was:', JSON.stringify(body, null, 2))
-    return NextResponse.json({
-      error: 'Invalid payload',
-      details: parsed.error.errors,
-      receivedBody: body,
-      bodyParseError
-    }, { status: 400 })
+    console.error('Validation error:', parsed.error.errors)
+    return NextResponse.json({ error: 'Invalid payload', details: parsed.error.errors }, { status: 400 })
   }
-  console.log('Validation passed, answers count:', parsed.data.answers.length)
 
   const supa = createSupabaseServiceRole()
 
@@ -68,11 +42,9 @@ export async function POST(req: NextRequest) {
     .upsert(rows, { onConflict: 'student_id,class_question_id' })
 
   if (error) {
-    console.error('Database error saving answers:', JSON.stringify(error, null, 2))
-    console.error('Rows attempted:', JSON.stringify(rows, null, 2))
-    return NextResponse.json({ error: error.message, dbError: error, rowsAttempted: rows }, { status: 400 })
+    console.error('Error saving answers:', error)
+    return NextResponse.json({ error: error.message }, { status: 400 })
   }
-  console.log('Answers saved successfully')
 
   // Only mark exam as complete when explicitly submitting (not auto-save)
   if (parsed.data.submit) {
@@ -88,6 +60,5 @@ export async function POST(req: NextRequest) {
       .eq('student_id', payload.studentId)
   }
 
-  console.log('=== ANSWERS API DEBUG END - SUCCESS ===')
-  return NextResponse.json({ ok: true, savedCount: rows.length })
+  return NextResponse.json({ ok: true })
 }
