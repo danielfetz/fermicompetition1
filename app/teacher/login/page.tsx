@@ -1,17 +1,26 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { supabase } from '@/lib/supabaseClient'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import FermiMascot from '@/components/FermiMascot'
 
-export default function TeacherLogin() {
+function TeacherLoginContent() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    // Check for error from auth callback
+    const errorParam = searchParams.get('error')
+    if (errorParam) {
+      setError(decodeURIComponent(errorParam))
+    }
+  }, [searchParams])
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -108,5 +117,17 @@ export default function TeacherLogin() {
         </Link>
       </div>
     </div>
+  )
+}
+
+export default function TeacherLogin() {
+  return (
+    <Suspense fallback={
+      <div className="max-w-md mx-auto card text-center py-8">
+        <p className="text-wolf">Loading...</p>
+      </div>
+    }>
+      <TeacherLoginContent />
+    </Suspense>
   )
 }
