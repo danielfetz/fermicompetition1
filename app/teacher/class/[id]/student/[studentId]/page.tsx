@@ -1,5 +1,6 @@
 import { createSupabaseServer } from '@/lib/supabaseServer'
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 
 type Params = { params: { id: string, studentId: string } }
 
@@ -49,7 +50,15 @@ export default async function EditStudent({ params }: Params) {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-extrabold">Edit {student.full_name || student.username}</h1>
+      <div>
+        <Link href={`/teacher/class/${params.id}`} className="text-sm text-duo-blue hover:underline mb-2 inline-flex items-center gap-1">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Back to Class Overview
+        </Link>
+        <h1 className="text-2xl font-extrabold">Edit {student.full_name || student.username}</h1>
+      </div>
       <div className="card overflow-x-auto">
         <form action={`/api/teacher/student/${student.id}/answers`} method="post" className="space-y-4">
           <div className="flex items-center gap-3">
@@ -95,7 +104,10 @@ export default async function EditStudent({ params }: Params) {
             </tbody>
           </table>
           <input type="hidden" name="class_id" value={params.id} />
-          <button className="btn btn-primary">Save Changes</button>
+          <div className="flex items-center gap-4">
+            <button className="btn btn-primary">Save Changes</button>
+            <span className="text-sm text-wolf">Remember to save before leaving</span>
+          </div>
         </form>
       </div>
     </div>
