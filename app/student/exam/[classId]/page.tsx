@@ -19,7 +19,6 @@ export default function StudentExam() {
   const [deadline, setDeadline] = useState<number | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [showHint, setShowHint] = useState(false)
   const [hintsUnlocked, setHintsUnlocked] = useState(false)
   const [inputValue, setInputValue] = useState('')
   const [loading, setLoading] = useState(true)
@@ -227,7 +226,6 @@ export default function StudentExam() {
     } else {
       setInputValue('')
     }
-    setShowHint(false)
   }
 
   function nextQuestion() {
@@ -307,22 +305,9 @@ export default function StudentExam() {
             <div className="question-number">{currentIndex + 1}</div>
             <div className="flex-1">
               <p className="question-text">{currentQuestion.prompt}</p>
-              {currentQuestion.hint && !hintsUnlocked && (
-                <button
-                  onClick={() => setShowHint(!showHint)}
-                  className="mt-2 text-sm text-duo-blue font-semibold hover:underline flex items-center gap-1"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                  </svg>
-                  {showHint ? 'Hide hint' : 'Show hint'}
-                </button>
-              )}
-              {(hintsUnlocked || showHint) && currentQuestion.hint && (
+              {hintsUnlocked && currentQuestion.hint && (
                 <div className="mt-3 p-3 bg-duo-yellow/10 rounded-duo border border-duo-yellow/30">
-                  {hintsUnlocked && (
-                    <p className="text-xs text-duo-yellow-dark font-semibold mb-1">Hint unlocked at halftime!</p>
-                  )}
+                  <p className="text-xs text-duo-yellow-dark font-semibold mb-1">Hint unlocked at halftime!</p>
                   <p className="text-sm text-eel">{currentQuestion.hint}</p>
                 </div>
               )}
