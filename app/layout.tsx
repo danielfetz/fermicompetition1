@@ -28,11 +28,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <header className="bg-white border-b-2 border-swan sticky top-0 z-50">
           <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-10 h-10 bg-duo-green rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 bg-duo-green rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform sm:hidden">
                 <span className="text-white font-extrabold text-lg">F</span>
               </div>
-              <span className="text-xl font-extrabold text-eel hidden sm:block">
-                Fermi <span className="text-duo-green">Competition</span>
+              <span className="text-xl font-extrabold text-duo-green">
+                Fermi Competition
               </span>
             </Link>
             <nav className="flex items-center gap-2">
