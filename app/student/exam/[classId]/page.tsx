@@ -256,7 +256,7 @@ export default function StudentExam() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       {/* Header with Timer and Progress */}
-      <div className="sticky top-16 z-40 bg-snow pt-2 pb-4 -mx-4 px-4">
+      <div className="sticky top-16 z-40 bg-white pt-2 pb-4 -mx-4 px-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
             <button

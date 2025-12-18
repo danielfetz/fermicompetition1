@@ -23,7 +23,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-nunito bg-snow text-eel min-h-screen">
+      <body className="font-nunito text-eel min-h-screen">
         {/* Header */}
         <header className="bg-white border-b-2 border-swan sticky top-0 z-50">
           <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
