@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { createBrowserClient } from '@supabase/ssr'
 import CompetitionModeToggle from './CompetitionModeToggle'
 import RealCompetitionCodeEntry from './RealCompetitionCodeEntry'
 
@@ -46,25 +45,19 @@ export default function ClassContent({
   const [realUnlocked, setRealUnlocked] = useState(initialRealUnlocked)
   const [checkingAccess, setCheckingAccess] = useState(false)
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-
-  // Check access client-side on mount and when mode changes to real
+  // Check access client-side on mount using API endpoint for reliability
   useEffect(() => {
     async function checkRealAccess() {
       if (realUnlocked) return // Already unlocked
 
       setCheckingAccess(true)
       try {
-        const { data: profile } = await supabase
-          .from('teacher_profiles')
-          .select('real_competition_unlocked, master_code_id')
-          .maybeSingle()
-
-        if (profile?.real_competition_unlocked || profile?.master_code_id) {
-          setRealUnlocked(true)
+        const res = await fetch('/api/check-real-access')
+        if (res.ok) {
+          const data = await res.json()
+          if (data.unlocked) {
+            setRealUnlocked(true)
+          }
         }
       } catch (err) {
         console.error('Error checking access:', err)
@@ -73,7 +66,7 @@ export default function ClassContent({
     }
 
     checkRealAccess()
-  }, [realUnlocked, supabase])
+  }, [realUnlocked])
 
   // Filter students and scores by current mode
   const filteredStudents = students.filter(s => (s.competition_mode || 'mock') === mode)

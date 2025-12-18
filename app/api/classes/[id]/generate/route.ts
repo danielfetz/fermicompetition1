@@ -23,11 +23,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   if (competition_mode === 'real') {
     const { data: profile } = await supabase
       .from('teacher_profiles')
-      .select('real_competition_unlocked, master_code_id')
+      .select('real_competition_unlocked, master_code_id, teacher_code_id')
       .eq('user_id', user.id)
       .maybeSingle()
 
-    const hasAccess = !!(profile?.real_competition_unlocked || profile?.master_code_id)
+    // User has access if they have real_competition_unlocked OR master_code_id OR teacher_code_id
+    const hasAccess = !!(profile?.real_competition_unlocked || profile?.master_code_id || profile?.teacher_code_id)
     if (!hasAccess) {
       return NextResponse.json({ error: 'Real competition not unlocked' }, { status: 403 })
     }
