@@ -20,6 +20,7 @@ type Score = {
   total_answered: number
   score_percentage: number
   competition_mode?: 'mock' | 'real'
+  confidence_points?: number
 }
 
 type Props = {
@@ -208,7 +209,8 @@ export default function ClassContent({
                       <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Password</th>
                       <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Full Name</th>
                       <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Status</th>
-                      <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Score</th>
+                      <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Accuracy</th>
+                      <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Points</th>
                       <th className="py-3 px-6 font-bold text-wolf uppercase tracking-wide text-xs">Actions</th>
                     </tr>
                   </thead>
@@ -256,6 +258,15 @@ export default function ClassContent({
                               </div>
                             ) : (
                               <span className="text-hare">—</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4">
+                            {total > 0 ? (
+                              <span className={`font-bold ${(score?.confidence_points ?? 250) >= 250 ? 'text-duo-green' : (score?.confidence_points ?? 250) >= 200 ? 'text-duo-yellow-dark' : 'text-duo-red'}`}>
+                                {score?.confidence_points ?? 250}
+                              </span>
+                            ) : (
+                              <span className="text-hare">250</span>
                             )}
                           </td>
                           <td className="py-3 px-6">

@@ -42,7 +42,7 @@ export default async function ClassDetail({ params, searchParams }: Params) {
   // Fetch all scores - filtering happens client-side
   const { data: scores } = await service
     .from('student_scores')
-    .select('student_id, correct_count, total_answered, score_percentage, competition_mode')
+    .select('student_id, correct_count, total_answered, score_percentage, competition_mode, confidence_points')
     .eq('class_id', cls.id)
 
   const initialMode = (searchParams.mode === 'real' ? 'real' : 'mock') as 'mock' | 'real'
