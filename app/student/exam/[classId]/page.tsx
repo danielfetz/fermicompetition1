@@ -20,6 +20,7 @@ export default function StudentExam() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showHint, setShowHint] = useState(false)
+  const [hintsUnlocked, setHintsUnlocked] = useState(false)
   const [inputValue, setInputValue] = useState('')
   const [loading, setLoading] = useState(true)
   const initialized = useRef(false)
@@ -127,6 +128,26 @@ export default function StudentExam() {
 
     return () => clearInterval(interval)
   }, [answers, saveAnswers])
+
+  // Check for halftime to unlock hints (20 minutes into a 40-minute exam)
+  useEffect(() => {
+    if (!deadline || hintsUnlocked) return
+
+    const checkHalftime = () => {
+      const now = Date.now()
+      const halfwayPoint = deadline - 20 * 60 * 1000 // 20 minutes before deadline
+      if (now >= halfwayPoint) {
+        setHintsUnlocked(true)
+      }
+    }
+
+    // Check immediately
+    checkHalftime()
+
+    // Then check every second
+    const interval = setInterval(checkHalftime, 1000)
+    return () => clearInterval(interval)
+  }, [deadline, hintsUnlocked])
 
   // Save on page unload
   useEffect(() => {
@@ -286,7 +307,7 @@ export default function StudentExam() {
             <div className="question-number">{currentIndex + 1}</div>
             <div className="flex-1">
               <p className="question-text">{currentQuestion.prompt}</p>
-              {currentQuestion.hint && (
+              {currentQuestion.hint && !hintsUnlocked && (
                 <button
                   onClick={() => setShowHint(!showHint)}
                   className="mt-2 text-sm text-duo-blue font-semibold hover:underline flex items-center gap-1"
@@ -297,8 +318,11 @@ export default function StudentExam() {
                   {showHint ? 'Hide hint' : 'Show hint'}
                 </button>
               )}
-              {showHint && currentQuestion.hint && (
+              {(hintsUnlocked || showHint) && currentQuestion.hint && (
                 <div className="mt-3 p-3 bg-duo-yellow/10 rounded-duo border border-duo-yellow/30">
+                  {hintsUnlocked && (
+                    <p className="text-xs text-duo-yellow-dark font-semibold mb-1">Hint unlocked at halftime!</p>
+                  )}
                   <p className="text-sm text-eel">{currentQuestion.hint}</p>
                 </div>
               )}
