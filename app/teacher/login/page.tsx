@@ -29,7 +29,7 @@ function TeacherLoginContent() {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     setLoading(false)
     if (error) setError(error.message)
-    else router.push('/teacher/dashboard')
+    else window.location.href = '/teacher/dashboard' // Hard redirect to refresh server components
   }
 
   return (
