@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 
 interface TimerProps {
   deadline: number | null
@@ -15,6 +15,13 @@ export default function Timer({
 }: TimerProps) {
   const [timeLeft, setTimeLeft] = useState<string>('--:--')
   const [isUrgent, setIsUrgent] = useState(false)
+  const onTimeUpRef = useRef(onTimeUp)
+  const hasTriggeredRef = useRef(false)
+
+  // Keep the ref updated with the latest callback
+  useEffect(() => {
+    onTimeUpRef.current = onTimeUp
+  }, [onTimeUp])
 
   const formatTime = useCallback((ms: number) => {
     if (ms <= 0) return '00:00'
@@ -26,12 +33,19 @@ export default function Timer({
   useEffect(() => {
     if (deadline === null) return
 
+    // Reset the triggered flag when deadline changes
+    hasTriggeredRef.current = false
+
     const updateTimer = () => {
       const ms = deadline - Date.now()
       if (ms <= 0) {
         setTimeLeft('00:00')
         setIsUrgent(true)
-        onTimeUp?.()
+        // Only trigger once
+        if (!hasTriggeredRef.current) {
+          hasTriggeredRef.current = true
+          onTimeUpRef.current?.()
+        }
         return false
       }
       setTimeLeft(formatTime(ms))
@@ -49,7 +63,7 @@ export default function Timer({
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [deadline, onTimeUp, urgentThreshold, formatTime])
+  }, [deadline, urgentThreshold, formatTime])
 
   return (
     <div className={`timer ${isUrgent ? 'timer-urgent' : ''}`}>

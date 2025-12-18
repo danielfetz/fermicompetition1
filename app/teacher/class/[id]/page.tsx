@@ -11,13 +11,15 @@ export default async function ClassDetail({ params }: Params) {
   if (!user) notFound()
 
   // Fetch teacher profile to check if real competition is unlocked
+  // Master code holders (coordinators) automatically have access
   const { data: profile } = await supabase
     .from('teacher_profiles')
-    .select('real_competition_unlocked')
+    .select('real_competition_unlocked, master_code_id')
     .eq('user_id', user.id)
     .maybeSingle()
 
-  const realUnlocked = profile?.real_competition_unlocked ?? false
+  // Real is unlocked if they have real_competition_unlocked OR they're a coordinator (has master_code_id)
+  const realUnlocked = !!(profile?.real_competition_unlocked || profile?.master_code_id)
 
   const { data: cls } = await supabase
     .from('classes')
