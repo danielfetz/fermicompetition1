@@ -16,8 +16,8 @@ export const studentLoginSchema = z.object({
 })
 
 export const upsertAnswerSchema = z.object({
-  question_id: z.string().uuid(),
-  value: z.number().nonnegative().finite(),
+  question_id: z.string().min(1), // Just require non-empty string, not strict UUID
+  value: z.number().finite(), // Allow any finite number (including negative for edge cases)
   confidence_pct: z.union([
     z.literal(10),
     z.literal(30),

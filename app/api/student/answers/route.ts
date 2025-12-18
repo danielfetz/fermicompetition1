@@ -21,7 +21,10 @@ export async function POST(req: NextRequest) {
   if (!payload) return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
 
   const parsed = upsertAnswersSchema.safeParse(body)
-  if (!parsed.success) return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
+  if (!parsed.success) {
+    console.error('Validation error:', parsed.error.errors)
+    return NextResponse.json({ error: 'Invalid payload', details: parsed.error.errors }, { status: 400 })
+  }
 
   const supa = createSupabaseServiceRole()
 
