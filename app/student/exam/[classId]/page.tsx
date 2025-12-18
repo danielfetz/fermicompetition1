@@ -150,7 +150,7 @@ export default function StudentExam() {
     setSubmitting(true)
     setError(null)
     const token = localStorage.getItem('studentToken')
-    const payload = { answers: Object.values(answers) }
+    const payload = { answers: Object.values(answers), submit: true }
     const res = await fetch('/api/student/answers', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },

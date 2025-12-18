@@ -35,11 +35,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 
-  // Mark student as having completed the exam
-  await supa
-    .from('students')
-    .update({ has_completed_exam: true })
-    .eq('id', payload.studentId)
+  // Only mark exam as complete when explicitly submitting (not auto-save)
+  if (parsed.data.submit) {
+    await supa
+      .from('students')
+      .update({ has_completed_exam: true })
+      .eq('id', payload.studentId)
+
+    // Also mark the session as submitted
+    await supa
+      .from('student_exam_sessions')
+      .update({ submitted_at: new Date().toISOString() })
+      .eq('student_id', payload.studentId)
+  }
 
   return NextResponse.json({ ok: true })
 }

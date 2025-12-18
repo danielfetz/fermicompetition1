@@ -28,6 +28,7 @@ export const upsertAnswerSchema = z.object({
 })
 
 export const upsertAnswersSchema = z.object({
-  answers: z.array(upsertAnswerSchema).min(1).max(10)
+  answers: z.array(upsertAnswerSchema).min(1).max(10),
+  submit: z.boolean().optional() // Only mark exam as complete when true
 })
 
