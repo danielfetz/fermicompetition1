@@ -23,6 +23,18 @@ function getFermiQuestion(fq: FermiQuestion | FermiQuestion[] | null): FermiQues
   return fq
 }
 
+// Calculate percentage difference from correct answer
+function getPercentageDiff(answer: number | null | undefined, correct: number | null | undefined): { value: number; label: string; color: string } | null {
+  if (answer == null || correct == null || correct === 0) return null
+  const diff = Math.abs((answer - correct) / correct) * 100
+  let color = 'text-duo-red'
+  if (diff <= 10) color = 'text-duo-green'
+  else if (diff <= 25) color = 'text-duo-green-dark'
+  else if (diff <= 50) color = 'text-duo-yellow-dark'
+  else if (diff <= 100) color = 'text-duo-orange'
+  return { value: diff, label: diff <= 1 ? '<1%' : `${Math.round(diff)}%`, color }
+}
+
 export default async function EditStudent({ params }: Params) {
   const supabase = createSupabaseServer()
   const { data: { user } } = await supabase.auth.getUser()
@@ -97,7 +109,17 @@ export default async function EditStudent({ params }: Params) {
                         {[10,30,50,70,90].map(c => <option key={c} value={c}>{c}%</option>)}
                       </select>
                     </td>
-                    <td className="py-2 font-mono text-wolf">{fq?.correct_value ?? '—'}</td>
+                    <td className="py-2">
+                      <div className="font-mono text-wolf">{fq?.correct_value ?? '—'}</div>
+                      {(() => {
+                        const diff = getPercentageDiff(a?.value, fq?.correct_value)
+                        return diff ? (
+                          <div className={`text-xs mt-0.5 ${diff.color}`}>
+                            {diff.label} off
+                          </div>
+                        ) : null
+                      })()}
+                    </td>
                   </tr>
                 )
               })}
