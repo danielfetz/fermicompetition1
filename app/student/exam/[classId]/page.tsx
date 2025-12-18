@@ -156,8 +156,8 @@ export default function StudentExam() {
       if (Object.keys(answers).length > 0) {
         const token = localStorage.getItem('studentToken')
         if (token) {
-          // Use sendBeacon for reliable save on unload
-          const payload = JSON.stringify({ answers: Object.values(answers) })
+          // Use sendBeacon for reliable save on unload - include token in body since headers aren't supported
+          const payload = JSON.stringify({ answers: Object.values(answers), token })
           navigator.sendBeacon('/api/student/answers', new Blob([payload], { type: 'application/json' }))
         }
       }
@@ -166,6 +166,17 @@ export default function StudentExam() {
     window.addEventListener('beforeunload', handleBeforeUnload)
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [answers])
+
+  // Save when answers change (debounced)
+  useEffect(() => {
+    if (Object.keys(answers).length === 0) return
+
+    const timeout = setTimeout(() => {
+      saveAnswers()
+    }, 2000) // Save 2 seconds after last change
+
+    return () => clearTimeout(timeout)
+  }, [answers, saveAnswers])
 
   const submit = useCallback(async () => {
     if (submitting) return

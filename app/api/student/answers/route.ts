@@ -4,14 +4,22 @@ import { upsertAnswersSchema } from '@/lib/validators'
 import { createSupabaseServiceRole } from '@/lib/supabaseServer'
 
 export async function POST(req: NextRequest) {
+  // Try to get token from Authorization header first, then from body (for sendBeacon)
   const auth = req.headers.get('authorization')
-  const token = auth?.startsWith('Bearer ') ? auth.slice(7) : null
+  let token = auth?.startsWith('Bearer ') ? auth.slice(7) : null
+
+  const body = await req.json().catch(() => null)
+
+  // If no token in header, check body (for sendBeacon which can't send headers)
+  if (!token && body?.token) {
+    token = body.token
+  }
+
   if (!token) return NextResponse.json({ error: 'Missing token' }, { status: 401 })
 
   const payload = verifyStudentToken(token)
   if (!payload) return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
 
-  const body = await req.json().catch(() => null)
   const parsed = upsertAnswersSchema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
 
