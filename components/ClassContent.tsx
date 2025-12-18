@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { createBrowserClient } from '@supabase/ssr'
 import CompetitionModeToggle from './CompetitionModeToggle'
 import RealCompetitionCodeEntry from './RealCompetitionCodeEntry'
 
@@ -39,9 +40,40 @@ export default function ClassContent({
   numStudents,
   students,
   scores,
-  realUnlocked
+  realUnlocked: initialRealUnlocked
 }: Props) {
   const [mode, setMode] = useState<'mock' | 'real'>('mock')
+  const [realUnlocked, setRealUnlocked] = useState(initialRealUnlocked)
+  const [checkingAccess, setCheckingAccess] = useState(false)
+
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
+  // Check access client-side on mount and when mode changes to real
+  useEffect(() => {
+    async function checkRealAccess() {
+      if (realUnlocked) return // Already unlocked
+
+      setCheckingAccess(true)
+      try {
+        const { data: profile } = await supabase
+          .from('teacher_profiles')
+          .select('real_competition_unlocked, master_code_id')
+          .maybeSingle()
+
+        if (profile?.real_competition_unlocked || profile?.master_code_id) {
+          setRealUnlocked(true)
+        }
+      } catch (err) {
+        console.error('Error checking access:', err)
+      }
+      setCheckingAccess(false)
+    }
+
+    checkRealAccess()
+  }, [realUnlocked, supabase])
 
   // Filter students and scores by current mode
   const filteredStudents = students.filter(s => (s.competition_mode || 'mock') === mode)
@@ -81,9 +113,14 @@ export default function ClassContent({
         </div>
       </div>
 
-      {/* Show code entry if real mode is selected but not unlocked */}
-      {mode === 'real' && !realUnlocked ? (
-        <RealCompetitionCodeEntry />
+      {/* Show loading state while checking access */}
+      {mode === 'real' && !realUnlocked && checkingAccess ? (
+        <div className="card text-center py-12">
+          <div className="animate-spin w-8 h-8 border-4 border-duo-blue border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-wolf">Checking access...</p>
+        </div>
+      ) : mode === 'real' && !realUnlocked ? (
+        <RealCompetitionCodeEntry onSuccess={() => setRealUnlocked(true)} />
       ) : (
         <>
           {/* Stats */}

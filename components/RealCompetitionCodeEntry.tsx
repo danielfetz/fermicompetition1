@@ -3,7 +3,11 @@
 import { useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 
-export default function RealCompetitionCodeEntry() {
+type Props = {
+  onSuccess?: () => void
+}
+
+export default function RealCompetitionCodeEntry({ onSuccess }: Props) {
   const [code, setCode] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -28,8 +32,12 @@ export default function RealCompetitionCodeEntry() {
       if (rpcError) throw rpcError
 
       if (data?.success) {
-        // Reload to reflect changes
-        window.location.reload()
+        // Call onSuccess callback if provided, otherwise reload
+        if (onSuccess) {
+          onSuccess()
+        } else {
+          window.location.reload()
+        }
       } else {
         setError(data?.error || 'Invalid code')
       }
