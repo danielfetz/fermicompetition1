@@ -3,23 +3,443 @@
 @tailwind utilities;
 
 :root {
-  --background: 240 5% 96%;
-  --foreground: 220 14% 23%;
+  --duo-green: #58CC02;
+  --duo-green-dark: #58A700;
+  --duo-blue: #1CB0F6;
+  --duo-blue-dark: #1899D6;
+  --duo-yellow: #FFC800;
+  --duo-yellow-dark: #CE9E00;
+  --duo-red: #FF4B4B;
+  --duo-red-dark: #EA2B2B;
+  --duo-purple: #CE82FF;
+  --duo-purple-dark: #A560E8;
+  --duo-orange: #FF9600;
+  --background: #F7F7F7;
+  --foreground: #4B4B4B;
 }
 
 html, body {
   height: 100%;
 }
 
-button.btn {
-  @apply rounded-xl px-4 py-2 font-semibold shadow-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed;
+/* ================================
+   DUOLINGO-STYLE BUTTONS
+   ================================ */
+
+.btn {
+  @apply inline-flex items-center justify-center gap-2 px-6 py-3 font-bold text-base
+         rounded-duo transition-all duration-150 cursor-pointer select-none
+         disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
+
+.btn:active:not(:disabled) {
+  transform: translateY(4px);
+}
+
+/* Primary Green Button */
 .btn-primary {
-  @apply bg-duolingo-green text-white hover:bg-green-600;
+  @apply bg-duo-green text-white shadow-duo-green;
 }
+.btn-primary:hover:not(:disabled) {
+  @apply bg-duo-green-dark;
+}
+.btn-primary:active:not(:disabled) {
+  @apply shadow-none bg-duo-green-dark;
+}
+
+/* Secondary Blue Button */
 .btn-secondary {
-  @apply bg-duolingo-blue text-white hover:bg-sky-600;
+  @apply bg-duo-blue text-white shadow-duo-blue;
 }
+.btn-secondary:hover:not(:disabled) {
+  @apply bg-duo-blue-dark;
+}
+.btn-secondary:active:not(:disabled) {
+  @apply shadow-none bg-duo-blue-dark;
+}
+
+/* Yellow/Warning Button */
+.btn-warning {
+  @apply bg-duo-yellow text-eel shadow-duo-yellow;
+}
+.btn-warning:hover:not(:disabled) {
+  @apply bg-duo-yellow-dark;
+}
+.btn-warning:active:not(:disabled) {
+  @apply shadow-none bg-duo-yellow-dark;
+}
+
+/* Danger/Red Button */
+.btn-danger {
+  @apply bg-duo-red text-white shadow-duo-red;
+}
+.btn-danger:hover:not(:disabled) {
+  @apply bg-duo-red-dark;
+}
+.btn-danger:active:not(:disabled) {
+  @apply shadow-none bg-duo-red-dark;
+}
+
+/* Outline Button */
+.btn-outline {
+  @apply bg-transparent border-2 border-swan text-wolf shadow-none;
+}
+.btn-outline:hover:not(:disabled) {
+  @apply bg-swan;
+}
+.btn-outline:active:not(:disabled) {
+  @apply bg-hare;
+}
+
+/* Ghost Button (minimal) */
+.btn-ghost {
+  @apply bg-transparent text-duo-blue shadow-none px-4 py-2;
+  text-transform: none;
+}
+.btn-ghost:hover:not(:disabled) {
+  @apply bg-duo-blue/10;
+}
+
+/* Small Button Variant */
+.btn-sm {
+  @apply px-4 py-2 text-sm rounded-xl;
+}
+
+/* Large Button Variant */
+.btn-lg {
+  @apply px-8 py-4 text-lg rounded-duo-lg;
+}
+
+/* ================================
+   DUOLINGO-STYLE CARDS
+   ================================ */
+
 .card {
-  @apply bg-white rounded-2xl shadow p-5;
+  @apply bg-white rounded-duo-lg p-6 shadow-card transition-all duration-200;
+  border: 2px solid #E5E5E5;
+}
+
+.card:hover {
+  @apply shadow-card-hover;
+  transform: translateY(-2px);
+}
+
+.card-interactive {
+  @apply card cursor-pointer;
+}
+
+.card-interactive:hover {
+  @apply border-duo-blue;
+}
+
+.card-success {
+  @apply card border-duo-green bg-duo-green/5;
+}
+
+.card-warning {
+  @apply card border-duo-yellow bg-duo-yellow/5;
+}
+
+.card-error {
+  @apply card border-duo-red bg-duo-red/5;
+}
+
+/* ================================
+   FORM INPUTS
+   ================================ */
+
+.input {
+  @apply w-full px-4 py-3 bg-white border-2 border-swan rounded-duo text-eel font-semibold
+         placeholder:text-hare placeholder:font-normal
+         focus:outline-none focus:border-duo-blue focus:ring-0
+         transition-colors duration-200;
+}
+
+.input:disabled {
+  @apply bg-snow cursor-not-allowed opacity-60;
+}
+
+.input-error {
+  @apply border-duo-red focus:border-duo-red;
+}
+
+.input-success {
+  @apply border-duo-green focus:border-duo-green;
+}
+
+/* Select Dropdown */
+.select {
+  @apply input appearance-none cursor-pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%234B4B4B' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
+
+/* Label */
+.label {
+  @apply block text-sm font-bold text-eel mb-2 uppercase tracking-wide;
+}
+
+/* Form Group */
+.form-group {
+  @apply space-y-2;
+}
+
+/* ================================
+   PROGRESS BAR
+   ================================ */
+
+.progress-bar {
+  @apply w-full h-4 bg-swan rounded-full overflow-hidden;
+}
+
+.progress-fill {
+  @apply h-full bg-duo-green rounded-full transition-all duration-500 ease-out;
+}
+
+.progress-fill-animated {
+  @apply progress-fill;
+  animation: progress 0.5s ease-out;
+}
+
+/* XP Progress Style */
+.progress-xp {
+  @apply h-3 bg-duo-yellow/20;
+}
+
+.progress-xp .progress-fill {
+  @apply bg-duo-yellow;
+}
+
+/* ================================
+   BADGES & CHIPS
+   ================================ */
+
+.badge {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-bold;
+}
+
+.badge-green {
+  @apply bg-duo-green/15 text-duo-green-dark;
+}
+
+.badge-blue {
+  @apply bg-duo-blue/15 text-duo-blue-dark;
+}
+
+.badge-yellow {
+  @apply bg-duo-yellow/20 text-duo-yellow-dark;
+}
+
+.badge-red {
+  @apply bg-duo-red/15 text-duo-red-dark;
+}
+
+.badge-purple {
+  @apply bg-duo-purple/15 text-duo-purple-dark;
+}
+
+/* ================================
+   TIMER
+   ================================ */
+
+.timer {
+  @apply inline-flex items-center gap-2 px-4 py-2 bg-duo-yellow/20 text-duo-yellow-dark
+         font-bold rounded-full text-lg;
+}
+
+.timer-urgent {
+  @apply bg-duo-red/20 text-duo-red-dark animate-pulse;
+}
+
+/* ================================
+   CONFIDENCE SELECTOR
+   ================================ */
+
+.confidence-btn {
+  @apply flex-1 py-3 px-2 rounded-xl font-bold text-center cursor-pointer
+         transition-all duration-150 border-2 border-swan bg-white text-wolf;
+}
+
+.confidence-btn:hover {
+  @apply bg-snow border-hare;
+}
+
+.confidence-btn.selected {
+  @apply border-duo-blue bg-duo-blue/10 text-duo-blue-dark;
+}
+
+.confidence-btn.selected-10 {
+  @apply border-duo-red bg-duo-red/10 text-duo-red-dark;
+}
+
+.confidence-btn.selected-30 {
+  @apply border-duo-orange bg-duo-orange/10 text-duo-orange-dark;
+}
+
+.confidence-btn.selected-50 {
+  @apply border-duo-yellow bg-duo-yellow/15 text-duo-yellow-dark;
+}
+
+.confidence-btn.selected-70 {
+  @apply border-duo-blue bg-duo-blue/10 text-duo-blue-dark;
+}
+
+.confidence-btn.selected-90 {
+  @apply border-duo-green bg-duo-green/10 text-duo-green-dark;
+}
+
+/* ================================
+   STREAK & STATS
+   ================================ */
+
+.stat-card {
+  @apply flex flex-col items-center justify-center p-4 bg-white rounded-duo border-2 border-swan;
+}
+
+.stat-value {
+  @apply text-3xl font-extrabold text-eel;
+}
+
+.stat-label {
+  @apply text-sm font-semibold text-wolf uppercase tracking-wide;
+}
+
+/* ================================
+   MASCOT / CHARACTER
+   ================================ */
+
+.mascot {
+  @apply relative inline-block;
+}
+
+.mascot-speech {
+  @apply absolute -top-2 left-full ml-4 bg-white rounded-duo-lg p-4 shadow-card
+         border-2 border-swan max-w-xs;
+}
+
+.mascot-speech::before {
+  content: '';
+  @apply absolute top-4 -left-3 w-0 h-0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 12px solid #E5E5E5;
+}
+
+.mascot-speech::after {
+  content: '';
+  @apply absolute top-4 -left-2 w-0 h-0;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  border-right: 10px solid white;
+}
+
+/* ================================
+   QUESTION CARD (EXAM)
+   ================================ */
+
+.question-card {
+  @apply bg-white rounded-duo-lg p-6 shadow-card border-2 border-swan;
+}
+
+.question-number {
+  @apply inline-flex items-center justify-center w-8 h-8 rounded-full
+         bg-duo-blue text-white font-bold text-sm;
+}
+
+.question-text {
+  @apply text-xl font-bold text-eel leading-relaxed;
+}
+
+/* ================================
+   LEADERBOARD
+   ================================ */
+
+.leaderboard-row {
+  @apply flex items-center gap-4 p-4 bg-white rounded-duo border-2 border-swan
+         transition-all duration-200;
+}
+
+.leaderboard-row:hover {
+  @apply border-duo-blue bg-duo-blue/5;
+}
+
+.leaderboard-rank {
+  @apply w-8 h-8 flex items-center justify-center rounded-full font-bold text-sm;
+}
+
+.leaderboard-rank-1 {
+  @apply bg-duo-yellow text-eel;
+}
+
+.leaderboard-rank-2 {
+  @apply bg-gray-300 text-eel;
+}
+
+.leaderboard-rank-3 {
+  @apply bg-orange-400 text-white;
+}
+
+/* ================================
+   ANIMATIONS
+   ================================ */
+
+.animate-correct {
+  animation: bounceIn 0.5s ease-out, pulseGreen 0.5s ease-out 0.5s;
+}
+
+.animate-incorrect {
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.3s ease-out forwards;
+}
+
+/* Staggered children animation */
+.stagger-children > * {
+  opacity: 0;
+  animation: fadeInUp 0.3s ease-out forwards;
+}
+
+.stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.1s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.2s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.3s; }
+.stagger-children > *:nth-child(7) { animation-delay: 0.35s; }
+.stagger-children > *:nth-child(8) { animation-delay: 0.4s; }
+.stagger-children > *:nth-child(9) { animation-delay: 0.45s; }
+.stagger-children > *:nth-child(10) { animation-delay: 0.5s; }
+
+/* ================================
+   UTILITY CLASSES
+   ================================ */
+
+.text-gradient {
+  @apply bg-gradient-to-r from-duo-green via-duo-blue to-duo-purple bg-clip-text text-transparent;
+}
+
+.divider {
+  @apply w-full h-px bg-swan my-6;
+}
+
+.icon-btn {
+  @apply p-2 rounded-full hover:bg-swan transition-colors duration-200 text-wolf hover:text-eel;
 }
