@@ -1,6 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServiceRole } from '@/lib/supabaseServer'
 
+type FermiQuestion = {
+  id: string
+  prompt: string
+  hint: string | null
+  difficulty: number
+  category: string
+}
+
+type ClassQuestion = {
+  id: string
+  order: number
+  fermi_questions: FermiQuestion | null
+}
+
 export async function GET(req: NextRequest) {
   const classId = req.nextUrl.searchParams.get('classId')
   if (!classId) return NextResponse.json({ error: 'classId required' }, { status: 400 })
@@ -55,10 +69,10 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: seededError.message }, { status: 400 })
     }
 
-    const questions = (seededQuestions || []).map(cq => ({
-      id: cq.id, // Use class_question id for answers
-      prompt: (cq.fermi_questions as { prompt: string })?.prompt || '',
-      hint: (cq.fermi_questions as { hint?: string })?.hint,
+    const questions = (seededQuestions as ClassQuestion[] || []).map(cq => ({
+      id: cq.id,
+      prompt: cq.fermi_questions?.prompt || '',
+      hint: cq.fermi_questions?.hint,
       order: cq.order
     }))
 
@@ -66,10 +80,10 @@ export async function GET(req: NextRequest) {
   }
 
   // Format the response
-  const questions = classQuestions.map(cq => ({
-    id: cq.id, // Use class_question id for answers
-    prompt: (cq.fermi_questions as { prompt: string })?.prompt || '',
-    hint: (cq.fermi_questions as { hint?: string })?.hint,
+  const questions = (classQuestions as ClassQuestion[]).map(cq => ({
+    id: cq.id,
+    prompt: cq.fermi_questions?.prompt || '',
+    hint: cq.fermi_questions?.hint,
     order: cq.order
   }))
 
