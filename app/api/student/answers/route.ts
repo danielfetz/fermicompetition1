@@ -16,19 +16,21 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
 
   const supa = createSupabaseServiceRole()
+  const competitionMode = payload.competitionMode || 'mock'
 
   // Map answers - now using class_question_id (the id passed from questions API)
   const rows = parsed.data.answers.map(a => ({
     student_id: payload.studentId,
     class_question_id: a.question_id, // This is actually the class_question ID
+    competition_mode: competitionMode,
     value: a.value,
     confidence_pct: a.confidence_pct
   }))
 
-  // Upsert answers
+  // Upsert answers (unique on student_id, class_question_id, competition_mode)
   const { error } = await supa
     .from('answers')
-    .upsert(rows, { onConflict: 'student_id,class_question_id' })
+    .upsert(rows, { onConflict: 'student_id,class_question_id,competition_mode' })
 
   if (error) {
     console.error('Error saving answers:', error)
@@ -42,11 +44,12 @@ export async function POST(req: NextRequest) {
       .update({ has_completed_exam: true })
       .eq('id', payload.studentId)
 
-    // Also mark the session as submitted
+    // Also mark the session as submitted for this mode
     await supa
       .from('student_exam_sessions')
       .update({ submitted_at: new Date().toISOString() })
       .eq('student_id', payload.studentId)
+      .eq('competition_mode', competitionMode)
   }
 
   return NextResponse.json({ ok: true })

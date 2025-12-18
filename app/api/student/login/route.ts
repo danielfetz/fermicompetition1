@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
   // Find student by username (case insensitive)
   const { data: student } = await supa
     .from('students')
-    .select('id, class_id, password_hash, full_name, first_login_at, has_completed_exam')
+    .select('id, class_id, password_hash, full_name, first_login_at, has_completed_exam, competition_mode')
     .ilike('username', username.toLowerCase().trim())
     .maybeSingle()
 
@@ -41,16 +41,19 @@ export async function POST(req: NextRequest) {
       .eq('id', student.id)
   }
 
-  // Sign JWT token
+  // Sign JWT token with competition mode
+  const competitionMode = (student.competition_mode || 'mock') as 'mock' | 'real'
   const token = signStudentToken({
     studentId: student.id,
     classId: student.class_id,
+    competitionMode,
     role: 'student'
   })
 
   return NextResponse.json({
     token,
     classId: student.class_id,
+    competitionMode,
     needsName: !student.full_name
   })
 }

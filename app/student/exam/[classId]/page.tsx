@@ -31,15 +31,16 @@ export default function StudentExam() {
 
     async function init() {
       const token = localStorage.getItem('studentToken')
+      const competitionMode = localStorage.getItem('competitionMode') || 'mock'
       if (!token) {
         router.push('/student/login')
         return
       }
 
       try {
-        // Fetch questions and session in parallel
+        // Fetch questions and session in parallel, passing competition mode
         const [questionsRes, sessionRes] = await Promise.all([
-          fetch(`/api/questions?classId=${classId}`),
+          fetch(`/api/questions?classId=${classId}&mode=${competitionMode}`),
           fetch('/api/student/session', {
             headers: { Authorization: `Bearer ${token}` }
           })

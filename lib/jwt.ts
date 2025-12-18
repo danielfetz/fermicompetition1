@@ -5,6 +5,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me'
 export type StudentTokenPayload = {
   studentId: string
   classId: string
+  competitionMode: 'mock' | 'real'
   role: 'student'
 }
 

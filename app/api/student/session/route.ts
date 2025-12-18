@@ -24,11 +24,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Exam already completed' }, { status: 400 })
   }
 
-  // Try to get existing session
+  const competitionMode = payload.competitionMode || 'mock'
+
+  // Try to get existing session for this mode
   let { data: session } = await supa
     .from('student_exam_sessions')
     .select('id, started_at, ends_at, submitted_at')
     .eq('student_id', payload.studentId)
+    .eq('competition_mode', competitionMode)
     .single()
 
   // If no session exists, create one
@@ -41,6 +44,7 @@ export async function GET(req: NextRequest) {
       .insert({
         student_id: payload.studentId,
         class_id: payload.classId,
+        competition_mode: competitionMode,
         started_at: now.toISOString(),
         ends_at: endsAt.toISOString()
       })
@@ -59,11 +63,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Exam already submitted' }, { status: 400 })
   }
 
-  // Get existing answers for this student
+  // Get existing answers for this student and mode
   const { data: answers } = await supa
     .from('answers')
     .select('class_question_id, value, confidence_pct')
     .eq('student_id', payload.studentId)
+    .eq('competition_mode', competitionMode)
 
   // Format answers as a map for easy lookup on client
   const answersMap: Record<string, { value: number; confidence_pct: number }> = {}

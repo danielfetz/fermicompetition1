@@ -24,11 +24,12 @@ function getFermiQuestion(fq: FermiQuestion | FermiQuestion[] | null): FermiQues
 
 export async function GET(req: NextRequest) {
   const classId = req.nextUrl.searchParams.get('classId')
+  const mode = req.nextUrl.searchParams.get('mode') || 'mock'
   if (!classId) return NextResponse.json({ error: 'classId required' }, { status: 400 })
 
   const supa = createSupabaseServiceRole()
 
-  // Get questions through class_questions join to fermi_questions
+  // Get questions through class_questions join to fermi_questions, filtered by mode
   const { data: classQuestions, error } = await supa
     .from('class_questions')
     .select(`
@@ -43,6 +44,7 @@ export async function GET(req: NextRequest) {
       )
     `)
     .eq('class_id', classId)
+    .eq('competition_mode', mode)
     .order('order', { ascending: true })
 
   if (error) {
@@ -50,10 +52,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 
-  // If no questions found for this class, try to seed them first
+  // If no questions found for this class and mode, try to seed them first
   if (!classQuestions || classQuestions.length === 0) {
-    // Seed default questions for this class
-    await supa.rpc('seed_class_questions', { p_class_id: classId })
+    // Seed questions for this class and mode
+    await supa.rpc('seed_class_questions', { p_class_id: classId, p_mode: mode })
 
     // Try fetching again
     const { data: seededQuestions, error: seededError } = await supa
@@ -70,6 +72,7 @@ export async function GET(req: NextRequest) {
         )
       `)
       .eq('class_id', classId)
+      .eq('competition_mode', mode)
       .order('order', { ascending: true })
 
     if (seededError) {

@@ -27,8 +27,9 @@ export default function StudentLogin() {
       setError(body.error || 'Login failed')
       return
     }
-    const { token, classId, needsName } = await res.json()
+    const { token, classId, competitionMode, needsName } = await res.json()
     localStorage.setItem('studentToken', token)
+    localStorage.setItem('competitionMode', competitionMode || 'mock')
     if (needsName) router.push(`/student/profile?classId=${classId}`)
     else router.push(`/student/exam/${classId}`)
   }

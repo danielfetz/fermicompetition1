@@ -42,7 +42,7 @@ export default function CompetitionModeToggle({
             : 'text-wolf hover:text-eel'
         }`}
       >
-        Real
+        Official
         {!realUnlocked && <span className="ml-1 text-xs opacity-75">🔒</span>}
       </button>
     </div>
