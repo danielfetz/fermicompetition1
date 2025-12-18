@@ -184,6 +184,7 @@ export default function StudentExam() {
     setError(null)
     const token = localStorage.getItem('studentToken')
     const payload = { answers: Object.values(answers), submit: true }
+    console.log('Submitting payload:', JSON.stringify(payload, null, 2))
     const res = await fetch('/api/student/answers', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -191,7 +192,9 @@ export default function StudentExam() {
     })
     setSubmitting(false)
     if (!res.ok) {
-      setError('Submit failed. Please try again.')
+      const errorData = await res.json().catch(() => ({}))
+      console.error('Submit error:', errorData)
+      setError(`Submit failed: ${errorData.error || 'Unknown error'}${errorData.details ? ' - ' + JSON.stringify(errorData.details) : ''}`)
       return
     }
     router.push('/student/done')
