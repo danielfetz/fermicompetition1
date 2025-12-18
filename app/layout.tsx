@@ -1,6 +1,7 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { createSupabaseServer } from '@/lib/supabaseServer'
 
 export const metadata: Metadata = {
   title: 'Fermi Challenge',
@@ -10,7 +11,11 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const supabase = createSupabaseServer()
+  const { data: { user } } = await supabase.auth.getUser()
+  const isTeacherLoggedIn = !!user
+
   return (
     <html lang="en">
       <head>
@@ -31,18 +36,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </span>
             </Link>
             <nav className="flex items-center gap-2">
-              <Link
-                href="/teacher"
-                className="btn btn-ghost btn-sm"
-              >
-                Teachers
-              </Link>
-              <Link
-                href="/student/login"
-                className="btn btn-primary btn-sm"
-              >
-                Student Login
-              </Link>
+              {isTeacherLoggedIn ? (
+                <Link
+                  href="/teacher/dashboard"
+                  className="btn btn-primary btn-sm"
+                >
+                  Dashboard
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href="/teacher"
+                    className="btn btn-ghost btn-sm"
+                  >
+                    Teachers
+                  </Link>
+                  <Link
+                    href="/student/login"
+                    className="btn btn-primary btn-sm"
+                  >
+                    Student Login
+                  </Link>
+                </>
+              )}
             </nav>
           </div>
         </header>
