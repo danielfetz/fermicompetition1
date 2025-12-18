@@ -28,7 +28,8 @@ export const upsertAnswerSchema = z.object({
 })
 
 export const upsertAnswersSchema = z.object({
-  answers: z.array(upsertAnswerSchema).min(1).max(10),
-  submit: z.boolean().optional() // Only mark exam as complete when true
+  answers: z.array(upsertAnswerSchema).min(1).max(20), // Support up to 20 questions (mock: 10, official: 15)
+  submit: z.boolean().optional(), // Only mark exam as complete when true
+  token: z.string().optional() // Token can be passed in body for sendBeacon
 })
 
