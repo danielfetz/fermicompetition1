@@ -253,7 +253,7 @@ export default function StudentExam() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            <span className="font-bold text-eel">Fermi Challenge</span>
+            <span className="font-bold text-eel">Fermi Competition</span>
           </div>
           <Timer deadline={deadline} onTimeUp={handleTimeUp} urgentThreshold={5} />
         </div>

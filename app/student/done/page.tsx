@@ -9,9 +9,9 @@ export default function Done() {
         <div className="flex justify-center">
           <FermiMascot mood="celebrating" size="lg" />
         </div>
-        <h1 className="text-3xl font-extrabold text-eel">Challenge Complete!</h1>
+        <h1 className="text-3xl font-extrabold text-eel">Competition Complete!</h1>
         <p className="text-lg text-wolf">
-          Great job! You&apos;ve finished the Fermi Challenge.
+          Great job! You&apos;ve finished the Fermi Competition.
         </p>
       </div>
 

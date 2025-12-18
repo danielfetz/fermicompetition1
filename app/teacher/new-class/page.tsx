@@ -54,7 +54,7 @@ export default function NewClass() {
         </div>
         <div>
           <h1 className="text-2xl font-extrabold text-eel">Create a New Class</h1>
-          <p className="text-wolf">Set up your class for the Fermi Challenge</p>
+          <p className="text-wolf">Set up your class for the Fermi Competition</p>
         </div>
       </div>
 

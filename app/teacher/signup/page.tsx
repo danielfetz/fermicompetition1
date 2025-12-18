@@ -93,7 +93,7 @@ export default function TeacherSignup() {
         </div>
         <div>
           <h1 className="text-2xl font-extrabold text-eel">Create Your Account</h1>
-          <p className="text-wolf">Join the Fermi Challenge as a teacher</p>
+          <p className="text-wolf">Join the Fermi Competition as a teacher</p>
         </div>
       </div>
 

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { createSupabaseServer } from '@/lib/supabaseServer'
 
 export const metadata: Metadata = {
-  title: 'Fermi Challenge',
+  title: 'Fermi Competition',
   description: 'A Duolingo-style app for Fermi estimation competitions',
   icons: {
     icon: '/favicon.ico',
@@ -28,11 +28,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <header className="bg-white border-b-2 border-swan sticky top-0 z-50">
           <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-10 h-10 bg-duo-green rounded-xl flex items-center justify-center shadow-duo-green group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 bg-duo-green rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform">
                 <span className="text-white font-extrabold text-lg">F</span>
               </div>
               <span className="text-xl font-extrabold text-eel hidden sm:block">
-                Fermi<span className="text-duo-green">Challenge</span>
+                Fermi <span className="text-duo-green">Competition</span>
               </span>
             </Link>
             <nav className="flex items-center gap-2">
@@ -71,7 +71,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {/* Footer */}
         <footer className="bg-white border-t-2 border-swan mt-auto">
           <div className="max-w-6xl mx-auto px-4 py-6 text-center text-wolf text-sm">
-            <p className="font-semibold">Fermi Challenge</p>
+            <p className="font-semibold">Fermi Competition</p>
             <p className="mt-1">Estimation skills for curious minds</p>
           </div>
         </footer>

@@ -11,7 +11,7 @@ export default function TeacherLanding() {
         </div>
         <h1 className="text-3xl font-extrabold text-eel">Teacher Portal</h1>
         <p className="text-wolf">
-          Create classes, generate student credentials, and track your students&apos; progress in the Fermi Challenge.
+          Create classes, generate student credentials, and track your students&apos; progress in the Fermi Competition.
         </p>
       </div>
 
@@ -26,7 +26,7 @@ export default function TeacherLanding() {
             </div>
             <div className="flex-1">
               <h2 className="text-xl font-bold text-eel">Create Account</h2>
-              <p className="text-sm text-wolf">New to Fermi Challenge? Sign up now!</p>
+              <p className="text-sm text-wolf">New to Fermi Competition? Sign up now!</p>
             </div>
             <svg className="w-5 h-5 text-wolf group-hover:text-duo-green transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

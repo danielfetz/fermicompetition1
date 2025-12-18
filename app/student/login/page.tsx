@@ -42,7 +42,7 @@ export default function StudentLogin() {
         </div>
         <div>
           <h1 className="text-2xl font-extrabold text-eel">Welcome, Scientist!</h1>
-          <p className="text-wolf">Enter your credentials to start the Fermi Challenge</p>
+          <p className="text-wolf">Enter your credentials to start the Fermi Competition</p>
         </div>
       </div>
 

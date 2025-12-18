@@ -19,7 +19,7 @@ export default async function Dashboard() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold text-eel">Your Classes</h1>
-          <p className="text-wolf">Manage your Fermi Challenge competitions</p>
+          <p className="text-wolf">Manage your Fermi competitions</p>
         </div>
         <Link href="/teacher/new-class" className="btn btn-primary">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -73,7 +73,7 @@ export default async function Dashboard() {
           </div>
           <h3 className="text-xl font-bold text-eel mb-2">No Classes Yet</h3>
           <p className="text-wolf mb-6">
-            Create your first class to start the Fermi Challenge with your students!
+            Create your first class to start the Fermi Competition with your students!
           </p>
           <Link href="/teacher/new-class" className="btn btn-primary">
             Create Your First Class

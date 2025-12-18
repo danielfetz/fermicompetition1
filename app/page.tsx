@@ -14,7 +14,7 @@ export default function Home() {
               <span className="text-gradient">Estimation</span>
             </h1>
             <p className="text-lg text-wolf">
-              Join the Fermi Challenge! Practice estimation skills, compete with classmates,
+              Join the Fermi Competition! Practice estimation skills, compete with classmates,
               and learn to think like a physicist.
             </p>
           </div>
@@ -179,7 +179,7 @@ export default function Home() {
         <div className="space-y-4">
           <h2 className="text-3xl font-extrabold">Ready to Start?</h2>
           <p className="text-wolf max-w-xl mx-auto">
-            Join schools around the world in the Fermi Challenge.
+            Join schools around the world in the Fermi Competition.
             It&apos;s free, fun, and educational!
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6">

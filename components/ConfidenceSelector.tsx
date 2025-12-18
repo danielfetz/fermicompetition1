@@ -9,11 +9,11 @@ interface ConfidenceSelectorProps {
 }
 
 const CONFIDENCE_LEVELS: { value: ConfidenceLevel; label: string; emoji: string }[] = [
-  { value: 10, label: '10%', emoji: '😰' },
-  { value: 30, label: '30%', emoji: '🤔' },
-  { value: 50, label: '50%', emoji: '😐' },
-  { value: 70, label: '70%', emoji: '😊' },
-  { value: 90, label: '90%', emoji: '😎' },
+  { value: 10, label: '0-20%', emoji: '😰' },
+  { value: 30, label: '20-40%', emoji: '🤔' },
+  { value: 50, label: '40-60%', emoji: '😐' },
+  { value: 70, label: '60-80%', emoji: '😊' },
+  { value: 90, label: '80-100%', emoji: '😎' },
 ]
 
 export default function ConfidenceSelector({
