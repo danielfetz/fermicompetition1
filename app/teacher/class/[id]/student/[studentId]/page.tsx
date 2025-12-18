@@ -2,7 +2,7 @@ import { createSupabaseServer } from '@/lib/supabaseServer'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 
-type Params = { params: { id: string, studentId: string } }
+type Params = { params: { id: string, studentId: string }; searchParams: { mode?: string } }
 
 type FermiQuestion = {
   id: string
@@ -35,7 +35,8 @@ function getPercentageDiff(answer: number | null | undefined, correct: number | 
   return { value: diff, label: diff <= 1 ? '<1%' : `${Math.round(diff)}%`, color }
 }
 
-export default async function EditStudent({ params }: Params) {
+export default async function EditStudent({ params, searchParams }: Params) {
+  const mode = searchParams.mode === 'real' ? 'real' : 'mock'
   const supabase = createSupabaseServer()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) notFound()
@@ -63,7 +64,7 @@ export default async function EditStudent({ params }: Params) {
   return (
     <div className="space-y-6">
       <div>
-        <Link href={`/teacher/class/${params.id}`} className="text-sm text-duo-blue hover:underline mb-2 inline-flex items-center gap-1">
+        <Link href={`/teacher/class/${params.id}?mode=${mode}`} className="text-sm font-semibold text-duo-blue hover:underline mb-2 inline-flex items-center gap-1">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>

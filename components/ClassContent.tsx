@@ -30,6 +30,7 @@ type Props = {
   students: Student[]
   scores: Score[]
   realUnlocked: boolean
+  initialMode?: 'mock' | 'real'
 }
 
 export default function ClassContent({
@@ -39,9 +40,10 @@ export default function ClassContent({
   numStudents,
   students,
   scores,
-  realUnlocked: initialRealUnlocked
+  realUnlocked: initialRealUnlocked,
+  initialMode = 'mock'
 }: Props) {
-  const [mode, setMode] = useState<'mock' | 'real'>('mock')
+  const [mode, setMode] = useState<'mock' | 'real'>(initialMode)
   const [realUnlocked, setRealUnlocked] = useState(initialRealUnlocked)
   const [checkingAccess, setCheckingAccess] = useState(false)
 
@@ -80,7 +82,7 @@ export default function ClassContent({
       {/* Header */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
         <div>
-          <Link href="/teacher/dashboard" className="text-sm text-duo-blue hover:underline mb-2 inline-flex items-center gap-1">
+          <Link href="/teacher/dashboard" className="text-sm font-semibold text-duo-blue hover:underline mb-2 inline-flex items-center gap-1">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
@@ -92,6 +94,7 @@ export default function ClassContent({
         <div className="flex flex-wrap items-center gap-3">
           <CompetitionModeToggle
             classId={classId}
+            defaultMode={initialMode}
             realUnlocked={realUnlocked}
             onModeChange={setMode}
           />
@@ -207,7 +210,7 @@ export default function ClassContent({
                           </td>
                           <td className="py-3 px-6">
                             <Link
-                              href={`/teacher/class/${classId}/student/${s.id}`}
+                              href={`/teacher/class/${classId}/student/${s.id}?mode=${mode}`}
                               className="text-duo-blue font-semibold hover:underline inline-flex items-center gap-1"
                             >
                               View/Edit

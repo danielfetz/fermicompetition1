@@ -173,7 +173,7 @@ export default function GenerateStudents() {
             Generate More
           </button>
           <button onClick={() => {
-            router.push(`/teacher/class/${params.id}`)
+            router.push(`/teacher/class/${params.id}?mode=${mode}`)
             router.refresh() // Force refetch of server component data
           }} className="btn btn-primary">
             View Class
@@ -326,9 +326,9 @@ export default function GenerateStudents() {
       {/* Back Link */}
       <div className="text-center">
         <button onClick={() => {
-          router.push(`/teacher/class/${params.id}`)
+          router.push(`/teacher/class/${params.id}?mode=${mode}`)
           router.refresh()
-        }} className="btn btn-ghost btn-sm">
+        }} className="btn btn-ghost btn-sm font-semibold text-duo-blue">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>

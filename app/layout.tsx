@@ -31,7 +31,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <div className="w-10 h-10 bg-duo-green rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform sm:hidden">
                 <span className="text-white font-extrabold text-lg">F</span>
               </div>
-              <span className="text-xl font-extrabold text-duo-green">
+              <span className="text-xl font-extrabold text-duo-green hidden sm:block">
                 Fermi Competition
               </span>
             </Link>
