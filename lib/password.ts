@@ -105,22 +105,34 @@ export function generateUsername(prefix: string, index: number) {
   return `${prefix}${number}`.toLowerCase()
 }
 
-// Generate batch of fun credentials for students
-export async function generateStudentCredentials(count: number): Promise<{
+// Generate batch of fun credentials for students with globally unique usernames
+export async function generateStudentCredentials(
+  count: number,
+  existingUsernames: Set<string>
+): Promise<{
   username: string
   plainPassword: string
   passwordHash: string
 }[]> {
   const credentials = []
-
-  // Shuffle scientists for more variety
-  const shuffledScientists = [...SCIENTISTS].sort(() => Math.random() - 0.5)
+  const usedUsernames = new Set(existingUsernames)
 
   for (let i = 0; i < count; i++) {
-    const scientist = shuffledScientists[i % shuffledScientists.length]
+    // Pick random adjective and scientist
     const adjective = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)]
-    const number = (i + 1).toString().padStart(2, '0')
-    const username = `${adjective}${scientist}${number}`.toLowerCase()
+    const scientist = SCIENTISTS[Math.floor(Math.random() * SCIENTISTS.length)]
+    const baseUsername = `${adjective}${scientist}`.toLowerCase()
+
+    // Find the next available number for this base username
+    let number = 1
+    let username = `${baseUsername}${number.toString().padStart(2, '0')}`
+
+    while (usedUsernames.has(username)) {
+      number++
+      username = `${baseUsername}${number.toString().padStart(2, '0')}`
+    }
+
+    usedUsernames.add(username)
 
     const plainPassword = generateReadablePassword(8)
     const passwordHash = await hashPassword(plainPassword)

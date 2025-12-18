@@ -46,8 +46,15 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   if (cErr || !cls) return NextResponse.json({ error: 'Class not found' }, { status: 404 })
   if (cls.teacher_id !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  // Generate fun scientist-themed credentials
-  const generatedCredentials = await generateStudentCredentials(count)
+  // Fetch ALL existing usernames to ensure global uniqueness
+  const { data: existingStudents } = await service
+    .from('students')
+    .select('username')
+
+  const existingUsernames = new Set(existingStudents?.map(s => s.username) || [])
+
+  // Generate fun scientist-themed credentials with globally unique usernames
+  const generatedCredentials = await generateStudentCredentials(count, existingUsernames)
 
   const credentials: { username: string; password: string }[] = []
   const rows: {
