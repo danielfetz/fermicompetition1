@@ -65,6 +65,7 @@ ALTER TABLE public.teacher_profiles ENABLE ROW LEVEL SECURITY;
 -- STEP 5: RLS Policies for master_codes
 -- =====================================================
 -- Coordinators can view their own master code
+-- Note: claim_code functions use SECURITY DEFINER to bypass RLS for code validation
 CREATE POLICY "coordinator_select_own_master_code" ON public.master_codes
   FOR SELECT USING (
     EXISTS (
@@ -72,10 +73,6 @@ CREATE POLICY "coordinator_select_own_master_code" ON public.master_codes
       WHERE tp.user_id = auth.uid() AND tp.master_code_id = id
     )
   );
-
--- Anyone can check if a code exists (for claiming)
-CREATE POLICY "anyone_can_check_master_code" ON public.master_codes
-  FOR SELECT USING (true);
 
 -- =====================================================
 -- STEP 6: RLS Policies for teacher_codes
@@ -109,9 +106,7 @@ CREATE POLICY "coordinator_update_codes" ON public.teacher_codes
     )
   );
 
--- Anyone can check if a code exists (for claiming)
-CREATE POLICY "anyone_can_check_teacher_code" ON public.teacher_codes
-  FOR SELECT USING (true);
+-- Note: No public SELECT policy - claim_code uses SECURITY DEFINER to bypass RLS
 
 -- =====================================================
 -- STEP 7: RLS Policies for teacher_profiles
