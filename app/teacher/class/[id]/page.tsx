@@ -1,6 +1,6 @@
-import { createSupabaseServer } from '@/lib/supabaseServer'
+import { createSupabaseServer, createSupabaseServiceRole } from '@/lib/supabaseServer'
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
+import ClassContent from '@/components/ClassContent'
 
 type Params = { params: { id: string } }
 
@@ -9,62 +9,51 @@ export default async function ClassDetail({ params }: Params) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) notFound()
 
-  const { data: cls } = await supabase
+  // Use service role to bypass RLS - we've already verified the user above
+  const service = createSupabaseServiceRole()
+
+  // Fetch teacher profile to check if real competition is unlocked
+  // Master code holders (coordinators) and teacher code holders have access
+  const { data: profile } = await service
+    .from('teacher_profiles')
+    .select('real_competition_unlocked, master_code_id, teacher_code_id')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  // Real is unlocked if they have real_competition_unlocked OR master_code_id OR teacher_code_id
+  const realUnlocked = !!(profile?.real_competition_unlocked || profile?.master_code_id || profile?.teacher_code_id)
+
+  const { data: cls } = await service
     .from('classes')
-    .select('id, name, num_students')
+    .select('id, name, num_students, school_name, teacher_id')
     .eq('id', params.id)
     .maybeSingle()
 
-  if (!cls) return notFound()
+  // Check class exists and belongs to current user
+  if (!cls || cls.teacher_id !== user.id) return notFound()
 
-  const { data: students } = await supabase
+  // Fetch all students (both mock and real) - filtering happens client-side
+  const { data: students } = await service
     .from('students')
-    .select('id, username, full_name')
+    .select('id, username, full_name, has_completed_exam, plain_password, competition_mode')
     .eq('class_id', cls.id)
     .order('username')
 
-  const { data: scores } = await supabase
+  // Fetch all scores - filtering happens client-side
+  const { data: scores } = await service
     .from('student_scores')
-    .select('student_id, correct_count')
+    .select('student_id, correct_count, total_answered, score_percentage, competition_mode')
     .eq('class_id', cls.id)
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-extrabold">{cls.name}</h1>
-          <p className="text-gray-600">{students?.length || 0} / {cls.num_students} students</p>
-        </div>
-        <div className="flex gap-2">
-          <Link className="btn btn-secondary" href={`/teacher/class/${cls.id}/questions`}>Edit questions</Link>
-          <Link className="btn btn-primary" href={`/teacher/class/${cls.id}/generate`}>Generate credentials</Link>
-        </div>
-      </div>
-      <div className="card overflow-x-auto">
-        <table className="min-w-full text-sm">
-          <thead>
-            <tr className="text-left text-gray-600">
-              <th className="py-2 pr-4">Username</th>
-              <th className="py-2 pr-4">Full name</th>
-              <th className="py-2 pr-4">Correct</th>
-              <th className="py-2">Edit answers</th>
-            </tr>
-          </thead>
-          <tbody>
-            {students?.map(s => {
-              const sc = scores?.find(x => x.student_id === s.id)?.correct_count ?? 0
-              return (
-              <tr key={s.id} className="border-t">
-                <td className="py-2 pr-4 font-mono">{s.username}</td>
-                <td className="py-2 pr-4">{s.full_name ?? '—'}</td>
-                <td className="py-2 pr-4">{sc}</td>
-                <td className="py-2"><Link className="text-duolingo-blue" href={`/teacher/class/${cls.id}/student/${s.id}`}>Open</Link></td>
-              </tr>
-            )})}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <ClassContent
+      classId={cls.id}
+      className={cls.name}
+      schoolName={cls.school_name}
+      numStudents={cls.num_students}
+      students={students || []}
+      scores={scores || []}
+      realUnlocked={realUnlocked}
+    />
   )
 }
-
