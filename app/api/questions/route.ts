@@ -9,10 +9,17 @@ type FermiQuestion = {
   category: string
 }
 
-type ClassQuestion = {
+type ClassQuestionRaw = {
   id: string
   order: number
-  fermi_questions: FermiQuestion | null
+  fermi_questions: FermiQuestion | FermiQuestion[] | null
+}
+
+// Helper to extract fermi question from either single object or array
+function getFermiQuestion(fq: FermiQuestion | FermiQuestion[] | null): FermiQuestion | null {
+  if (!fq) return null
+  if (Array.isArray(fq)) return fq[0] || null
+  return fq
 }
 
 export async function GET(req: NextRequest) {
@@ -69,23 +76,29 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: seededError.message }, { status: 400 })
     }
 
-    const questions = (seededQuestions as ClassQuestion[] || []).map(cq => ({
-      id: cq.id,
-      prompt: cq.fermi_questions?.prompt || '',
-      hint: cq.fermi_questions?.hint,
-      order: cq.order
-    }))
+    const questions = ((seededQuestions || []) as ClassQuestionRaw[]).map(cq => {
+      const fq = getFermiQuestion(cq.fermi_questions)
+      return {
+        id: cq.id,
+        prompt: fq?.prompt || '',
+        hint: fq?.hint,
+        order: cq.order
+      }
+    })
 
     return NextResponse.json({ questions })
   }
 
   // Format the response
-  const questions = (classQuestions as ClassQuestion[]).map(cq => ({
-    id: cq.id,
-    prompt: cq.fermi_questions?.prompt || '',
-    hint: cq.fermi_questions?.hint,
-    order: cq.order
-  }))
+  const questions = ((classQuestions || []) as ClassQuestionRaw[]).map(cq => {
+    const fq = getFermiQuestion(cq.fermi_questions)
+    return {
+      id: cq.id,
+      prompt: fq?.prompt || '',
+      hint: fq?.hint,
+      order: cq.order
+    }
+  })
 
   return NextResponse.json({ questions })
 }

@@ -1,9 +1,6 @@
 import './globals.css'
-import { Nunito } from 'next/font/google'
 import type { Metadata } from 'next'
 import Link from 'next/link'
-
-const nunito = Nunito({ subsets: ['latin'], variable: '--font-nunito', weight: ['400', '600', '700', '800', '900'] })
 
 export const metadata: Metadata = {
   title: 'Fermi Challenge',
@@ -15,7 +12,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={nunito.variable}>
+    <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+      </head>
       <body className="font-nunito bg-snow text-eel min-h-screen">
         {/* Header */}
         <header className="bg-white border-b-2 border-swan sticky top-0 z-50">

@@ -9,7 +9,7 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        nunito: ['var(--font-nunito)', 'system-ui', 'sans-serif']
+        nunito: ['Nunito', 'system-ui', 'sans-serif']
       },
       colors: {
         // Duolingo primary palette
