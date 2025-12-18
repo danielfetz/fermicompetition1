@@ -127,6 +127,7 @@ export default async function EditStudent({ params, searchParams }: Params) {
             </tbody>
           </table>
           <input type="hidden" name="class_id" value={params.id} />
+          <input type="hidden" name="mode" value={mode} />
           <div className="flex items-center gap-4">
             <button className="btn btn-primary">Save Changes</button>
             <span className="text-sm text-wolf">Remember to save before leaving</span>

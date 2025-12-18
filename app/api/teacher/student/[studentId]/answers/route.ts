@@ -8,6 +8,7 @@ export async function POST(req: NextRequest, { params }: { params: { studentId: 
 
   const form = await req.formData()
   const class_id = String(form.get('class_id'))
+  const mode = String(form.get('mode') || 'mock')
 
   const service = createSupabaseServiceRole()
   const { data: cls } = await service.from('classes').select('id, teacher_id').eq('id', class_id).single()
@@ -46,5 +47,5 @@ export async function POST(req: NextRequest, { params }: { params: { studentId: 
     if (error) return NextResponse.json({ error: error.message }, { status: 400 })
   }
 
-  return NextResponse.redirect(new URL(`/teacher/class/${class_id}`, req.url))
+  return NextResponse.redirect(new URL(`/teacher/class/${class_id}?mode=${mode}`, req.url))
 }

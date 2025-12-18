@@ -99,9 +99,8 @@ html, body {
 
 /* Ghost Button (minimal) */
 .btn-ghost {
-  @apply bg-transparent shadow-none px-4 py-2;
+  @apply bg-transparent shadow-none px-4 py-2 text-duo-blue;
   text-transform: none;
-  color: inherit;
 }
 .btn-ghost:hover:not(:disabled) {
   @apply bg-gray-100;

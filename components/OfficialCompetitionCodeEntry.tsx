@@ -127,6 +127,10 @@ export default function OfficialCompetitionCodeEntry({ onSuccess }: Props) {
               </div>
             </div>
           </div>
+          <p className="text-wolf text-xs mt-4">
+            Interested in participating with your class in the official competition (expected spring 2026)?{' '}
+            Contact <a href="mailto:daniel@fermi.org" className="text-duo-blue hover:underline font-semibold">daniel@fermi.org</a> for an access code.
+          </p>
         </div>
       </div>
     </div>

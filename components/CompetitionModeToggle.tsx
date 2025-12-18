@@ -43,7 +43,6 @@ export default function CompetitionModeToggle({
         }`}
       >
         Official (soon)
-        {!realUnlocked && <span className="ml-1 text-xs opacity-75">🔒</span>}
       </button>
     </div>
   )
