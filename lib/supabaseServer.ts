@@ -13,8 +13,18 @@ export function createSupabaseServer() {
     supabaseAnonKey,
     {
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options as any)
+            )
+          } catch {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing user sessions.
+          }
         },
       }
     }
@@ -25,7 +35,12 @@ export function createSupabaseServiceRole() {
   return createServerClient(
     supabaseUrl,
     supabaseServiceKey,
-    { cookies: { get() { return undefined } } }
+    {
+      cookies: {
+        getAll() { return [] },
+        setAll() {}
+      }
+    }
   )
 }
 
