@@ -42,7 +42,10 @@ export default function NewClass() {
       .single()
     setLoading(false)
     if (error) setError(error.message)
-    else router.push(`/teacher/class/${data!.id}`)
+    else {
+      router.push(`/teacher/class/${data!.id}`)
+      router.refresh()
+    }
   }
 
   return (

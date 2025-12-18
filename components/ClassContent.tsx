@@ -46,6 +46,7 @@ export default function ClassContent({
   const [mode, setMode] = useState<'mock' | 'real'>(initialMode)
   const [realUnlocked, setRealUnlocked] = useState(initialRealUnlocked)
   const [checkingAccess, setCheckingAccess] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   // Check access client-side on mount using API endpoint for reliability
   useEffect(() => {
@@ -142,11 +143,52 @@ export default function ClassContent({
           {/* Students Table */}
           <div className="card">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-eel">
-                Students
-                {mode === 'real' && <span className="ml-2 badge badge-blue">Official Competition</span>}
-              </h2>
-              <span className="badge badge-blue">{studentsGenerated} generated</span>
+              <h2 className="text-xl font-bold text-eel">Students</h2>
+              <div className="flex items-center gap-2">
+                {filteredStudents.length > 0 && (
+                  <>
+                    <button
+                      onClick={() => {
+                        const text = filteredStudents.map(s => `${s.username}\t${s.plain_password || ''}`).join('\n')
+                        navigator.clipboard.writeText(text)
+                        setCopied(true)
+                        setTimeout(() => setCopied(false), 2000)
+                      }}
+                      className="icon-btn"
+                      title="Copy credentials"
+                    >
+                      {copied ? (
+                        <svg className="w-5 h-5 text-duo-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => {
+                        const csv = 'Username,Password\n' + filteredStudents.map(s => `${s.username},${s.plain_password || ''}`).join('\n')
+                        const blob = new Blob([csv], { type: 'text/csv' })
+                        const url = URL.createObjectURL(blob)
+                        const a = document.createElement('a')
+                        a.href = url
+                        a.download = `student-credentials-${mode}.csv`
+                        a.click()
+                        URL.revokeObjectURL(url)
+                      }}
+                      className="icon-btn"
+                      title="Download CSV"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                    </button>
+                  </>
+                )}
+                <span className="badge badge-blue">{studentsGenerated} generated</span>
+              </div>
             </div>
 
             {filteredStudents.length > 0 ? (
