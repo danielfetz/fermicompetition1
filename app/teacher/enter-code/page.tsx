@@ -73,7 +73,7 @@ export default function EnterCodePage() {
           </div>
           <h1 className="text-2xl font-extrabold text-eel mb-2">Enter Competition Code</h1>
           <p className="text-wolf">
-            Enter your code to unlock the real competition and additional features.
+            Enter your code to unlock the official competition and additional features.
           </p>
         </div>
 
@@ -88,7 +88,7 @@ export default function EnterCodePage() {
             <p className="text-wolf text-sm">
               {success.isCoordinator
                 ? 'You now have coordinator privileges. Redirecting...'
-                : 'Real competition is now unlocked. Redirecting...'}
+                : 'Official competition is now unlocked. Redirecting...'}
             </p>
           </div>
         ) : (
@@ -145,7 +145,7 @@ export default function EnterCodePage() {
               <svg className="w-4 h-4 text-duo-green flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-              <span><strong className="text-eel">Teacher Code:</strong> Unlocks real competition mode</span>
+              <span><strong className="text-eel">Teacher Code:</strong> Unlocks official competition mode</span>
             </li>
             <li className="flex items-start gap-2">
               <svg className="w-4 h-4 text-duo-purple flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

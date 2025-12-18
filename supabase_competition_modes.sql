@@ -96,6 +96,7 @@ BEGIN
   INSERT INTO public.class_questions (class_id, fermi_question_id, "order", competition_mode)
   SELECT p_class_id, fq.id, fq."order", p_mode
   FROM public.fermi_questions fq
+  WHERE fq.competition_mode = p_mode
   ORDER BY fq."order"
   ON CONFLICT DO NOTHING;
 END$$;

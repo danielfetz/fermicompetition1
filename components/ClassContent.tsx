@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import CompetitionModeToggle from './CompetitionModeToggle'
-import RealCompetitionCodeEntry from './RealCompetitionCodeEntry'
+import OfficialCompetitionCodeEntry from './OfficialCompetitionCodeEntry'
 
 type Student = {
   id: string
@@ -113,7 +113,7 @@ export default function ClassContent({
           <p className="text-wolf">Checking access...</p>
         </div>
       ) : mode === 'real' && !realUnlocked ? (
-        <RealCompetitionCodeEntry onSuccess={() => setRealUnlocked(true)} />
+        <OfficialCompetitionCodeEntry onSuccess={() => setRealUnlocked(true)} />
       ) : (
         <>
           {/* Stats */}
@@ -141,7 +141,7 @@ export default function ClassContent({
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-eel">
                 Students
-                {mode === 'real' && <span className="ml-2 badge badge-blue">Real Competition</span>}
+                {mode === 'real' && <span className="ml-2 badge badge-blue">Official Competition</span>}
               </h2>
               <span className="badge badge-blue">{studentsGenerated} generated</span>
             </div>
@@ -230,15 +230,15 @@ export default function ClassContent({
                   </svg>
                 </div>
                 <h3 className="text-lg font-bold text-eel mb-2">
-                  No {mode === 'real' ? 'Real Competition ' : ''}Students Yet
+                  No {mode === 'real' ? 'Official Competition ' : ''}Students Yet
                 </h3>
                 <p className="text-wolf mb-4">
                   {mode === 'real'
-                    ? 'Generate new credentials for the real competition. These are separate from mock credentials.'
+                    ? 'Generate new credentials for the official competition. These are separate from mock credentials.'
                     : 'Generate credentials for your students to get started.'}
                 </p>
                 <Link href={`/teacher/class/${classId}/generate?mode=${mode}`} className="btn btn-primary">
-                  Generate {mode === 'real' ? 'Real ' : ''}Credentials
+                  Generate {mode === 'real' ? 'Official ' : ''}Credentials
                 </Link>
               </div>
             )}

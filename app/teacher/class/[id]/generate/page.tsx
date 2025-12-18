@@ -75,15 +75,15 @@ export default function GenerateStudents() {
           </div>
           <div>
             <h1 className="text-2xl font-extrabold text-eel">
-              {isReal ? 'Real Competition ' : ''}Credentials Generated!
+              {isReal ? 'Official Competition ' : ''}Credentials Generated!
             </h1>
             <p className="text-wolf">
-              {result.length} student accounts are ready for the {isReal ? 'real' : 'mock'} competition.
+              {result.length} student accounts are ready for the {isReal ? 'official' : 'mock'} competition.
             </p>
           </div>
           {isReal && (
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-duo-blue/10 rounded-full">
-              <span className="badge badge-blue">Real Competition</span>
+              <span className="badge badge-blue">Official Competition</span>
               <span className="text-sm text-duo-blue font-semibold">15 official questions</span>
             </div>
           )}
@@ -156,11 +156,11 @@ export default function GenerateStudents() {
             </div>
             <div>
               <h3 className={`font-bold ${isReal ? 'text-duo-blue' : 'text-duo-yellow-dark'}`}>
-                {isReal ? 'Real Competition Mode' : 'Pro Tip'}
+                {isReal ? 'Official Competition Mode' : 'Pro Tip'}
               </h3>
               <p className="text-sm text-eel mt-1">
                 {isReal
-                  ? 'These credentials are for the official competition with 15 real questions. Students cannot use mock credentials for the real competition.'
+                  ? 'These credentials are for the official competition with 15 official questions. Students cannot use mock credentials for the official competition.'
                   : 'Students will enter their full name when they first log in. The fun scientist-themed usernames make credentials easy to distribute!'}
               </p>
             </div>
@@ -192,17 +192,17 @@ export default function GenerateStudents() {
         </div>
         <div>
           <h1 className="text-2xl font-extrabold text-eel">
-            Generate {isReal ? 'Real Competition ' : ''}Credentials
+            Generate {isReal ? 'Official Competition ' : ''}Credentials
           </h1>
           <p className="text-wolf">
             {isReal
-              ? 'Create credentials for the official Fermi Competition with 15 real questions.'
+              ? 'Create credentials for the official Fermi Competition with 15 official questions.'
               : 'Create unique login credentials for your students with fun scientist-themed usernames!'}
           </p>
         </div>
         {isReal && (
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-duo-blue/10 rounded-full">
-            <span className="badge badge-blue">Real Competition</span>
+            <span className="badge badge-blue">Official Competition</span>
           </div>
         )}
       </div>
@@ -252,7 +252,7 @@ export default function GenerateStudents() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                Generate {count} {isReal ? 'Real ' : ''}Credentials
+                Generate {count} {isReal ? 'Official ' : ''}Credentials
               </>
             )}
           </button>
@@ -262,7 +262,7 @@ export default function GenerateStudents() {
       {/* Info Card */}
       <div className={`card ${isReal ? 'bg-duo-blue/5 border-duo-blue/20' : 'bg-duo-green/5 border-duo-green/20'}`}>
         <h3 className="font-bold text-eel mb-3">
-          {isReal ? 'Real Competition Info:' : 'What you\'ll get:'}
+          {isReal ? 'Official Competition Info:' : 'What you\'ll get:'}
         </h3>
         <ul className="space-y-2">
           {isReal ? (

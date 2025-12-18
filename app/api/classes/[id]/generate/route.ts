@@ -21,7 +21,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   const service = createSupabaseServiceRole()
 
-  // For real competition mode, check if teacher has it unlocked
+  // For official competition mode, check if teacher has it unlocked
   // Use service role to bypass RLS - we've already verified the user above
   if (competition_mode === 'real') {
     const { data: profile } = await service
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     // User has access if they have real_competition_unlocked OR master_code_id OR teacher_code_id
     const hasAccess = !!(profile?.real_competition_unlocked || profile?.master_code_id || profile?.teacher_code_id)
     if (!hasAccess) {
-      return NextResponse.json({ error: 'Real competition not unlocked' }, { status: 403 })
+      return NextResponse.json({ error: 'Official competition not unlocked' }, { status: 403 })
     }
   }
 

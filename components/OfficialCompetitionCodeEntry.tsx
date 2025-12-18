@@ -7,7 +7,7 @@ type Props = {
   onSuccess?: () => void
 }
 
-export default function RealCompetitionCodeEntry({ onSuccess }: Props) {
+export default function OfficialCompetitionCodeEntry({ onSuccess }: Props) {
   const [code, setCode] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -57,9 +57,9 @@ export default function RealCompetitionCodeEntry({ onSuccess }: Props) {
           </svg>
         </div>
 
-        <h3 className="text-2xl font-extrabold text-eel mb-2">Real Competition Locked</h3>
+        <h3 className="text-2xl font-extrabold text-eel mb-2">Official Competition Locked</h3>
         <p className="text-wolf mb-6">
-          Enter your competition code to unlock the real Fermi Competition and access official questions.
+          Enter your competition code to unlock the official Fermi Competition and access official questions.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -99,7 +99,7 @@ export default function RealCompetitionCodeEntry({ onSuccess }: Props) {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
                 </svg>
-                Unlock Real Competition
+                Unlock Official Competition
               </>
             )}
           </button>
