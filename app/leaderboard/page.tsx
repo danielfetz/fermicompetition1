@@ -30,7 +30,7 @@ export default async function LeaderboardPage() {
   const realLeaderboard = leaderboard.filter(e => e.competition_mode === 'real')
 
   return (
-    <div className="min-h-screen bg-snow">
+    <div className="min-h-screen">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-8">
           <Link href="/" className="text-sm font-semibold text-duo-blue hover:underline mb-2 inline-flex items-center gap-1">

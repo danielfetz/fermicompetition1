@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
   // If no session exists, create one
   if (!session) {
     const now = new Date()
-    const endsAt = new Date(now.getTime() + 40 * 60 * 1000) // 40 minutes from now
+    const endsAt = new Date(now.getTime() + 70 * 60 * 1000) // 70 minutes from now
 
     const { data: newSession, error } = await supa
       .from('student_exam_sessions')

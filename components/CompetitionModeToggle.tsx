@@ -32,7 +32,7 @@ export default function CompetitionModeToggle({
             : 'text-wolf hover:text-eel'
         }`}
       >
-        Mock
+        Practice
       </button>
       <button
         onClick={() => handleModeChange('real')}

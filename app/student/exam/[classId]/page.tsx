@@ -20,6 +20,7 @@ export default function StudentExam() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [hintsUnlocked, setHintsUnlocked] = useState(false)
+  const [seenHints, setSeenHints] = useState<Set<string>>(new Set())
   const [inputValue, setInputValue] = useState('')
   const [loading, setLoading] = useState(true)
   const initialized = useRef(false)
@@ -88,8 +89,8 @@ export default function StudentExam() {
             router.push('/student/done')
             return
           }
-          // If session creation failed for another reason, set a fallback deadline
-          setDeadline(Date.now() + 40 * 60 * 1000)
+          // If session creation failed for another reason, set a fallback deadline (70 minutes)
+          setDeadline(Date.now() + 70 * 60 * 1000)
         }
       } catch (err) {
         console.error('Error initializing exam:', err)
@@ -130,13 +131,13 @@ export default function StudentExam() {
     return () => clearInterval(interval)
   }, [answers, saveAnswers])
 
-  // Check for halftime to unlock hints (20 minutes into a 40-minute exam)
+  // Check for halftime to unlock hints (35 minutes into a 70-minute exam)
   useEffect(() => {
     if (!deadline || hintsUnlocked) return
 
     const checkHalftime = () => {
       const now = Date.now()
-      const halfwayPoint = deadline - 20 * 60 * 1000 // 20 minutes before deadline
+      const halfwayPoint = deadline - 35 * 60 * 1000 // 35 minutes before deadline (halftime)
       if (now >= halfwayPoint) {
         setHintsUnlocked(true)
       }
@@ -149,6 +150,13 @@ export default function StudentExam() {
     const interval = setInterval(checkHalftime, 1000)
     return () => clearInterval(interval)
   }, [deadline, hintsUnlocked])
+
+  // Mark current question's hint as seen when viewing it after hints unlock
+  useEffect(() => {
+    if (hintsUnlocked && currentQuestion?.hint) {
+      setSeenHints(prev => new Set([...prev, currentQuestion.id]))
+    }
+  }, [hintsUnlocked, currentQuestion])
 
   // Save on page unload
   useEffect(() => {
@@ -242,6 +250,11 @@ export default function StudentExam() {
     } else {
       setInputValue('')
     }
+
+    // Mark hint as seen if hints are unlocked and question has a hint
+    if (hintsUnlocked && q?.hint) {
+      setSeenHints(prev => new Set([...prev, q.id]))
+    }
   }
 
   function nextQuestion() {
@@ -302,21 +315,27 @@ export default function StudentExam() {
 
       {/* Question Navigation Dots */}
       <div className="flex flex-wrap justify-center gap-2">
-        {questions.map((q, idx) => (
-          <button
-            key={q.id}
-            onClick={() => goToQuestion(idx)}
-            className={`w-8 h-8 rounded-full font-bold text-sm transition-all ${
-              idx === currentIndex
-                ? 'bg-duo-blue text-white scale-110'
-                : answers[q.id]?.value
-                  ? 'bg-duo-green text-white'
-                  : 'bg-swan text-wolf hover:bg-hare'
-            }`}
-          >
-            {idx + 1}
-          </button>
-        ))}
+        {questions.map((q, idx) => {
+          const hasUnseenHint = hintsUnlocked && q.hint && !seenHints.has(q.id)
+          return (
+            <button
+              key={q.id}
+              onClick={() => goToQuestion(idx)}
+              className={`relative w-8 h-8 rounded-full font-bold text-sm transition-all ${
+                idx === currentIndex
+                  ? 'bg-duo-blue text-white scale-110'
+                  : answers[q.id]?.value
+                    ? 'bg-duo-green text-white'
+                    : 'bg-swan text-wolf hover:bg-hare'
+              }`}
+            >
+              {idx + 1}
+              {hasUnseenHint && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-duo-red rounded-full animate-pulse" />
+              )}
+            </button>
+          )
+        })}
       </div>
 
       {/* Current Question Card */}
