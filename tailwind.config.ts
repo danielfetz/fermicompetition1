@@ -57,6 +57,7 @@ const config: Config = {
         'duo-yellow': '0 4px 0 0 #CE9E00',
         'duo-red': '0 4px 0 0 #EA2B2B',
         'duo-purple': '0 4px 0 0 #A560E8',
+        'duo-swan': '0 4px 0 0 #CCCCCC',
         'duo-inset': 'inset 0 2px 0 0 rgba(255, 255, 255, 0.2)',
         'card': '0 2px 4px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1)',
         'card-hover': '0 4px 8px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.05)',
