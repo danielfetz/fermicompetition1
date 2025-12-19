@@ -10,6 +10,36 @@ type Question = { id: string; prompt: string; hint?: string }
 type ConfidenceLevel = 10 | 30 | 50 | 70 | 90
 type Answer = { question_id: string; value: number; confidence_pct: ConfidenceLevel }
 
+// Format large numbers into human-readable strings
+function formatNumberReadable(num: number): string {
+  if (num === 0) return '0'
+  if (isNaN(num)) return ''
+
+  const absNum = Math.abs(num)
+  const sign = num < 0 ? '-' : ''
+
+  const units = [
+    { value: 1e18, name: 'quintillion' },
+    { value: 1e15, name: 'quadrillion' },
+    { value: 1e12, name: 'trillion' },
+    { value: 1e9, name: 'billion' },
+    { value: 1e6, name: 'million' },
+    { value: 1e3, name: 'thousand' },
+  ]
+
+  for (const unit of units) {
+    if (absNum >= unit.value) {
+      const value = absNum / unit.value
+      // Format with up to 2 decimal places, removing trailing zeros
+      const formatted = value.toFixed(2).replace(/\.?0+$/, '')
+      return `${sign}${formatted} ${unit.name}`
+    }
+  }
+
+  // For numbers less than 1000, just return the number
+  return num.toString()
+}
+
 export default function StudentExam() {
   const { classId } = useParams<{ classId: string }>()
   const router = useRouter()
@@ -370,7 +400,11 @@ export default function StudentExam() {
                 autoFocus
               />
               <p className="text-sm text-wolf text-center mt-2">
-                Enter your best estimate as a number
+                {inputValue && parseFloat(inputValue) ? (
+                  <span className="text-duo-blue font-semibold">{formatNumberReadable(parseFloat(inputValue))}</span>
+                ) : (
+                  'Enter your best estimate as a number'
+                )}
               </p>
             </div>
 
