@@ -1,14 +1,12 @@
 import Link from 'next/link'
-import FermiMascot from '@/components/FermiMascot'
 
 export default function Home() {
   return (
-    <div className="space-y-12">
+    <div className="space-y-12 max-w-2xl mx-auto">
       {/* Hero Section */}
       <section className="text-center py-8">
         <div className="flex flex-col items-center gap-6">
-          <FermiMascot mood="happy" size="lg" animate />
-          <div className="space-y-4 max-w-2xl">
+          <div className="space-y-4">
             <h1 className="text-4xl sm:text-5xl font-extrabold text-eel">
               Master the Art of{' '}
               <span className="text-gradient">Estimation</span>
@@ -36,7 +34,7 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="card text-center">
           <div className="w-16 h-16 mx-auto mb-4 bg-duo-green/10 rounded-full flex items-center justify-center">
             <svg className="w-8 h-8 text-duo-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -159,23 +157,18 @@ export default function Home() {
 
       {/* What is Fermi Section */}
       <section className="card bg-gradient-to-br from-duo-green/5 to-duo-blue/5">
-        <div className="flex flex-col md:flex-row items-center gap-8">
-          <div className="md:w-1/3 flex justify-center">
-            <FermiMascot mood="thinking" size="lg" />
-          </div>
-          <div className="md:w-2/3 space-y-4">
-            <h2 className="text-2xl font-extrabold">What is a Fermi Question?</h2>
-            <p className="text-wolf leading-relaxed">
-              Named after physicist Enrico Fermi, these are estimation problems that seem impossible
-              to answer at first. The key is breaking them down into smaller, manageable parts.
+        <div className="space-y-4">
+          <h2 className="text-2xl font-extrabold">What is a Fermi Question?</h2>
+          <p className="text-wolf leading-relaxed">
+            Named after physicist Enrico Fermi, these are estimation problems that seem impossible
+            to answer at first. The key is breaking them down into smaller, manageable parts.
+          </p>
+          <div className="bg-white rounded-duo p-4 border-2 border-swan">
+            <p className="font-semibold text-duo-blue-dark mb-2">Example:</p>
+            <p className="text-eel italic">&ldquo;How many piano tuners are there in Chicago?&rdquo;</p>
+            <p className="text-sm text-wolf mt-2">
+              Think about: population, households with pianos, tuning frequency, time per tuning...
             </p>
-            <div className="bg-white rounded-duo p-4 border-2 border-swan">
-              <p className="font-semibold text-duo-blue-dark mb-2">Example:</p>
-              <p className="text-eel italic">&ldquo;How many piano tuners are there in Chicago?&rdquo;</p>
-              <p className="text-sm text-wolf mt-2">
-                Think about: population, households with pianos, tuning frequency, time per tuning...
-              </p>
-            </div>
           </div>
         </div>
       </section>
