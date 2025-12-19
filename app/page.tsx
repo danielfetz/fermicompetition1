@@ -7,7 +7,7 @@ export default function Home() {
       <section className="text-center py-8">
         <div className="flex flex-col items-center gap-6">
           <div className="space-y-4">
-            <h1 className="text-[34px] font-extrabold text-eel leading-tight">
+            <h1 className="text-[33.6px] font-extrabold text-eel leading-tight">
               A Competition in Memory of Enrico Fermi, Celebrating Quantitative Thinking and Belief Updating
             </h1>
             <p className="text-lg text-wolf">
@@ -69,13 +69,25 @@ export default function Home() {
             Teachers can monitor class performance and see who&apos;s mastering the art of estimation.
           </p>
         </div>
+
+        <div className="card text-center">
+          <div className="w-16 h-16 mx-auto mb-4 bg-duo-purple/10 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-duo-purple-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold mb-2">Bayesian Updating</h3>
+          <p className="text-wolf">
+            At halftime, hints are revealed. Update your estimates and practice calibrated reasoning.
+          </p>
+        </div>
       </section>
 
       {/* How It Works Section */}
       <section className="space-y-8">
         <h2 className="text-3xl font-extrabold text-center">How It Works</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* For Teachers */}
           <div className="card">
             <div className="flex items-center gap-3 mb-4">
