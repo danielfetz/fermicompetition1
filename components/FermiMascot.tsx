@@ -67,11 +67,6 @@ export default function FermiMascot({
             {/* Cheeks */}
             <circle cx="25" cy="55" r="5" fill={MASCOT_COLORS.cheeks} opacity="0.5" />
             <circle cx="75" cy="55" r="5" fill={MASCOT_COLORS.cheeks} opacity="0.5" />
-            {/* Atom Symbol on Belly */}
-            <ellipse cx="50" cy="65" rx="8" ry="3" fill="none" stroke={MASCOT_COLORS.body} strokeWidth="1.5" />
-            <ellipse cx="50" cy="65" rx="8" ry="3" fill="none" stroke={MASCOT_COLORS.body} strokeWidth="1.5" transform="rotate(60 50 65)" />
-            <ellipse cx="50" cy="65" rx="8" ry="3" fill="none" stroke={MASCOT_COLORS.body} strokeWidth="1.5" transform="rotate(-60 50 65)" />
-            <circle cx="50" cy="65" r="2" fill={MASCOT_COLORS.body} />
           </svg>
         )
       case 'thinking':
@@ -87,8 +82,8 @@ export default function FermiMascot({
             {/* Right Eye (looking up) */}
             <ellipse cx="65" cy="40" rx="10" ry="12" fill={MASCOT_COLORS.eyes} />
             <circle cx="65" cy="36" r="5" fill={MASCOT_COLORS.pupils} />
-            {/* Thinking Mouth - small "o" shape */}
-            <circle cx="50" cy="62" r="4" fill="none" stroke={MASCOT_COLORS.pupils} strokeWidth="2" />
+            {/* Thinking Mouth */}
+            <ellipse cx="50" cy="62" rx="5" ry="3" fill={MASCOT_COLORS.pupils} />
             {/* Thought bubble hints */}
             <circle cx="80" cy="25" r="3" fill="#E5E5E5" />
             <circle cx="88" cy="15" r="5" fill="#E5E5E5" />

@@ -50,7 +50,20 @@ export default function StudentExam() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [hintsUnlocked, setHintsUnlocked] = useState(false)
-  const [seenHints, setSeenHints] = useState<Set<string>>(new Set())
+  const [seenHints, setSeenHints] = useState<Set<string>>(() => {
+    // Load seen hints from localStorage on mount
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`seenHints_${classId}`)
+      if (saved) {
+        try {
+          return new Set(JSON.parse(saved))
+        } catch {
+          return new Set()
+        }
+      }
+    }
+    return new Set()
+  })
   const [inputValue, setInputValue] = useState('')
   const [loading, setLoading] = useState(true)
   const initialized = useRef(false)
@@ -188,6 +201,13 @@ export default function StudentExam() {
       setSeenHints(prev => new Set([...prev, current.id]))
     }
   }, [hintsUnlocked, questions, currentIndex])
+
+  // Persist seenHints to localStorage
+  useEffect(() => {
+    if (seenHints.size > 0) {
+      localStorage.setItem(`seenHints_${classId}`, JSON.stringify([...seenHints]))
+    }
+  }, [seenHints, classId])
 
   // Save on page unload
   useEffect(() => {
