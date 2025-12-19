@@ -7,9 +7,8 @@ export default function Home() {
       <section className="text-center py-8">
         <div className="flex flex-col items-center gap-6">
           <div className="space-y-4">
-            <h1 className="text-4xl sm:text-5xl font-extrabold text-eel">
-              Master the Art of{' '}
-              <span className="text-gradient">Estimation</span>
+            <h1 className="text-[34px] font-extrabold text-eel leading-tight">
+              A Competition in Memory of Enrico Fermi, Celebrating Quantitative Thinking and Belief Updating
             </h1>
             <p className="text-lg text-wolf">
               Join the Fermi Competition! Practice estimation skills, compete with classmates,
@@ -17,10 +16,10 @@ export default function Home() {
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-4 mt-4">
-            <Link href="/teacher" className="btn btn-primary btn-lg">
+            <Link href="/teacher" className="btn btn-primary">
               I&apos;m a Teacher
             </Link>
-            <Link href="/student/login" className="btn btn-secondary btn-lg">
+            <Link href="/student/login" className="btn btn-secondary">
               I&apos;m a Student
             </Link>
           </div>
@@ -182,10 +181,10 @@ export default function Home() {
             It&apos;s free, fun, and educational!
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6">
-            <Link href="/teacher/signup" className="btn btn-primary btn-lg">
+            <Link href="/teacher/signup" className="btn btn-primary">
               Create Teacher Account
             </Link>
-            <Link href="/student/login" className="btn btn-outline btn-lg">
+            <Link href="/student/login" className="btn btn-outline">
               Student Login
             </Link>
           </div>
