@@ -136,7 +136,7 @@ export default function ClassContent({
               <div className="stat-label">In Progress</div>
             </div>
             <div className="stat-card">
-              <div className="stat-value text-duo-purple">{mode === 'real' ? 15 : 10}</div>
+              <div className="stat-value text-duo-purple">25</div>
               <div className="stat-label">Questions</div>
             </div>
           </div>
@@ -219,7 +219,7 @@ export default function ClassContent({
                       const score = filteredScores.find(x => x.student_id === s.id)
                       const correct = score?.correct_count ?? 0
                       const total = score?.total_answered ?? 0
-                      const maxQuestions = mode === 'real' ? 15 : 10
+                      const maxQuestions = 25
 
                       return (
                         <tr key={s.id} className="hover:bg-snow transition-colors">

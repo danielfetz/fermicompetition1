@@ -55,9 +55,9 @@ export default function Home() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h3 className="text-xl font-bold mb-2">40-Minute Challenge</h3>
+          <h3 className="text-xl font-bold mb-2">70-Minute Challenge</h3>
           <p className="text-wolf">
-            Answer 10 Fermi questions under time pressure. Rate your confidence for each answer.
+            Answer 25 Fermi questions under time pressure. Rate your confidence for each answer.
           </p>
         </div>
 
@@ -142,7 +142,7 @@ export default function Home() {
                 <span className="flex-shrink-0 w-8 h-8 bg-duo-blue text-white rounded-full flex items-center justify-center font-bold">3</span>
                 <div>
                   <p className="font-semibold">Answer Questions</p>
-                  <p className="text-sm text-wolf">10 Fermi questions, 40 minutes. Rate your confidence!</p>
+                  <p className="text-sm text-wolf">25 Fermi questions, 70 minutes. Rate your confidence!</p>
                 </div>
               </li>
               <li className="flex gap-4">

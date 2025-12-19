@@ -84,7 +84,7 @@ export default function GenerateStudents() {
           {isReal && (
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-duo-blue/10 rounded-full">
               <span className="badge badge-blue">Official Competition</span>
-              <span className="text-sm text-duo-blue font-semibold">15 official questions</span>
+              <span className="text-sm text-duo-blue font-semibold">25 official questions</span>
             </div>
           )}
         </div>
@@ -160,7 +160,7 @@ export default function GenerateStudents() {
               </h3>
               <p className="text-sm text-eel mt-1">
                 {isReal
-                  ? 'These credentials are for the official competition with 15 official questions. Students cannot use mock credentials for the official competition.'
+                  ? 'These credentials are for the official competition with 25 official questions. Students cannot use mock credentials for the official competition.'
                   : 'Students will enter their full name when they first log in. The fun scientist-themed usernames make credentials easy to distribute!'}
               </p>
             </div>
@@ -196,7 +196,7 @@ export default function GenerateStudents() {
           </h1>
           <p className="text-wolf">
             {isReal
-              ? 'Create credentials for the official Fermi Competition with 15 official questions.'
+              ? 'Create credentials for the official Fermi Competition with 25 official questions.'
               : 'Create unique login credentials for your students with fun scientist-themed usernames!'}
           </p>
         </div>
@@ -271,7 +271,7 @@ export default function GenerateStudents() {
                 <svg className="w-5 h-5 text-duo-blue flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                15 official Fermi estimation questions
+                25 official Fermi estimation questions
               </li>
               <li className="flex items-start gap-2 text-sm text-wolf">
                 <svg className="w-5 h-5 text-duo-blue flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -289,7 +289,7 @@ export default function GenerateStudents() {
                 <svg className="w-5 h-5 text-duo-blue flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                40-minute timed examination
+                70-minute timed examination
               </li>
             </>
           ) : (

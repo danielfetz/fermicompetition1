@@ -366,6 +366,7 @@ export default function StudentExam() {
                 placeholder="Enter a number"
                 value={inputValue}
                 onChange={e => updateAnswer(e.target.value)}
+                onWheel={e => e.currentTarget.blur()}
                 autoFocus
               />
               <p className="text-sm text-wolf text-center mt-2">
