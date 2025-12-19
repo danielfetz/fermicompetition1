@@ -362,7 +362,7 @@ export default function StudentExam() {
             >
               {idx + 1}
               {hasUnseenHint && (
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-duo-red rounded-full animate-pulse" />
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-duo-red rounded-full" />
               )}
             </button>
           )
