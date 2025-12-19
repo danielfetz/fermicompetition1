@@ -153,10 +153,11 @@ export default function StudentExam() {
 
   // Mark current question's hint as seen when viewing it after hints unlock
   useEffect(() => {
-    if (hintsUnlocked && currentQuestion?.hint) {
-      setSeenHints(prev => new Set([...prev, currentQuestion.id]))
+    const current = questions[currentIndex]
+    if (hintsUnlocked && current?.hint) {
+      setSeenHints(prev => new Set([...prev, current.id]))
     }
-  }, [hintsUnlocked, currentQuestion])
+  }, [hintsUnlocked, questions, currentIndex])
 
   // Save on page unload
   useEffect(() => {
