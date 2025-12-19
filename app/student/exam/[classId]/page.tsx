@@ -334,35 +334,36 @@ export default function StudentExam() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      {/* Header with Timer and Progress */}
-      <div className="sticky top-16 z-40 bg-white pt-2 pb-4 -mx-4 px-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => {
-                saveAnswers()
-                if (confirm('Are you sure you want to leave? Your progress has been saved.')) {
-                  router.push('/student/login')
-                }
-              }}
-              className="icon-btn"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            <span className="font-bold text-eel">Fermi Competition</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Timer deadline={deadline} onTimeUp={handleTimeUp} urgentThreshold={5} />
-            {!hintsUnlocked && (
-              <span className="text-xs text-wolf hidden sm:inline">Hints at halftime</span>
-            )}
-          </div>
+    <>
+      {/* Custom Exam Header - overlays the default header nav */}
+      <div className="fixed top-0 right-0 z-[60] bg-white border-b-2 border-swan">
+        <div className="px-4 py-3 flex items-center gap-2">
+          <Timer deadline={deadline} onTimeUp={handleTimeUp} urgentThreshold={5} />
+          {!hintsUnlocked && (
+            <span className="text-xs text-wolf hidden sm:inline">Hints at halftime</span>
+          )}
+          <button
+            onClick={() => {
+              saveAnswers()
+              if (confirm('Are you sure you want to leave? Your progress has been saved.')) {
+                router.push('/student/login')
+              }
+            }}
+            className="icon-btn ml-2"
+            title="Exit competition"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
-        <ProgressBar current={answeredCount} total={questions.length} />
       </div>
+
+      <div className="max-w-3xl mx-auto space-y-6 pb-28">
+        {/* Progress Bar */}
+        <div className="pt-2">
+          <ProgressBar current={answeredCount} total={questions.length} />
+        </div>
 
       {/* Question Navigation Dots */}
       <div className="flex flex-wrap justify-center gap-2">
@@ -437,80 +438,83 @@ export default function StudentExam() {
         </div>
       )}
 
-      {/* Navigation Buttons */}
-      <div className="flex items-center justify-between">
-        <button
-          onClick={prevQuestion}
-          disabled={currentIndex === 0}
-          className="btn btn-outline"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Previous
-        </button>
-
-        {currentIndex === questions.length - 1 ? (
-          <button
-            onClick={submit}
-            disabled={submitting}
-            className="btn btn-primary"
-          >
-            {submitting ? (
-              <>
-                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                Submitting...
-              </>
-            ) : (
-              <>
-                Submit All
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </>
-            )}
-          </button>
-        ) : (
-          <button onClick={nextQuestion} className="btn btn-secondary">
-            Next
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+        {/* Error Message */}
+        {error && (
+          <div className="bg-duo-red/10 border-2 border-duo-red rounded-duo p-4 text-center">
+            <p className="text-duo-red-dark font-semibold">{error}</p>
+          </div>
         )}
-      </div>
 
-      {/* Error Message */}
-      {error && (
-        <div className="bg-duo-red/10 border-2 border-duo-red rounded-duo p-4 text-center">
-          <p className="text-duo-red-dark font-semibold">{error}</p>
-        </div>
-      )}
-
-      {/* Summary Footer */}
-      <div className="card bg-gradient-to-br from-duo-green/5 to-duo-blue/5">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-wolf">Progress</p>
-            <p className="text-lg font-bold text-eel">
-              {answeredCount} of {questions.length} answered
-            </p>
-          </div>
-          <div className="flex gap-1">
-            {questions.map((q) => (
-              <div
-                key={q.id}
-                className={`w-2 h-8 rounded-full ${
-                  answers[q.id]?.value ? 'bg-duo-green' : 'bg-swan'
-                }`}
-              />
-            ))}
+        {/* Summary Card */}
+        <div className="card bg-gradient-to-br from-duo-green/5 to-duo-blue/5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-wolf">Progress</p>
+              <p className="text-lg font-bold text-eel">
+                {answeredCount} of {questions.length} answered
+              </p>
+            </div>
+            <div className="flex gap-1">
+              {questions.map((q) => (
+                <div
+                  key={q.id}
+                  className={`w-2 h-8 rounded-full ${
+                    answers[q.id]?.value ? 'bg-duo-green' : 'bg-swan'
+                  }`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Fixed Navigation Footer */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t-2 border-swan">
+        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
+          <button
+            onClick={prevQuestion}
+            disabled={currentIndex === 0}
+            className="btn btn-outline"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Previous
+          </button>
+
+          {currentIndex === questions.length - 1 ? (
+            <button
+              onClick={submit}
+              disabled={submitting}
+              className="btn btn-primary"
+            >
+              {submitting ? (
+                <>
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  Submit All
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </>
+              )}
+            </button>
+          ) : (
+            <button onClick={nextQuestion} className="btn btn-secondary">
+              Next
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
+    </>
   )
 }
