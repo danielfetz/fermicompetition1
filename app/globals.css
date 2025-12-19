@@ -88,13 +88,17 @@ html, body {
 
 /* Outline Button */
 .btn-outline {
-  @apply bg-transparent border-2 border-swan text-wolf shadow-duo-swan;
+  @apply bg-transparent text-wolf shadow-duo-swan;
+  border-width: 2px 2px 0 2px;
+  border-style: solid;
+  border-color: #E5E5E5;
 }
 .btn-outline:hover:not(:disabled) {
   @apply bg-swan;
 }
 .btn-outline:active:not(:disabled) {
   @apply bg-hare shadow-none;
+  border-width: 2px;
 }
 
 /* Ghost Button (minimal) */

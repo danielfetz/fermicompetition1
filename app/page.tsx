@@ -16,10 +16,10 @@ export default function Home() {
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-4 mt-4">
-            <Link href="/teacher" className="btn btn-primary">
+            <Link href="/teacher" className="btn btn-secondary">
               I&apos;m a Teacher
             </Link>
-            <Link href="/student/login" className="btn btn-secondary">
+            <Link href="/student/login" className="btn btn-outline">
               I&apos;m a Student
             </Link>
           </div>
