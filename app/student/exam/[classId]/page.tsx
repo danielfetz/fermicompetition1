@@ -335,42 +335,28 @@ export default function StudentExam() {
 
   return (
     <>
-      {/* Custom Exam Header - overlays the default header nav */}
-      <div className="fixed top-0 right-0 z-[60] bg-white border-b-2 border-swan">
-        <div className="px-4 py-3 flex items-center gap-2">
-          <Timer deadline={deadline} onTimeUp={handleTimeUp} urgentThreshold={5} />
-          {!hintsUnlocked && (
-            <span className="text-xs text-wolf hidden sm:inline">Hints at halftime</span>
-          )}
-          <button
-            onClick={() => {
-              saveAnswers()
-              if (confirm('Are you sure you want to leave? Your progress has been saved.')) {
-                router.push('/student/login')
-              }
-            }}
-            className="icon-btn ml-2"
-            title="Exit competition"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      </div>
-
       <div className="max-w-3xl mx-auto space-y-6 pb-28">
-        {/* Progress Bar */}
-        <div className="pt-2">
-          <ProgressBar current={answeredCount} total={questions.length} />
+        {/* Timer and Progress */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Timer deadline={deadline} onTimeUp={handleTimeUp} urgentThreshold={5} />
+            {!hintsUnlocked && (
+              <span className="text-xs text-wolf hidden sm:inline">Hints at halftime</span>
+            )}
+          </div>
+          <div className="text-sm text-wolf">
+            {answeredCount}/{questions.length} answered
+          </div>
         </div>
 
-      {/* Question Navigation Dots */}
-      <div className="flex flex-wrap justify-center gap-2">
-        {questions.map((q, idx) => {
-          const hasUnseenHint = hintsUnlocked && q.hint && !seenHints.has(q.id)
-          return (
-            <button
+        <ProgressBar current={answeredCount} total={questions.length} />
+
+        {/* Question Navigation Dots */}
+        <div className="flex flex-wrap justify-center gap-2">
+          {questions.map((q, idx) => {
+            const hasUnseenHint = hintsUnlocked && q.hint && !seenHints.has(q.id)
+            return (
+              <button
               key={q.id}
               onClick={() => goToQuestion(idx)}
               className={`relative w-8 h-8 rounded-full font-bold text-sm transition-all ${
@@ -444,28 +430,6 @@ export default function StudentExam() {
             <p className="text-duo-red-dark font-semibold">{error}</p>
           </div>
         )}
-
-        {/* Summary Card */}
-        <div className="card bg-gradient-to-br from-duo-green/5 to-duo-blue/5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-wolf">Progress</p>
-              <p className="text-lg font-bold text-eel">
-                {answeredCount} of {questions.length} answered
-              </p>
-            </div>
-            <div className="flex gap-1">
-              {questions.map((q) => (
-                <div
-                  key={q.id}
-                  className={`w-2 h-8 rounded-full ${
-                    answers[q.id]?.value ? 'bg-duo-green' : 'bg-swan'
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Fixed Navigation Footer */}
