@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 export default function ExamLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -12,18 +13,18 @@ export default function ExamLayout({ children }: { children: React.ReactNode }) 
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Exam Header - replaces the default header */}
+    <>
+      {/* Exam Header */}
       <header className="bg-white border-b-2 border-swan sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-duo-green rounded-xl flex items-center justify-center">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-10 h-10 bg-duo-green rounded-xl flex items-center justify-center sm:hidden">
               <span className="text-white font-extrabold text-lg">F</span>
             </div>
             <span className="text-xl font-extrabold text-duo-green hidden sm:block">
               Fermi Competition
             </span>
-          </div>
+          </Link>
           <button
             onClick={handleClose}
             className="icon-btn"
@@ -36,12 +37,10 @@ export default function ExamLayout({ children }: { children: React.ReactNode }) 
         </div>
       </header>
 
-      {/* Main Content - no max-width constraint, let pages handle it */}
-      <main className="flex-1 px-4 py-6">
+      {/* Main Content */}
+      <main className="max-w-6xl mx-auto px-4 py-6">
         {children}
       </main>
-
-      {/* No footer in exam mode */}
-    </div>
+    </>
   )
 }
