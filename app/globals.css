@@ -88,7 +88,7 @@ html, body {
 
 /* Outline Button */
 .btn-outline {
-  @apply bg-transparent text-wolf shadow-duo-swan;
+  @apply bg-white text-wolf shadow-duo-swan;
   border-width: 2px 2px 0 2px;
   border-style: solid;
   border-color: #E5E5E5;

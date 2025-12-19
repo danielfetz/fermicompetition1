@@ -43,7 +43,7 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
               <>
                 <Link
                   href="/teacher"
-                  className="btn btn-ghost btn-sm"
+                  className="btn btn-ghost btn-sm !text-wolf"
                 >
                   Teachers
                 </Link>
@@ -51,7 +51,7 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
                   href="/student/login"
                   className="btn btn-primary btn-sm"
                 >
-                  Student Login
+                  Join as Student
                 </Link>
               </>
             )}
