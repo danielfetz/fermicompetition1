@@ -11,8 +11,7 @@ export default function Home() {
               A Competition in Memory of Enrico Fermi, Celebrating Quantitative Thinking and Belief Updating
             </h1>
             <p className="text-lg text-wolf">
-              Join the Fermi Competition! Practice estimation skills, compete with classmates,
-              and learn to think like a physicist.
+              Join the practice competition with your class today. The official competition launches in Spring 2026, with prizes worth thousands of dollars.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-3 mt-4 w-full sm:w-auto">
@@ -48,7 +47,7 @@ export default function Home() {
           </div>
           <h3 className="text-xl font-bold mb-2">70-Minute Challenge</h3>
           <p className="text-wolf">
-            Answer 25 Fermi questions under time pressure. Rate your confidence for each answer.
+            Answer 25 Fermi questions under time pressure. Assign a confidence level to each answer.
           </p>
         </div>
 
@@ -72,14 +71,20 @@ export default function Home() {
           </div>
           <h3 className="text-xl font-bold mb-2">Bayesian Updating</h3>
           <p className="text-wolf">
-            At halftime, hints are revealed. Update your estimates and practice calibrated reasoning.
+            At halftime, hints are revealed. Update your confidence and estimates in light of new information.
           </p>
         </div>
       </section>
 
       {/* How It Works Section */}
       <section className="space-y-8">
-        <h2 className="text-3xl font-extrabold text-center">How It Works</h2>
+        <div className="text-center">
+          <h2 className="text-3xl font-extrabold">How It Works</h2>
+          <p className="text-wolf mt-2">
+            To participate in the official competition, request a code by emailing{' '}
+            <a href="mailto:daniel@fermi.org" className="text-duo-blue hover:underline">daniel@fermi.org</a>
+          </p>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* For Teachers */}
