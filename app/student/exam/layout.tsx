@@ -7,7 +7,7 @@ export default function ExamLayout({ children }: { children: React.ReactNode }) 
   const router = useRouter()
 
   const handleClose = () => {
-    if (confirm('Are you sure you want to leave? Your progress has been saved.')) {
+    if (confirm('Are you sure you want to leave? Your progress has been saved, but time is still running out!')) {
       router.push('/student/login')
     }
   }
