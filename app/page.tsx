@@ -5,9 +5,9 @@ export default function Home() {
     <div className="space-y-12 max-w-2xl mx-auto">
       {/* Hero Section */}
       <section className="text-center py-8">
-        <div className="flex flex-col items-center gap-6">
+        <div className="flex flex-col items-center gap-2">
           <div className="space-y-4">
-            <h1 className="text-[33.6px] font-extrabold text-eel leading-tight">
+            <h1 className="text-[27px] sm:text-[33.6px] font-extrabold text-eel leading-tight">
               A Competition in Memory of Enrico Fermi, Celebrating Quantitative Thinking and Belief Updating
             </h1>
             <p className="text-lg text-wolf">
@@ -15,11 +15,11 @@ export default function Home() {
               and learn to think like a physicist.
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-4 mt-4">
-            <Link href="/teacher" className="btn btn-secondary">
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-3 mt-4 w-full sm:w-auto">
+            <Link href="/teacher" className="btn btn-secondary w-full sm:w-auto">
               I&apos;m a Teacher
             </Link>
-            <Link href="/student/login" className="btn btn-outline">
+            <Link href="/student/login" className="btn btn-outline w-full sm:w-auto">
               I&apos;m a Student
             </Link>
           </div>
