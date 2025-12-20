@@ -29,6 +29,10 @@ const FAQ_ITEMS: FAQItem[] = [
     answer: 'Students earn points based on both accuracy and confidence calibration. Higher confidence on correct answers earns more points, while overconfidence on incorrect answers results in point deductions. This encourages honest self-assessment.',
   },
   {
+    question: 'Is this a proper scoring rule?',
+    answer: 'Yes! Our scoring system is mathematically equivalent to a linearly transformed reverse Brier score, evaluated at the midpoint of each confidence bracket (10%, 30%, 50%, 70%, 90%). The formula is: Score = 1/8 − (25/2) × Brier. This means the optimal strategy is always to report your true beliefs—there is no benefit to over- or under-stating your confidence.',
+  },
+  {
     question: 'Can students change their answers?',
     answer: 'Yes! Students can navigate between questions and update their answers and confidence levels at any time during the competition. All progress is automatically saved.',
   },

@@ -81,7 +81,7 @@ export default async function LeaderboardPage() {
             </div>
             <div className="bg-snow p-2 rounded">
               <div className="font-bold text-eel">20-40%</div>
-              <div className="text-duo-green">+6 right</div>
+              <div className="text-duo-green">+7 right</div>
               <div className="text-duo-red">-1 wrong</div>
             </div>
             <div className="bg-snow p-2 rounded">
