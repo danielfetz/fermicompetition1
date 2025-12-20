@@ -9,12 +9,17 @@ export default async function Dashboard() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/teacher/login')
 
-  // Fetch teacher profile
-  const { data: profile } = await supabase
+  // Fetch teacher profile with error handling
+  const { data: profile, error: profileError } = await supabase
     .from('teacher_profiles')
     .select('*, master_codes(*), teacher_codes(*)')
     .eq('user_id', user.id)
     .maybeSingle()
+
+  // Log any profile fetch errors for debugging
+  if (profileError) {
+    console.error('Error fetching teacher profile:', profileError)
+  }
 
   const isCoordinator = !!profile?.master_code_id
   const hasCode = !!(profile?.teacher_code_id || profile?.master_code_id)

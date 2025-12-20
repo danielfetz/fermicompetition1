@@ -52,20 +52,33 @@ export default function CoordinatorSection({ masterCodeId, masterCodeName }: Pro
   async function loadData() {
     setLoading(true)
 
-    // Fetch teachers using codes under this master code
-    const { data: teacherData } = await supabase
-      .from('coordinator_teachers')
-      .select('*')
+    try {
+      // Fetch teachers using codes under this master code
+      const { data: teacherData, error: teacherError } = await supabase
+        .from('coordinator_teachers')
+        .select('*')
 
-    // Fetch all codes under this master code
-    const { data: codeData } = await supabase
-      .from('teacher_codes')
-      .select('*')
-      .eq('master_code_id', masterCodeId)
-      .order('created_at', { ascending: false })
+      if (teacherError) {
+        console.error('Error fetching coordinator teachers:', teacherError)
+      }
 
-    setTeachers(teacherData || [])
-    setCodes(codeData || [])
+      // Fetch all codes under this master code
+      const { data: codeData, error: codeError } = await supabase
+        .from('teacher_codes')
+        .select('*')
+        .eq('master_code_id', masterCodeId)
+        .order('created_at', { ascending: false })
+
+      if (codeError) {
+        console.error('Error fetching teacher codes:', codeError)
+      }
+
+      setTeachers(teacherData || [])
+      setCodes(codeData || [])
+    } catch (err) {
+      console.error('Error loading coordinator data:', err)
+    }
+
     setLoading(false)
   }
 
