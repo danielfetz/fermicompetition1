@@ -74,7 +74,7 @@ export default function FAQ() {
               openIndex === index ? 'max-h-96' : 'max-h-0'
             }`}
           >
-            <div className="px-4 py-3 bg-snow border-t border-swan">
+            <div className="px-4 py-3 bg-white border-t border-swan">
               <p className="text-wolf">{item.answer}</p>
             </div>
           </div>

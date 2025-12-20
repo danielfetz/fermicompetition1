@@ -9,7 +9,7 @@ export default function Home() {
         <div className="flex flex-col items-center gap-2">
           <div className="space-y-4">
             <h1 className="text-[27px] sm:text-[33.6px] font-extrabold text-eel leading-tight">
-              A Competition in Memory of Enrico Fermi, Celebrating Quantitative Thinking and Belief Updating
+              A Competition in Memory of Enrico Fermi, Celebrating Quantitative Thinking and Bayesian Updating
             </h1>
             <p className="text-lg text-wolf">
               Join the practice competition with your class today. The official competition launches in Spring 2026, with prizes worth thousands of dollars.
@@ -75,6 +75,12 @@ export default function Home() {
             At halftime, hints are revealed. Update your confidence and estimates in light of new information.
           </p>
         </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="space-y-6">
+        <h2 className="text-3xl font-extrabold text-center mb-8">Frequently Asked Questions</h2>
+        <FAQ />
       </section>
 
       {/* How It Works Section */}
@@ -164,12 +170,6 @@ export default function Home() {
             </ol>
           </div>
         </div>
-      </section>
-
-      {/* FAQ Section */}
-      <section className="space-y-6">
-        <h2 className="text-3xl font-extrabold text-center">Frequently Asked Questions</h2>
-        <FAQ />
       </section>
 
       {/* What is Fermi Section */}
