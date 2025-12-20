@@ -38,7 +38,7 @@ SELECT
         AND a.value BETWEEN (fq.correct_value * 0.5) AND (fq.correct_value * 1.5) THEN
         CASE a.confidence_pct
           WHEN 10 THEN 3
-          WHEN 30 THEN 6
+          WHEN 30 THEN 7
           WHEN 50 THEN 10
           WHEN 70 THEN 12
           WHEN 90 THEN 13

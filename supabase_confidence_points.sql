@@ -5,7 +5,7 @@
 -- Base points: 250
 -- Per answer based on confidence:
 --   0-20% (10): +3 if correct, 0 if wrong
---   20-40% (30): +6 if correct, -1 if wrong
+--   20-40% (30): +7 if correct, -1 if wrong
 --   40-60% (50): +10 if correct, -3 if wrong
 --   60-80% (70): +12 if correct, -6 if wrong
 --   80-100% (90): +13 if correct, -10 if wrong
@@ -43,7 +43,7 @@ SELECT
         AND a.value BETWEEN (fq.correct_value * 0.5) AND (fq.correct_value * 1.5) THEN
         CASE a.confidence_pct
           WHEN 10 THEN 3
-          WHEN 30 THEN 6
+          WHEN 30 THEN 7
           WHEN 50 THEN 10
           WHEN 70 THEN 12
           WHEN 90 THEN 13
