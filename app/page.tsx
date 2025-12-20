@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import FAQ from '@/components/FAQ'
 
 export default function Home() {
   return (
@@ -163,6 +164,12 @@ export default function Home() {
             </ol>
           </div>
         </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="space-y-6">
+        <h2 className="text-3xl font-extrabold text-center">Frequently Asked Questions</h2>
+        <FAQ />
       </section>
 
       {/* What is Fermi Section */}
