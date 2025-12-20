@@ -1,44 +1,44 @@
 -- Fix infinite recursion in teacher_profiles RLS policies
 -- Run this in your Supabase SQL Editor
 
--- Drop the problematic policies
-DROP POLICY IF EXISTS "coordinator_select_teacher_profiles" ON public.teacher_profiles;
-DROP POLICY IF EXISTS "teacher_select_own_profile" ON public.teacher_profiles;
+-- Step 1: Drop ALL policies on teacher_profiles to start fresh
+DO $$
+DECLARE
+    pol RECORD;
+BEGIN
+    FOR pol IN SELECT policyname FROM pg_policies WHERE tablename = 'teacher_profiles'
+    LOOP
+        EXECUTE format('DROP POLICY IF EXISTS %I ON public.teacher_profiles', pol.policyname);
+    END LOOP;
+END $$;
 
--- Recreate teacher_select_own_profile (simple, no recursion)
-CREATE POLICY "teacher_select_own_profile" ON public.teacher_profiles
-  FOR SELECT USING (user_id = auth.uid());
-
--- The coordinator policy was causing recursion because it queried teacher_profiles
--- from within a policy on teacher_profiles. Instead, we'll use a function with
--- SECURITY DEFINER to bypass RLS when checking coordinator status.
-
--- Create a helper function to check if current user is a coordinator
+-- Step 2: Create a helper function with SECURITY DEFINER to bypass RLS
 CREATE OR REPLACE FUNCTION public.get_current_user_master_code_id()
 RETURNS uuid LANGUAGE sql SECURITY DEFINER STABLE AS $$
   SELECT master_code_id FROM public.teacher_profiles WHERE user_id = auth.uid();
 $$;
 
--- Now create a safe coordinator policy that doesn't cause recursion
-CREATE POLICY "coordinator_select_teacher_profiles" ON public.teacher_profiles
-  FOR SELECT USING (
-    -- User can see their own profile
-    user_id = auth.uid()
-    OR
-    -- Coordinator can see profiles of teachers using their codes
-    (
-      public.get_current_user_master_code_id() IS NOT NULL
-      AND teacher_code_id IN (
-        SELECT id FROM public.teacher_codes
-        WHERE master_code_id = public.get_current_user_master_code_id()
-      )
-    )
-  );
+-- Grant execute on the function
+GRANT EXECUTE ON FUNCTION public.get_current_user_master_code_id() TO authenticated;
 
--- Also fix the coordinator_teachers view to use the function
+-- Step 3: Create ONE simple policy - users can only see their own profile
+-- This avoids any recursion issues
+CREATE POLICY "select_own_profile" ON public.teacher_profiles
+  FOR SELECT USING (user_id = auth.uid());
+
+CREATE POLICY "insert_own_profile" ON public.teacher_profiles
+  FOR INSERT WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "update_own_profile" ON public.teacher_profiles
+  FOR UPDATE USING (user_id = auth.uid());
+
+-- Step 4: Recreate the coordinator_teachers view with SECURITY DEFINER wrapper
+-- This lets coordinators see teachers without needing RLS on teacher_profiles
 DROP VIEW IF EXISTS public.coordinator_teachers;
 
-CREATE OR REPLACE VIEW public.coordinator_teachers AS
+CREATE OR REPLACE VIEW public.coordinator_teachers
+WITH (security_invoker = false)
+AS
 SELECT
   tp.id AS profile_id,
   tp.user_id,
@@ -58,5 +58,5 @@ JOIN public.teacher_codes tc ON tc.id = tp.teacher_code_id
 JOIN auth.users u ON u.id = tp.user_id
 WHERE tc.master_code_id = public.get_current_user_master_code_id();
 
--- Grant execute on the function
-GRANT EXECUTE ON FUNCTION public.get_current_user_master_code_id() TO authenticated;
+-- Grant access to the view
+GRANT SELECT ON public.coordinator_teachers TO authenticated;
