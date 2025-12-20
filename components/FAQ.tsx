@@ -9,6 +9,14 @@ interface FAQItem {
 
 const FAQ_ITEMS: FAQItem[] = [
   {
+    question: 'What is the Fermi Competition?',
+    answer: 'The Fermi Competition is an annual estimation challenge where students tackle real-world quantitative problems. Participants answer Fermi questions, assign confidence levels to their estimates, and have the opportunity to update their thinking after receiving hints at halftime. The competition emphasizes calibrated reasoning and Bayesian updating over pure accuracy.',
+  },
+  {
+    question: 'Why is the competition named after Enrico Fermi?',
+    answer: 'Enrico Fermi (1901–1954) was a Nobel Prize-winning physicist famous for his ability to make remarkably accurate estimates with limited information. His legendary "back-of-the-envelope" calculations—like estimating the number of piano tuners in Chicago—demonstrated that complex problems can be solved through logical decomposition and educated approximation. This competition honors his legacy of quantitative thinking.',
+  },
+  {
     question: 'What is a Fermi question?',
     answer: 'A Fermi question is an estimation problem that seems impossible to answer precisely, but can be reasoned through by breaking it down into smaller, estimable parts. Named after physicist Enrico Fermi, these questions help develop quantitative reasoning skills.',
   },
