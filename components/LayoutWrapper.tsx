@@ -75,14 +75,16 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
                   </svg>
                 </button>
                 {moreDropdownOpen && (
-                  <div className="absolute top-full right-0 mt-2 bg-white border-2 border-swan rounded-lg py-2 min-w-[160px]">
-                    <Link
-                      href="/leaderboard"
-                      className="block px-4 py-2 text-sm font-bold uppercase hover:text-eel transition-colors"
-                      style={{ color: '#a2a2a2', letterSpacing: '1px' }}
-                    >
-                      Leaderboard
-                    </Link>
+                  <div className="absolute top-full right-0 pt-2">
+                    <div className="bg-white border-2 border-swan rounded-lg py-2 min-w-[160px]">
+                      <Link
+                        href="/leaderboard"
+                        className="block px-4 py-2 text-sm font-bold uppercase hover:text-eel transition-colors"
+                        style={{ color: '#a2a2a2', letterSpacing: '1px' }}
+                      >
+                        Leaderboard
+                      </Link>
+                    </div>
                   </div>
                 )}
               </div>
