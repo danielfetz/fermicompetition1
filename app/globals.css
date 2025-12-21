@@ -124,12 +124,11 @@ html, body {
    ================================ */
 
 .card {
-  @apply bg-white rounded-duo-lg p-6 shadow-card transition-all duration-200;
+  @apply bg-white rounded-duo-lg p-6 transition-all duration-200;
   border: 2px solid #E5E5E5;
 }
 
 .card:hover {
-  @apply shadow-card-hover;
   transform: translateY(-2px);
 }
 
