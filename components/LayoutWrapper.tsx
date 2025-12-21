@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 
@@ -11,11 +12,19 @@ interface LayoutWrapperProps {
 export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWrapperProps) {
   const pathname = usePathname()
   const isExamRoute = pathname?.startsWith('/student/exam/')
+  const isHomePage = pathname === '/'
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   if (isExamRoute) {
     // Exam mode: minimal layout with just the content
     return <>{children}</>
   }
+
+  const navLinks = [
+    { href: '/#faq', label: 'FAQ' },
+    { href: '/#how-it-works', label: 'How It Works' },
+    { href: '/#about-fermi', label: 'About Fermi' },
+  ]
 
   // Normal layout with header and footer
   return (
@@ -31,7 +40,18 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
               Fermi Competition
             </span>
           </Link>
-          <nav className="flex items-center gap-2">
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-6">
+            {isHomePage && navLinks.map(link => (
+              <a
+                key={link.href}
+                href={link.href}
+                className="text-wolf font-semibold hover:text-eel transition-colors"
+              >
+                {link.label}
+              </a>
+            ))}
             {isTeacherLoggedIn ? (
               <Link
                 href="/teacher/dashboard"
@@ -40,23 +60,78 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
                 Dashboard
               </Link>
             ) : (
-              <>
-                <Link
-                  href="/teacher"
-                  className="btn btn-ghost btn-sm !text-wolf"
-                >
-                  Teachers
-                </Link>
-                <Link
-                  href="/student/login"
-                  className="btn btn-primary btn-sm"
-                >
-                  Join as Student
-                </Link>
-              </>
+              <Link
+                href="/teacher"
+                className="btn btn-primary btn-sm"
+              >
+                Get Started
+              </Link>
             )}
           </nav>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 text-wolf hover:text-eel transition-colors"
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
+          </button>
         </div>
+
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-swan bg-white">
+            <nav className="max-w-6xl mx-auto px-4 py-4 flex flex-col gap-3">
+              {isHomePage && navLinks.map(link => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-wolf font-semibold hover:text-eel transition-colors py-2"
+                >
+                  {link.label}
+                </a>
+              ))}
+              <div className="border-t border-swan pt-3 mt-1">
+                {isTeacherLoggedIn ? (
+                  <Link
+                    href="/teacher/dashboard"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="btn btn-primary w-full"
+                  >
+                    Dashboard
+                  </Link>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    <Link
+                      href="/teacher"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="btn btn-primary w-full"
+                    >
+                      I&apos;m a Teacher
+                    </Link>
+                    <Link
+                      href="/student/login"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="btn btn-outline w-full"
+                    >
+                      I&apos;m a Student
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </nav>
+          </div>
+        )}
       </header>
 
       {/* Main Content */}

@@ -78,13 +78,13 @@ export default function Home() {
       </section>
 
       {/* FAQ Section */}
-      <section className="space-y-6">
+      <section id="faq" className="space-y-6 scroll-mt-20">
         <h2 className="text-3xl font-extrabold text-center mb-8">Frequently Asked Questions</h2>
         <FAQ />
       </section>
 
       {/* How It Works Section */}
-      <section className="space-y-8">
+      <section id="how-it-works" className="space-y-8 scroll-mt-20">
         <div className="text-center">
           <h2 className="text-3xl font-extrabold">How It Works</h2>
           <p className="text-wolf mt-2">
@@ -172,20 +172,37 @@ export default function Home() {
         </div>
       </section>
 
-      {/* What is Fermi Section */}
-      <section className="card bg-gradient-to-br from-duo-green/5 to-duo-blue/5">
-        <div className="space-y-4">
-          <h2 className="text-2xl font-extrabold">What is a Fermi Question?</h2>
-          <p className="text-wolf leading-relaxed">
-            Named after physicist Enrico Fermi, these are estimation problems that seem impossible
-            to answer at first. The key is breaking them down into smaller, manageable parts.
-          </p>
-          <div className="bg-white rounded-duo p-4 border-2 border-swan">
-            <p className="font-semibold text-duo-blue-dark mb-2">Example:</p>
-            <p className="text-eel italic">&ldquo;How many piano tuners are there in Chicago?&rdquo;</p>
-            <p className="text-sm text-wolf mt-2">
-              Think about: population, households with pianos, tuning frequency, time per tuning...
+      {/* Who was Enrico Fermi Section */}
+      <section id="about-fermi" className="space-y-6 scroll-mt-20">
+        <h2 className="text-3xl font-extrabold text-center">Who was Enrico Fermi?</h2>
+        <div className="card bg-gradient-to-br from-duo-green/5 to-duo-blue/5">
+          <div className="space-y-4">
+            <p className="text-wolf leading-relaxed">
+              <strong className="text-eel">Enrico Fermi (1901–1954)</strong> was an Italian-American physicist and one of the most influential scientists of the 20th century. He won the Nobel Prize in Physics in 1938 for his work on induced radioactivity and later played a key role in developing the first nuclear reactor.
             </p>
+            <p className="text-wolf leading-relaxed">
+              Fermi was legendary for his ability to make quick, accurate estimates with minimal information—a skill now called &ldquo;Fermi estimation.&rdquo; His most famous example was estimating the number of piano tuners in Chicago using only basic reasoning and rough approximations.
+            </p>
+            <p className="text-wolf leading-relaxed">
+              This competition honors Fermi&apos;s legacy by challenging students to think quantitatively, break down complex problems, and honestly assess their own uncertainty—skills that are valuable in science, business, and everyday decision-making.
+            </p>
+          </div>
+        </div>
+
+        {/* What is a Fermi Question - now nested */}
+        <div className="card">
+          <div className="space-y-4">
+            <h3 className="text-2xl font-extrabold">What is a Fermi Question?</h3>
+            <p className="text-wolf leading-relaxed">
+              A Fermi question is an estimation problem that seems impossible to answer at first. The key is breaking it down into smaller, manageable parts.
+            </p>
+            <div className="bg-snow rounded-duo p-4 border-2 border-swan">
+              <p className="font-semibold text-duo-blue-dark mb-2">Example:</p>
+              <p className="text-eel italic">&ldquo;How many piano tuners are there in Chicago?&rdquo;</p>
+              <p className="text-sm text-wolf mt-2">
+                Think about: population, households with pianos, tuning frequency, time per tuning...
+              </p>
+            </div>
           </div>
         </div>
       </section>
