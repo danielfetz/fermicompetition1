@@ -55,9 +55,12 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
               </a>
             ))}
             {isHomePage && (
-              <div className="relative">
+              <div
+                className="relative"
+                onMouseEnter={() => setMoreDropdownOpen(true)}
+                onMouseLeave={() => setMoreDropdownOpen(false)}
+              >
                 <button
-                  onClick={() => setMoreDropdownOpen(!moreDropdownOpen)}
                   className="text-sm font-bold uppercase px-3 hover:text-eel transition-colors flex items-center gap-1"
                   style={{ color: '#a2a2a2', letterSpacing: '1px' }}
                 >
@@ -72,11 +75,11 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
                   </svg>
                 </button>
                 {moreDropdownOpen && (
-                  <div className="absolute top-full right-0 mt-2 bg-white border border-swan rounded-lg shadow-lg py-2 min-w-[160px]">
+                  <div className="absolute top-full right-0 mt-2 bg-white border-2 border-swan rounded-lg py-2 min-w-[160px]">
                     <Link
                       href="/leaderboard"
-                      onClick={() => setMoreDropdownOpen(false)}
-                      className="block px-4 py-2 text-sm font-semibold text-wolf hover:bg-polar hover:text-eel transition-colors"
+                      className="block px-4 py-2 text-sm font-bold uppercase hover:text-eel transition-colors"
+                      style={{ color: '#a2a2a2', letterSpacing: '1px' }}
                     >
                       Leaderboard
                     </Link>
