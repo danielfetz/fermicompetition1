@@ -30,8 +30,8 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
   return (
     <>
       {/* Header */}
-      <header className="bg-white border-b-2 border-swan sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <header className="bg-white border-b-2 border-swan sticky top-0 z-50 h-[70px]">
+        <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 group">
             <div className="w-10 h-10 bg-duo-green rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform sm:hidden">
               <span className="text-white font-extrabold text-lg">F</span>
@@ -47,15 +47,8 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
               <a
                 key={link.href}
                 href={link.href}
-                className="hover:text-eel transition-colors"
-                style={{
-                  color: '#a2a2a2',
-                  fontSize: '14px',
-                  letterSpacing: '1px',
-                  padding: '0 12px',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                }}
+                className="text-sm font-bold uppercase px-3 hover:text-eel transition-colors"
+                style={{ color: '#a2a2a2', letterSpacing: '1px' }}
               >
                 {link.label}
               </a>
@@ -122,14 +115,8 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="hover:text-eel transition-colors py-2"
-                  style={{
-                    color: '#a2a2a2',
-                    fontSize: '14px',
-                    letterSpacing: '1px',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                  }}
+                  className="text-sm font-bold uppercase py-2 hover:text-eel transition-colors"
+                  style={{ color: '#a2a2a2', letterSpacing: '1px' }}
                 >
                   {link.label}
                 </a>
