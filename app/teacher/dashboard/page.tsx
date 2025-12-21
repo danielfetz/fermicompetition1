@@ -9,12 +9,17 @@ export default async function Dashboard() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/teacher/login')
 
-  // Fetch teacher profile
-  const { data: profile } = await supabase
+  // Fetch teacher profile with error handling
+  const { data: profile, error: profileError } = await supabase
     .from('teacher_profiles')
     .select('*, master_codes(*), teacher_codes(*)')
     .eq('user_id', user.id)
     .maybeSingle()
+
+  // Log any profile fetch errors for debugging
+  if (profileError) {
+    console.error('Error fetching teacher profile:', profileError)
+  }
 
   const isCoordinator = !!profile?.master_code_id
   const hasCode = !!(profile?.teacher_code_id || profile?.master_code_id)
@@ -134,7 +139,7 @@ export default async function Dashboard() {
             {isCoordinator ? 'Coordinator Code Active' : 'Competition Code Active'}
           </div>
         ) : (
-          <Link href="/teacher/enter-code" className="btn btn-outline text-duo-blue border-duo-blue hover:bg-duo-blue hover:text-white">
+          <Link href="/teacher/enter-code" className="btn btn-ghost !text-duo-green">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
             </svg>
@@ -142,7 +147,7 @@ export default async function Dashboard() {
           </Link>
         )}
         <form action="/api/auth/logout" method="POST">
-          <button type="submit" className="btn btn-ghost text-wolf">
+          <button type="submit" className="btn btn-ghost !text-wolf">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>

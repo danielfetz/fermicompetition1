@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServer, createSupabaseServiceRole } from '@/lib/supabaseServer'
-import { generateStudentCredentials } from '@/lib/password'
+import { generateStudentCredentials, parseUsername } from '@/lib/password'
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const { count = 10, competition_mode = 'mock' } = await req.json().catch(() => ({}))
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   const service = createSupabaseServiceRole()
 
-  // For real competition mode, check if teacher has it unlocked
+  // For official competition mode, check if teacher has it unlocked
   // Use service role to bypass RLS - we've already verified the user above
   if (competition_mode === 'real') {
     const { data: profile } = await service
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     // User has access if they have real_competition_unlocked OR master_code_id OR teacher_code_id
     const hasAccess = !!(profile?.real_competition_unlocked || profile?.master_code_id || profile?.teacher_code_id)
     if (!hasAccess) {
-      return NextResponse.json({ error: 'Real competition not unlocked' }, { status: 403 })
+      return NextResponse.json({ error: 'Official competition not unlocked' }, { status: 403 })
     }
   }
 
@@ -46,8 +46,20 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   if (cErr || !cls) return NextResponse.json({ error: 'Class not found' }, { status: 404 })
   if (cls.teacher_id !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  // Generate fun scientist-themed credentials
-  const generatedCredentials = await generateStudentCredentials(count)
+  // Efficiently get max numbers for each base username pattern
+  // Uses a database function that aggregates on the server side
+  const { data: maxNumbers } = await service.rpc('get_username_max_numbers')
+
+  // Build map of base -> max number
+  const existingMaxNumbers = new Map<string, number>()
+  if (maxNumbers) {
+    for (const row of maxNumbers as { base: string; max_num: number }[]) {
+      existingMaxNumbers.set(row.base, row.max_num)
+    }
+  }
+
+  // Generate fun scientist-themed credentials with globally unique usernames
+  const generatedCredentials = await generateStudentCredentials(count, existingMaxNumbers)
 
   const credentials: { username: string; password: string }[] = []
   const rows: {

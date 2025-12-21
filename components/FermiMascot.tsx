@@ -67,11 +67,6 @@ export default function FermiMascot({
             {/* Cheeks */}
             <circle cx="25" cy="55" r="5" fill={MASCOT_COLORS.cheeks} opacity="0.5" />
             <circle cx="75" cy="55" r="5" fill={MASCOT_COLORS.cheeks} opacity="0.5" />
-            {/* Atom Symbol on Belly */}
-            <ellipse cx="50" cy="65" rx="8" ry="3" fill="none" stroke={MASCOT_COLORS.body} strokeWidth="1.5" />
-            <ellipse cx="50" cy="65" rx="8" ry="3" fill="none" stroke={MASCOT_COLORS.body} strokeWidth="1.5" transform="rotate(60 50 65)" />
-            <ellipse cx="50" cy="65" rx="8" ry="3" fill="none" stroke={MASCOT_COLORS.body} strokeWidth="1.5" transform="rotate(-60 50 65)" />
-            <circle cx="50" cy="65" r="2" fill={MASCOT_COLORS.body} />
           </svg>
         )
       case 'thinking':

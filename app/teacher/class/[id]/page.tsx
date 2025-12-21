@@ -2,9 +2,9 @@ import { createSupabaseServer, createSupabaseServiceRole } from '@/lib/supabaseS
 import { notFound } from 'next/navigation'
 import ClassContent from '@/components/ClassContent'
 
-type Params = { params: { id: string } }
+type Params = { params: { id: string }; searchParams: { mode?: string } }
 
-export default async function ClassDetail({ params }: Params) {
+export default async function ClassDetail({ params, searchParams }: Params) {
   const supabase = createSupabaseServer()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) notFound()
@@ -42,8 +42,10 @@ export default async function ClassDetail({ params }: Params) {
   // Fetch all scores - filtering happens client-side
   const { data: scores } = await service
     .from('student_scores')
-    .select('student_id, correct_count, total_answered, score_percentage, competition_mode')
+    .select('student_id, correct_count, total_answered, score_percentage, competition_mode, confidence_points')
     .eq('class_id', cls.id)
+
+  const initialMode = (searchParams.mode === 'real' ? 'real' : 'mock') as 'mock' | 'real'
 
   return (
     <ClassContent
@@ -54,6 +56,7 @@ export default async function ClassDetail({ params }: Params) {
       students={students || []}
       scores={scores || []}
       realUnlocked={realUnlocked}
+      initialMode={initialMode}
     />
   )
 }

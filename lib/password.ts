@@ -105,22 +105,32 @@ export function generateUsername(prefix: string, index: number) {
   return `${prefix}${number}`.toLowerCase()
 }
 
-// Generate batch of fun credentials for students
-export async function generateStudentCredentials(count: number): Promise<{
+// Generate batch of fun credentials for students with globally unique usernames
+// Takes a map of base username -> highest existing number for efficient lookup
+export async function generateStudentCredentials(
+  count: number,
+  existingMaxNumbers: Map<string, number>
+): Promise<{
   username: string
   plainPassword: string
   passwordHash: string
 }[]> {
   const credentials = []
-
-  // Shuffle scientists for more variety
-  const shuffledScientists = [...SCIENTISTS].sort(() => Math.random() - 0.5)
+  // Track numbers we're using in this batch
+  const usedNumbers = new Map<string, number>(existingMaxNumbers)
 
   for (let i = 0; i < count; i++) {
-    const scientist = shuffledScientists[i % shuffledScientists.length]
+    // Pick random adjective and scientist
     const adjective = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)]
-    const number = (i + 1).toString().padStart(2, '0')
-    const username = `${adjective}${scientist}${number}`.toLowerCase()
+    const scientist = SCIENTISTS[Math.floor(Math.random() * SCIENTISTS.length)]
+    const baseUsername = `${adjective}${scientist}`.toLowerCase()
+
+    // Get the next available number for this base
+    const currentMax = usedNumbers.get(baseUsername) || 0
+    const nextNumber = currentMax + 1
+    const username = `${baseUsername}${nextNumber.toString().padStart(2, '0')}`
+
+    usedNumbers.set(baseUsername, nextNumber)
 
     const plainPassword = generateReadablePassword(8)
     const passwordHash = await hashPassword(plainPassword)
@@ -133,4 +143,11 @@ export async function generateStudentCredentials(count: number): Promise<{
   }
 
   return credentials
+}
+
+// Helper to extract base username and number from a full username
+export function parseUsername(username: string): { base: string; number: number } | null {
+  const match = username.match(/^(.+?)(\d+)$/)
+  if (!match) return null
+  return { base: match[1], number: parseInt(match[2], 10) }
 }

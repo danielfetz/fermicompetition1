@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import CompetitionModeToggle from './CompetitionModeToggle'
-import RealCompetitionCodeEntry from './RealCompetitionCodeEntry'
+import OfficialCompetitionCodeEntry from './OfficialCompetitionCodeEntry'
 
 type Student = {
   id: string
@@ -20,6 +20,7 @@ type Score = {
   total_answered: number
   score_percentage: number
   competition_mode?: 'mock' | 'real'
+  confidence_points?: number
 }
 
 type Props = {
@@ -30,6 +31,7 @@ type Props = {
   students: Student[]
   scores: Score[]
   realUnlocked: boolean
+  initialMode?: 'mock' | 'real'
 }
 
 export default function ClassContent({
@@ -39,11 +41,13 @@ export default function ClassContent({
   numStudents,
   students,
   scores,
-  realUnlocked: initialRealUnlocked
+  realUnlocked: initialRealUnlocked,
+  initialMode = 'mock'
 }: Props) {
-  const [mode, setMode] = useState<'mock' | 'real'>('mock')
+  const [mode, setMode] = useState<'mock' | 'real'>(initialMode)
   const [realUnlocked, setRealUnlocked] = useState(initialRealUnlocked)
   const [checkingAccess, setCheckingAccess] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   // Check access client-side on mount using API endpoint for reliability
   useEffect(() => {
@@ -80,7 +84,7 @@ export default function ClassContent({
       {/* Header */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
         <div>
-          <Link href="/teacher/dashboard" className="text-sm text-duo-blue hover:underline mb-2 inline-flex items-center gap-1">
+          <Link href="/teacher/dashboard" className="text-sm font-semibold text-duo-blue hover:underline mb-2 inline-flex items-center gap-1">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
@@ -92,6 +96,7 @@ export default function ClassContent({
         <div className="flex flex-wrap items-center gap-3">
           <CompetitionModeToggle
             classId={classId}
+            defaultMode={initialMode}
             realUnlocked={realUnlocked}
             onModeChange={setMode}
           />
@@ -113,7 +118,7 @@ export default function ClassContent({
           <p className="text-wolf">Checking access...</p>
         </div>
       ) : mode === 'real' && !realUnlocked ? (
-        <RealCompetitionCodeEntry onSuccess={() => setRealUnlocked(true)} />
+        <OfficialCompetitionCodeEntry onSuccess={() => setRealUnlocked(true)} />
       ) : (
         <>
           {/* Stats */}
@@ -131,7 +136,7 @@ export default function ClassContent({
               <div className="stat-label">In Progress</div>
             </div>
             <div className="stat-card">
-              <div className="stat-value text-duo-purple">{mode === 'real' ? 15 : 10}</div>
+              <div className="stat-value text-duo-purple">25</div>
               <div className="stat-label">Questions</div>
             </div>
           </div>
@@ -139,11 +144,60 @@ export default function ClassContent({
           {/* Students Table */}
           <div className="card">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-eel">
-                Students
-                {mode === 'real' && <span className="ml-2 badge badge-blue">Real Competition</span>}
-              </h2>
-              <span className="badge badge-blue">{studentsGenerated} generated</span>
+              <h2 className="text-xl font-bold text-eel">Students</h2>
+              <div className="flex items-center gap-2">
+                {filteredStudents.length > 0 && (
+                  <>
+                    <div className="relative group">
+                      <button
+                        onClick={() => {
+                          const text = filteredStudents.map(s => `${s.username}\t${s.plain_password || ''}`).join('\n')
+                          navigator.clipboard.writeText(text)
+                          setCopied(true)
+                          setTimeout(() => setCopied(false), 2000)
+                        }}
+                        className="icon-btn"
+                      >
+                        {copied ? (
+                          <svg className="w-5 h-5 text-duo-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                        )}
+                      </button>
+                      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs font-semibold text-white bg-eel rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                        {copied ? 'Copied!' : 'Copy all credentials'}
+                      </span>
+                    </div>
+                    <div className="relative group">
+                      <button
+                        onClick={() => {
+                          const csv = 'Username,Password\n' + filteredStudents.map(s => `${s.username},${s.plain_password || ''}`).join('\n')
+                          const blob = new Blob([csv], { type: 'text/csv' })
+                          const url = URL.createObjectURL(blob)
+                          const a = document.createElement('a')
+                          a.href = url
+                          a.download = `student-credentials-${mode}.csv`
+                          a.click()
+                          URL.revokeObjectURL(url)
+                        }}
+                        className="icon-btn"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                      </button>
+                      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs font-semibold text-white bg-eel rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                        Download as CSV
+                      </span>
+                    </div>
+                  </>
+                )}
+                <span className="badge badge-blue">{studentsGenerated} generated</span>
+              </div>
             </div>
 
             {filteredStudents.length > 0 ? (
@@ -155,7 +209,8 @@ export default function ClassContent({
                       <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Password</th>
                       <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Full Name</th>
                       <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Status</th>
-                      <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Score</th>
+                      <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Accuracy</th>
+                      <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Points</th>
                       <th className="py-3 px-6 font-bold text-wolf uppercase tracking-wide text-xs">Actions</th>
                     </tr>
                   </thead>
@@ -164,7 +219,7 @@ export default function ClassContent({
                       const score = filteredScores.find(x => x.student_id === s.id)
                       const correct = score?.correct_count ?? 0
                       const total = score?.total_answered ?? 0
-                      const maxQuestions = mode === 'real' ? 15 : 10
+                      const maxQuestions = 25
 
                       return (
                         <tr key={s.id} className="hover:bg-snow transition-colors">
@@ -205,9 +260,18 @@ export default function ClassContent({
                               <span className="text-hare">—</span>
                             )}
                           </td>
+                          <td className="py-3 px-4">
+                            {total > 0 ? (
+                              <span className={`font-bold ${(score?.confidence_points ?? 250) >= 250 ? 'text-duo-green' : (score?.confidence_points ?? 250) >= 200 ? 'text-duo-yellow-dark' : 'text-duo-red'}`}>
+                                {score?.confidence_points ?? 250}
+                              </span>
+                            ) : (
+                              <span className="text-hare">250</span>
+                            )}
+                          </td>
                           <td className="py-3 px-6">
                             <Link
-                              href={`/teacher/class/${classId}/student/${s.id}`}
+                              href={`/teacher/class/${classId}/student/${s.id}?mode=${mode}`}
                               className="text-duo-blue font-semibold hover:underline inline-flex items-center gap-1"
                             >
                               View/Edit
@@ -230,15 +294,15 @@ export default function ClassContent({
                   </svg>
                 </div>
                 <h3 className="text-lg font-bold text-eel mb-2">
-                  No {mode === 'real' ? 'Real Competition ' : ''}Students Yet
+                  No {mode === 'real' ? 'Official Competition ' : ''}Students Yet
                 </h3>
                 <p className="text-wolf mb-4">
                   {mode === 'real'
-                    ? 'Generate new credentials for the real competition. These are separate from mock credentials.'
+                    ? 'Generate new credentials for the official competition. These are separate from mock credentials.'
                     : 'Generate credentials for your students to get started.'}
                 </p>
                 <Link href={`/teacher/class/${classId}/generate?mode=${mode}`} className="btn btn-primary">
-                  Generate {mode === 'real' ? 'Real ' : ''}Credentials
+                  Generate {mode === 'real' ? 'Official ' : ''}Credentials
                 </Link>
               </div>
             )}
