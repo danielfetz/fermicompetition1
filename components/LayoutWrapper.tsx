@@ -52,20 +52,30 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
                 {link.label}
               </a>
             ))}
-            {isTeacherLoggedIn ? (
-              <Link
-                href="/teacher/dashboard"
-                className="btn btn-primary btn-sm"
-              >
-                Dashboard
-              </Link>
-            ) : (
-              <Link
-                href="/teacher"
-                className="btn btn-primary btn-sm"
-              >
-                Get Started
-              </Link>
+            {!isHomePage && (
+              isTeacherLoggedIn ? (
+                <Link
+                  href="/teacher/dashboard"
+                  className="btn btn-primary btn-sm"
+                >
+                  Dashboard
+                </Link>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <Link
+                    href="/teacher"
+                    className="btn btn-primary btn-sm"
+                  >
+                    I&apos;m a Teacher
+                  </Link>
+                  <Link
+                    href="/student/login"
+                    className="btn btn-outline btn-sm"
+                  >
+                    I&apos;m a Student
+                  </Link>
+                </div>
+              )
             )}
           </nav>
 
@@ -101,34 +111,36 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
                   {link.label}
                 </a>
               ))}
-              <div className="border-t border-swan pt-3 mt-1">
-                {isTeacherLoggedIn ? (
-                  <Link
-                    href="/teacher/dashboard"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="btn btn-primary w-full"
-                  >
-                    Dashboard
-                  </Link>
-                ) : (
-                  <div className="flex flex-col gap-2">
+              {!isHomePage && (
+                <div className="border-t border-swan pt-3 mt-1">
+                  {isTeacherLoggedIn ? (
                     <Link
-                      href="/teacher"
+                      href="/teacher/dashboard"
                       onClick={() => setMobileMenuOpen(false)}
                       className="btn btn-primary w-full"
                     >
-                      I&apos;m a Teacher
+                      Dashboard
                     </Link>
-                    <Link
-                      href="/student/login"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="btn btn-outline w-full"
-                    >
-                      I&apos;m a Student
-                    </Link>
-                  </div>
-                )}
-              </div>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      <Link
+                        href="/teacher"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="btn btn-primary w-full"
+                      >
+                        I&apos;m a Teacher
+                      </Link>
+                      <Link
+                        href="/student/login"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="btn btn-outline w-full"
+                      >
+                        I&apos;m a Student
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
             </nav>
           </div>
         )}
