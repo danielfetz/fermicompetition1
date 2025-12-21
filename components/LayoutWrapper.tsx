@@ -14,6 +14,7 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
   const isExamRoute = pathname?.startsWith('/student/exam/')
   const isHomePage = pathname === '/'
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [moreDropdownOpen, setMoreDropdownOpen] = useState(false)
 
   if (isExamRoute) {
     // Exam mode: minimal layout with just the content
@@ -53,6 +54,36 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
                 {link.label}
               </a>
             ))}
+            {isHomePage && (
+              <div className="relative">
+                <button
+                  onClick={() => setMoreDropdownOpen(!moreDropdownOpen)}
+                  className="text-sm font-bold uppercase px-3 hover:text-eel transition-colors flex items-center gap-1"
+                  style={{ color: '#a2a2a2', letterSpacing: '1px' }}
+                >
+                  More
+                  <svg
+                    className={`w-4 h-4 transition-transform ${moreDropdownOpen ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {moreDropdownOpen && (
+                  <div className="absolute top-full right-0 mt-2 bg-white border border-swan rounded-lg shadow-lg py-2 min-w-[160px]">
+                    <Link
+                      href="/leaderboard"
+                      onClick={() => setMoreDropdownOpen(false)}
+                      className="block px-4 py-2 text-sm font-semibold text-wolf hover:bg-polar hover:text-eel transition-colors"
+                    >
+                      Leaderboard
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
             {isHomePage && isTeacherLoggedIn && (
               <Link
                 href="/teacher/dashboard"
@@ -121,6 +152,16 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
                   {link.label}
                 </a>
               ))}
+              {isHomePage && (
+                <Link
+                  href="/leaderboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-sm font-bold uppercase py-2 hover:text-eel transition-colors"
+                  style={{ color: '#a2a2a2', letterSpacing: '1px' }}
+                >
+                  Leaderboard
+                </Link>
+              )}
               {isHomePage && isTeacherLoggedIn && (
                 <div className="border-t border-swan pt-3 mt-1">
                   <Link
