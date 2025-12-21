@@ -42,16 +42,32 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden md:flex items-center">
             {isHomePage && navLinks.map(link => (
               <a
                 key={link.href}
                 href={link.href}
-                className="text-wolf font-semibold hover:text-eel transition-colors"
+                className="hover:text-eel transition-colors"
+                style={{
+                  color: '#a2a2a2',
+                  fontSize: '14px',
+                  letterSpacing: '1px',
+                  padding: '0 12px',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                }}
               >
                 {link.label}
               </a>
             ))}
+            {isHomePage && isTeacherLoggedIn && (
+              <Link
+                href="/teacher/dashboard"
+                className="btn btn-primary btn-sm ml-4"
+              >
+                Dashboard
+              </Link>
+            )}
             {!isHomePage && (
               isTeacherLoggedIn ? (
                 <Link
@@ -106,11 +122,29 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="text-wolf font-semibold hover:text-eel transition-colors py-2"
+                  className="hover:text-eel transition-colors py-2"
+                  style={{
+                    color: '#a2a2a2',
+                    fontSize: '14px',
+                    letterSpacing: '1px',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                  }}
                 >
                   {link.label}
                 </a>
               ))}
+              {isHomePage && isTeacherLoggedIn && (
+                <div className="border-t border-swan pt-3 mt-1">
+                  <Link
+                    href="/teacher/dashboard"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="btn btn-primary w-full"
+                  >
+                    Dashboard
+                  </Link>
+                </div>
+              )}
               {!isHomePage && (
                 <div className="border-t border-swan pt-3 mt-1">
                   {isTeacherLoggedIn ? (
