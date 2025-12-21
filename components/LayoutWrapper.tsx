@@ -29,7 +29,7 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
 
   // Normal layout with header and footer
   return (
-    <>
+    <div className="min-h-screen flex flex-col">
       {/* Header */}
       <header className="bg-white border-b-2 border-swan sticky top-0 z-50 h-[70px]">
         <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
@@ -214,7 +214,7 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
       </header>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <main className="flex-1 max-w-6xl mx-auto px-4 py-8 w-full">
         {children}
       </main>
 
@@ -231,6 +231,6 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
           </Link>
         </div>
       </footer>
-    </>
+    </div>
   )
 }
