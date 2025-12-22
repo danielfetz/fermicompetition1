@@ -420,7 +420,7 @@ export default function StudentExam() {
               <div className="space-y-6">
                 {/* Answer Input */}
                 <div className="form-group">
-                  <label className="label flex items-center gap-2" htmlFor="answer">
+                  <label className="label !flex items-center gap-2" htmlFor="answer">
                     Your Estimate
                     <span className="group relative">
                       <svg className="w-4 h-4 text-wolf cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">

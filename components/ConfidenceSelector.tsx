@@ -23,7 +23,7 @@ export default function ConfidenceSelector({
 }: ConfidenceSelectorProps) {
   return (
     <div>
-      <label className="label !mb-4 flex items-center gap-2">
+      <label className="label !mb-4 !flex items-center gap-2">
         How confident are you?
         <span className="group relative">
           <svg className="w-4 h-4 text-wolf cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
