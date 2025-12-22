@@ -268,7 +268,8 @@ html, body {
 
 .confidence-btn {
   @apply flex-1 py-3 px-2 rounded-xl font-bold text-center cursor-pointer
-         transition-all duration-150 border-2 border-swan bg-white text-wolf;
+         transition-all duration-150 border-swan bg-white text-wolf;
+  border-width: 2px 2px 4px 2px;
 }
 
 .confidence-btn:hover {
@@ -349,7 +350,7 @@ html, body {
    ================================ */
 
 .question-card {
-  @apply bg-white rounded-duo-lg p-6 shadow-card border-2 border-swan;
+  @apply bg-white rounded-duo-lg p-6 border-2 border-swan;
 }
 
 .question-number {

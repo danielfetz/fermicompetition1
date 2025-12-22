@@ -454,7 +454,8 @@ export default function StudentExam() {
                     ref={inputRef}
                     id="answer"
                     type="number"
-                    className="input text-base font-bold text-center"
+                    className="input font-bold text-center"
+                    style={{ fontSize: '1.0675rem' }}
                     placeholder="Enter a number"
                     value={inputValue}
                     onChange={e => updateAnswer(e.target.value)}
