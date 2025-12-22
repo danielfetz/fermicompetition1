@@ -420,7 +420,17 @@ export default function StudentExam() {
               <div className="space-y-6">
                 {/* Answer Input */}
                 <div className="form-group">
-                  <label className="label" htmlFor="answer">Your Estimate</label>
+                  <label className="label flex items-center gap-2" htmlFor="answer">
+                    Your Estimate
+                    <span className="group relative">
+                      <svg className="w-4 h-4 text-wolf cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-eel text-white text-xs font-normal normal-case tracking-normal rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                        Your answer is correct if within ±50% of the actual answer
+                      </span>
+                    </span>
+                  </label>
                   <input
                     id="answer"
                     type="number"
