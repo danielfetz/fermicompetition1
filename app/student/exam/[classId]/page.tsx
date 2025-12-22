@@ -163,17 +163,6 @@ export default function StudentExam() {
     }
   }, [answers])
 
-  // Auto-save every 30 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (Object.keys(answers).length > 0) {
-        saveAnswers()
-      }
-    }, 30000)
-
-    return () => clearInterval(interval)
-  }, [answers, saveAnswers])
-
   // Check for halftime to unlock hints (35 minutes into a 70-minute exam)
   useEffect(() => {
     if (!deadline || hintsUnlocked) return
