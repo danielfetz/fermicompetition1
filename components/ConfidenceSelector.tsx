@@ -22,8 +22,8 @@ export default function ConfidenceSelector({
   disabled = false,
 }: ConfidenceSelectorProps) {
   return (
-    <div className="space-y-2">
-      <label className="label">How confident are you?</label>
+    <div>
+      <label className="label mb-4">How confident are you?</label>
       <div className="flex gap-2">
         {CONFIDENCE_LEVELS.map((level) => (
           <button

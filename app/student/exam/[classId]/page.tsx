@@ -343,7 +343,7 @@ export default function StudentExam() {
     <>
       {/* Exam Header */}
       <header className="bg-white border-b-2 border-swan sticky top-0 z-50 h-[70px]">
-        <div className="max-w-2xl mx-auto px-4 h-full flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-10 h-10 bg-duo-green rounded-xl flex items-center justify-center sm:hidden">
               <span className="text-white font-extrabold text-lg">F</span>
@@ -370,11 +370,6 @@ export default function StudentExam() {
       {/* Main Content */}
       <main className="max-w-2xl mx-auto px-4 py-6">
         <div className="space-y-6 pb-28">
-          {/* Answered Count */}
-          <div className="text-sm text-wolf text-right">
-            {answeredCount}/{questions.length} answered
-          </div>
-
           {/* Question Navigation Dots */}
           <div className="flex flex-wrap justify-center gap-2">
             {questions.map((q, idx) => {
@@ -388,7 +383,7 @@ export default function StudentExam() {
                       ? 'bg-duo-blue text-white scale-110'
                       : answers[q.id]?.value
                         ? 'bg-duo-green text-white'
-                        : 'bg-swan text-wolf hover:bg-hare'
+                        : 'bg-white text-wolf border-2 border-swan hover:border-hare'
                   }`}
                 >
                   {idx + 1}
@@ -403,17 +398,23 @@ export default function StudentExam() {
           {/* Current Question Card */}
           {currentQuestion && (
             <div className="question-card fade-in-up">
-              <div className="flex items-start gap-4 mb-6">
-                <div className="question-number">{currentIndex + 1}</div>
-                <div className="flex-1">
-                  <p className="question-text">{currentQuestion.prompt}</p>
-                  {hintsUnlocked && currentQuestion.hint && (
-                    <div className="mt-3 p-3 bg-duo-yellow/10 rounded-duo border border-duo-yellow/30">
-                      <p className="text-xs text-duo-yellow-dark font-semibold mb-1">Hint unlocked at halftime!</p>
-                      <p className="text-sm text-eel">{currentQuestion.hint}</p>
+              <div className="mb-6">
+                <p className="question-text">{currentQuestion.prompt}</p>
+                {hintsUnlocked && currentQuestion.hint && (
+                  <div className="mt-4 card bg-duo-yellow/5 border-duo-yellow/20">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-10 h-10 bg-duo-yellow/20 rounded-full flex items-center justify-center">
+                        <svg className="w-5 h-5 text-duo-yellow-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-duo-yellow-dark">Hint unlocked at halftime!</h3>
+                        <p className="text-sm text-eel mt-1">{currentQuestion.hint}</p>
+                      </div>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-6">
@@ -423,7 +424,7 @@ export default function StudentExam() {
                   <input
                     id="answer"
                     type="number"
-                    className="input text-xl font-bold text-center"
+                    className="input text-sm font-bold text-center"
                     placeholder="Enter a number"
                     value={inputValue}
                     onChange={e => updateAnswer(e.target.value)}

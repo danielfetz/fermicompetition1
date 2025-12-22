@@ -358,8 +358,9 @@ html, body {
 }
 
 .question-text {
-  @apply font-bold text-eel leading-relaxed;
+  @apply font-bold text-eel;
   font-size: 1.375rem;
+  line-height: 1.375;
 }
 
 /* ================================
