@@ -460,15 +460,16 @@ export default function StudentExam() {
                     ref={inputRef}
                     id="answer"
                     type="text"
-                    inputMode="decimal"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     className="input font-bold text-center"
                     style={{ fontSize: '1.0675rem' }}
                     placeholder="Enter a number"
                     value={inputValue}
                     onChange={e => {
-                      // Allow only numbers, decimal point, and minus sign
+                      // Allow only digits
                       const val = e.target.value
-                      if (val === '' || val === '-' || /^-?\d*\.?\d*$/.test(val)) {
+                      if (val === '' || /^\d+$/.test(val)) {
                         updateAnswer(val)
                       }
                     }}
