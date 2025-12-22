@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .text-xm {
+    font-size: 0.9375rem; /* 15px - between sm (14px) and base (16px) */
+  }
+}
+
 :root {
   --duo-green: #58CC02;
   --duo-green-dark: #58A700;
