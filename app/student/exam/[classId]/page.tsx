@@ -409,16 +409,21 @@ export default function StudentExam() {
               <div className="space-y-6">
                 {/* Answer Input */}
                 <div className="form-group">
-                  <label className="label !flex items-center gap-2" htmlFor="answer">
-                    Your Estimate
-                    <span className="group relative">
-                      <svg className="w-4 h-4 text-wolf cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-eel text-white text-xs font-normal normal-case tracking-normal rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 w-48 text-center">
-                        Your answer is correct if within ±50% of the actual answer
+                  <label className="label !flex items-center justify-between" htmlFor="answer">
+                    <span className="flex items-center gap-2">
+                      Your Estimate
+                      <span className="group relative">
+                        <svg className="w-4 h-4 text-wolf cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-eel text-white text-xs font-normal normal-case tracking-normal rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 w-48 text-center">
+                          Your answer is correct if within ±50% of the actual answer
+                        </span>
                       </span>
                     </span>
+                    {inputValue && parseFloat(inputValue) ? (
+                      <span className="text-duo-blue font-semibold normal-case tracking-normal">{formatNumberReadable(parseFloat(inputValue))}</span>
+                    ) : null}
                   </label>
                   <input
                     id="answer"
@@ -430,13 +435,6 @@ export default function StudentExam() {
                     onWheel={e => e.currentTarget.blur()}
                     autoFocus
                   />
-                  <p className="text-sm text-wolf text-center mt-2">
-                    {inputValue && parseFloat(inputValue) ? (
-                      <span className="text-duo-blue font-semibold">{formatNumberReadable(parseFloat(inputValue))}</span>
-                    ) : (
-                      'Enter your best estimate as a number'
-                    )}
-                  </p>
                 </div>
 
                 {/* Confidence Selector */}
@@ -458,7 +456,7 @@ export default function StudentExam() {
               </div>
               <div>
                 <h3 className="font-bold text-duo-blue">Learn more about hints</h3>
-                <p className="text-sm text-wolf mt-1">
+                <p className="text-wolf mt-1" style={{ fontSize: '0.9375rem' }}>
                   Hints are unlocked at halftime (35 minutes). Use them to update your estimates with new information—this is called Bayesian updating!
                 </p>
               </div>
