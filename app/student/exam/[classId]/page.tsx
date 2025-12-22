@@ -459,13 +459,19 @@ export default function StudentExam() {
                   <input
                     ref={inputRef}
                     id="answer"
-                    type="number"
+                    type="text"
+                    inputMode="decimal"
                     className="input font-bold text-center"
                     style={{ fontSize: '1.0675rem' }}
                     placeholder="Enter a number"
                     value={inputValue}
-                    onChange={e => updateAnswer(e.target.value)}
-                    onWheel={e => e.currentTarget.blur()}
+                    onChange={e => {
+                      // Allow only numbers, decimal point, and minus sign
+                      const val = e.target.value
+                      if (val === '' || val === '-' || /^-?\d*\.?\d*$/.test(val)) {
+                        updateAnswer(val)
+                      }
+                    }}
                     autoFocus
                   />
                 </div>
