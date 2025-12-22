@@ -67,6 +67,7 @@ export default function StudentExam() {
   const [inputValue, setInputValue] = useState('')
   const [loading, setLoading] = useState(true)
   const initialized = useRef(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   // Load questions, session, and existing answers
   useEffect(() => {
@@ -296,6 +297,9 @@ export default function StudentExam() {
     if (hintsUnlocked && q?.hint) {
       setSeenHints(prev => new Set([...prev, q.id]))
     }
+
+    // Focus input after state updates
+    setTimeout(() => inputRef.current?.focus(), 0)
   }
 
   function nextQuestion() {
@@ -447,6 +451,7 @@ export default function StudentExam() {
                     ) : null}
                   </label>
                   <input
+                    ref={inputRef}
                     id="answer"
                     type="number"
                     className="input text-base font-bold text-center"
