@@ -257,15 +257,24 @@ export default function StudentExam() {
   function updateAnswer(value: string) {
     setInputValue(value)
     if (!currentQuestion) return
-    const numValue = parseFloat(value) || 0
-    setAnswers(prev => ({
-      ...prev,
-      [currentQuestion.id]: {
-        question_id: currentQuestion.id,
-        value: numValue,
-        confidence_pct: prev[currentQuestion.id]?.confidence_pct || 50
-      }
-    }))
+    const numValue = parseFloat(value)
+    if (value === '' || isNaN(numValue)) {
+      // Clear the answer if input is empty
+      setAnswers(prev => {
+        const updated = { ...prev }
+        delete updated[currentQuestion.id]
+        return updated
+      })
+    } else {
+      setAnswers(prev => ({
+        ...prev,
+        [currentQuestion.id]: {
+          question_id: currentQuestion.id,
+          value: numValue,
+          confidence_pct: prev[currentQuestion.id]?.confidence_pct || 50
+        }
+      }))
+    }
   }
 
   function updateConfidence(pct: ConfidenceLevel) {
