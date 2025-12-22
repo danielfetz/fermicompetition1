@@ -258,23 +258,15 @@ export default function StudentExam() {
     setInputValue(value)
     if (!currentQuestion) return
     const numValue = parseFloat(value)
-    if (value === '' || isNaN(numValue)) {
-      // Clear the answer if input is empty
-      setAnswers(prev => {
-        const updated = { ...prev }
-        delete updated[currentQuestion.id]
-        return updated
-      })
-    } else {
-      setAnswers(prev => ({
-        ...prev,
-        [currentQuestion.id]: {
-          question_id: currentQuestion.id,
-          value: numValue,
-          confidence_pct: prev[currentQuestion.id]?.confidence_pct || 50
-        }
-      }))
-    }
+    // Store 0 when empty so it saves to Supabase
+    setAnswers(prev => ({
+      ...prev,
+      [currentQuestion.id]: {
+        question_id: currentQuestion.id,
+        value: isNaN(numValue) ? 0 : numValue,
+        confidence_pct: prev[currentQuestion.id]?.confidence_pct || 50
+      }
+    }))
   }
 
   function updateConfidence(pct: ConfidenceLevel) {
@@ -294,7 +286,7 @@ export default function StudentExam() {
 
     setCurrentIndex(index)
     const q = questions[index]
-    if (q && answers[q.id]) {
+    if (q && answers[q.id] && answers[q.id].value !== 0) {
       setInputValue(answers[q.id].value.toString())
     } else {
       setInputValue('')
@@ -408,7 +400,7 @@ export default function StudentExam() {
                       </div>
                       <div>
                         <h3 className="font-bold text-duo-yellow-dark">Hint</h3>
-                        <p className="text-sm text-wolf mt-1">{currentQuestion.hint}</p>
+                        <p className="text-wolf mt-1" style={{ fontSize: '0.9375rem' }}>{currentQuestion.hint}</p>
                       </div>
                     </div>
                   </div>
