@@ -434,7 +434,7 @@ export default function StudentExam() {
                   <input
                     id="answer"
                     type="number"
-                    className="input text-xm font-bold text-center"
+                    className="input text-base font-bold text-center"
                     placeholder="Enter a number"
                     value={inputValue}
                     onChange={e => updateAnswer(e.target.value)}
