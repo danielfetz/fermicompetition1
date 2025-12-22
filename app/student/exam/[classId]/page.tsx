@@ -199,9 +199,10 @@ export default function StudentExam() {
     }
   }, [seenHints, classId])
 
-  // Save on page unload
+  // Save on page unload and warn before leaving
   useEffect(() => {
-    const handleBeforeUnload = () => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // Save answers
       if (Object.keys(answers).length > 0) {
         const token = localStorage.getItem('studentToken')
         if (token) {
@@ -210,11 +211,34 @@ export default function StudentExam() {
           navigator.sendBeacon('/api/student/answers', new Blob([payload], { type: 'application/json' }))
         }
       }
+      // Show browser confirmation dialog
+      e.preventDefault()
+      e.returnValue = ''
+      return ''
     }
 
     window.addEventListener('beforeunload', handleBeforeUnload)
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [answers])
+
+  // Intercept browser back button
+  useEffect(() => {
+    // Push a state so we can intercept back navigation
+    window.history.pushState({ examPage: true }, '')
+
+    const handlePopState = () => {
+      if (confirm('Are you sure you want to leave? Your progress has been saved, but time is still running out!')) {
+        // Actually go back
+        window.history.back()
+      } else {
+        // Stay on page - push state again
+        window.history.pushState({ examPage: true }, '')
+      }
+    }
+
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
 
   // Save when answers change (debounced)
   useEffect(() => {
