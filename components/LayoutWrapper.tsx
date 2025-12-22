@@ -24,7 +24,7 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
   const navLinks = [
     { href: '/#faq', label: 'FAQ' },
     { href: '/#how-it-works', label: 'How It Works' },
-    { href: '/#about-fermi', label: 'About Fermi' },
+    { href: '/#about-fermi', label: 'Enrico Fermi' },
   ]
 
   // Normal layout with header and footer

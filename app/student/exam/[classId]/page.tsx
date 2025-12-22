@@ -398,8 +398,8 @@ export default function StudentExam() {
                         </svg>
                       </div>
                       <div>
-                        <h3 className="font-bold text-duo-yellow-dark">Hint unlocked at halftime!</h3>
-                        <p className="text-sm text-eel mt-1">{currentQuestion.hint}</p>
+                        <h3 className="font-bold text-duo-yellow-dark">Hint</h3>
+                        <p className="text-sm text-wolf mt-1">{currentQuestion.hint}</p>
                       </div>
                     </div>
                   </div>
@@ -457,7 +457,7 @@ export default function StudentExam() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-bold text-eel">About Hints</h3>
+                <h3 className="font-bold text-duo-blue">Learn more about hints</h3>
                 <p className="text-sm text-wolf mt-1">
                   Hints are unlocked at halftime (35 minutes). Use them to update your estimates with new information—this is called Bayesian updating!
                 </p>
