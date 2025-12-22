@@ -29,7 +29,7 @@ export default function ConfidenceSelector({
           <svg className="w-4 h-4 text-wolf cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-eel text-white text-xs font-normal normal-case tracking-normal rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+          <span className="absolute bottom-full left-0 mb-2 px-3 py-2 bg-eel text-white text-xs font-normal normal-case tracking-normal rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 w-56">
             Higher confidence = more points if correct, but also more lost if wrong
           </span>
         </span>
