@@ -28,6 +28,27 @@ export async function POST(req: NextRequest) {
 
   const supa = createSupabaseServiceRole()
 
+  // Check if the exam session has expired
+  const { data: session } = await supa
+    .from('student_exam_sessions')
+    .select('ends_at, submitted_at')
+    .eq('student_id', payload.studentId)
+    .single()
+
+  if (session) {
+    // If already submitted, reject new answers
+    if (session.submitted_at) {
+      return NextResponse.json({ error: 'Exam already submitted' }, { status: 400 })
+    }
+
+    // If deadline has passed, reject new answers (with 1 minute grace period for network latency)
+    const deadline = new Date(session.ends_at).getTime()
+    const gracePeriod = 60 * 1000 // 1 minute
+    if (Date.now() > deadline + gracePeriod) {
+      return NextResponse.json({ error: 'Exam time has expired' }, { status: 400 })
+    }
+  }
+
   // Map answers - now using class_question_id (the id passed from questions API)
   const rows = parsed.data.answers.map(a => ({
     student_id: payload.studentId,
