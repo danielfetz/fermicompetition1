@@ -318,6 +318,26 @@ export default function StudentExam() {
     }
   }
 
+  const handleLogoClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (confirm('Are you sure you want to leave? Your progress has been saved, but time is still running out!')) {
+      router.push('/')
+    }
+  }
+
+  const handleSubmitClick = () => {
+    if (!hintsUnlocked) {
+      if (!confirm('Hints have not been revealed yet! Are you sure you want to submit before halftime?')) {
+        return
+      }
+    } else {
+      if (!confirm('Are you sure you want to submit your answers? You will not be able to make changes after submitting.')) {
+        return
+      }
+    }
+    submit()
+  }
+
   if (loading || questions.length === 0) {
     return (
       <div className="max-w-2xl mx-auto space-y-6 px-4 py-6">
@@ -334,14 +354,14 @@ export default function StudentExam() {
       {/* Exam Header */}
       <header className="bg-white border-b-2 border-swan sticky top-0 z-50 h-[70px]">
         <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
+          <a href="/" onClick={handleLogoClick} className="flex items-center gap-2 cursor-pointer">
             <div className="w-10 h-10 bg-duo-green rounded-xl flex items-center justify-center sm:hidden">
               <span className="text-white font-extrabold text-lg">F</span>
             </div>
             <span className="text-xl font-extrabold text-duo-green hidden sm:block">
               Fermi Competition
             </span>
-          </Link>
+          </a>
           <div className="flex items-center gap-3">
             <Timer deadline={deadline} onTimeUp={handleTimeUp} urgentThreshold={5} />
             <button
@@ -489,7 +509,7 @@ export default function StudentExam() {
 
           {currentIndex === questions.length - 1 ? (
             <button
-              onClick={submit}
+              onClick={handleSubmitClick}
               disabled={submitting}
               className="btn btn-primary"
             >
