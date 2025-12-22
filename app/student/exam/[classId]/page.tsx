@@ -298,8 +298,14 @@ export default function StudentExam() {
       setSeenHints(prev => new Set([...prev, q.id]))
     }
 
-    // Focus input after state updates
-    setTimeout(() => inputRef.current?.focus(), 0)
+    // Focus input after state updates and move cursor to end
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus()
+        const len = inputRef.current.value.length
+        inputRef.current.setSelectionRange(len, len)
+      }
+    }, 0)
   }
 
   function nextQuestion() {
