@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-type CompetitionMode = 'mock' | 'real' | 'guest'
+type CompetitionMode = 'mock' | 'real'
 
 type Props = {
   classId: string
@@ -45,16 +45,6 @@ export default function CompetitionModeToggle({
         }`}
       >
         Official (soon)
-      </button>
-      <button
-        onClick={() => handleModeChange('guest')}
-        className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${
-          mode === 'guest'
-            ? 'bg-duo-purple text-white'
-            : 'text-wolf hover:text-eel'
-        }`}
-      >
-        Guest Test
       </button>
     </div>
   )

@@ -9,7 +9,7 @@ export default function GenerateStudents() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const mode = (searchParams.get('mode') as 'mock' | 'real' | 'guest') || 'mock'
+  const mode = (searchParams.get('mode') as 'mock' | 'real') || 'mock'
 
   const [count, setCount] = useState<number>(10)
   const [loading, setLoading] = useState(false)
@@ -18,7 +18,6 @@ export default function GenerateStudents() {
   const [copied, setCopied] = useState(false)
 
   const isReal = mode === 'real'
-  const isGuest = mode === 'guest'
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -76,22 +75,16 @@ export default function GenerateStudents() {
           </div>
           <div>
             <h1 className="text-2xl font-extrabold text-eel">
-              {isReal ? 'Official Competition ' : isGuest ? 'Guest Test ' : ''}Credentials Generated!
+              {isReal ? 'Official Competition ' : ''}Credentials Generated!
             </h1>
             <p className="text-wolf">
-              {result.length} {isGuest ? 'guest' : 'student'} accounts are ready for the {isReal ? 'official' : isGuest ? 'guest test' : 'mock'} competition.
+              {result.length} student accounts are ready for the {isReal ? 'official' : 'mock'} competition.
             </p>
           </div>
           {isReal && (
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-duo-blue/10 rounded-full">
               <span className="badge badge-blue">Official Competition</span>
               <span className="text-sm text-duo-blue font-semibold">25 official questions</span>
-            </div>
-          )}
-          {isGuest && (
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-duo-purple/10 rounded-full">
-              <span className="badge bg-duo-purple text-white">Guest Test</span>
-              <span className="text-sm text-duo-purple font-semibold">25 fun test questions</span>
             </div>
           )}
         </div>
@@ -127,8 +120,8 @@ export default function GenerateStudents() {
         <div className="card">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-bold text-eel">Student Credentials</h2>
-            <span className={`badge ${isReal ? 'badge-blue' : isGuest ? 'bg-duo-purple text-white' : 'badge-green'}`}>
-              {result.length} {isGuest ? 'guests' : 'students'}
+            <span className={`badge ${isReal ? 'badge-blue' : 'badge-green'}`}>
+              {result.length} students
             </span>
           </div>
           <div className="overflow-x-auto -mx-6">
@@ -154,22 +147,20 @@ export default function GenerateStudents() {
         </div>
 
         {/* Tip Card */}
-        <div className={`card ${isReal ? 'bg-duo-blue/10 border-duo-blue/30' : isGuest ? 'bg-duo-purple/10 border-duo-purple/30' : 'bg-duo-yellow/10 border-duo-yellow/30'}`}>
+        <div className={`card ${isReal ? 'bg-duo-blue/10 border-duo-blue/30' : 'bg-duo-yellow/10 border-duo-yellow/30'}`}>
           <div className="flex gap-3">
-            <div className={`flex-shrink-0 w-10 h-10 ${isReal ? 'bg-duo-blue/30' : isGuest ? 'bg-duo-purple/30' : 'bg-duo-yellow/30'} rounded-full flex items-center justify-center`}>
-              <svg className={`w-5 h-5 ${isReal ? 'text-duo-blue' : isGuest ? 'text-duo-purple' : 'text-duo-yellow-dark'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className={`flex-shrink-0 w-10 h-10 ${isReal ? 'bg-duo-blue/30' : 'bg-duo-yellow/30'} rounded-full flex items-center justify-center`}>
+              <svg className={`w-5 h-5 ${isReal ? 'text-duo-blue' : 'text-duo-yellow-dark'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
               </svg>
             </div>
             <div>
-              <h3 className={`font-bold ${isReal ? 'text-duo-blue' : isGuest ? 'text-duo-purple' : 'text-duo-yellow-dark'}`}>
-                {isReal ? 'Official Competition Mode' : isGuest ? 'Guest Test Mode' : 'Pro Tip'}
+              <h3 className={`font-bold ${isReal ? 'text-duo-blue' : 'text-duo-yellow-dark'}`}>
+                {isReal ? 'Official Competition Mode' : 'Pro Tip'}
               </h3>
               <p className="text-sm text-eel mt-1">
                 {isReal
                   ? 'These credentials are for the official competition with 25 official questions. Students cannot use mock credentials for the official competition.'
-                  : isGuest
-                  ? 'These credentials are for guests (parents, prospective students) to try out the system with 25 fun test questions. Great for demos and preparation!'
                   : 'Students will enter their full name when they first log in. The fun scientist-themed usernames make credentials easy to distribute!'}
               </p>
             </div>
@@ -201,24 +192,17 @@ export default function GenerateStudents() {
         </div>
         <div>
           <h1 className="text-2xl font-extrabold text-eel">
-            Generate {isReal ? 'Official Competition ' : isGuest ? 'Guest Test ' : ''}Credentials
+            Generate {isReal ? 'Official Competition ' : ''}Credentials
           </h1>
           <p className="text-wolf">
             {isReal
               ? 'Create credentials for the official Fermi Competition with 25 official questions.'
-              : isGuest
-              ? 'Create guest credentials for parents or students to try out the system with fun test questions!'
               : 'Create unique login credentials for your students with fun scientist-themed usernames!'}
           </p>
         </div>
         {isReal && (
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-duo-blue/10 rounded-full">
             <span className="badge badge-blue">Official Competition</span>
-          </div>
-        )}
-        {isGuest && (
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-duo-purple/10 rounded-full">
-            <span className="badge bg-duo-purple text-white">Guest Test</span>
           </div>
         )}
       </div>
@@ -254,7 +238,7 @@ export default function GenerateStudents() {
             </div>
           )}
 
-          <button className={`btn ${isReal ? 'btn-secondary' : isGuest ? 'bg-duo-purple hover:bg-duo-purple/90 text-white border-0' : 'btn-primary'} w-full`} disabled={loading}>
+          <button className={`btn ${isReal ? 'btn-secondary' : 'btn-primary'} w-full`} disabled={loading}>
             {loading ? (
               <span className="flex items-center gap-2">
                 <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
@@ -268,7 +252,7 @@ export default function GenerateStudents() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                Generate {count} {isReal ? 'Official ' : isGuest ? 'Guest ' : ''}Credentials
+                Generate {count} {isReal ? 'Official ' : ''}Credentials
               </>
             )}
           </button>
@@ -276,9 +260,9 @@ export default function GenerateStudents() {
       </div>
 
       {/* Info Card */}
-      <div className={`card ${isReal ? 'bg-duo-blue/5 border-duo-blue/20' : isGuest ? 'bg-duo-purple/5 border-duo-purple/20' : 'bg-duo-green/5 border-duo-green/20'}`}>
+      <div className={`card ${isReal ? 'bg-duo-blue/5 border-duo-blue/20' : 'bg-duo-green/5 border-duo-green/20'}`}>
         <h3 className="font-bold text-eel mb-3">
-          {isReal ? 'Official Competition Info:' : isGuest ? 'Guest Test Info:' : 'What you\'ll get:'}
+          {isReal ? 'Official Competition Info:' : 'What you\'ll get:'}
         </h3>
         <ul className="space-y-2">
           {isReal ? (
@@ -306,33 +290,6 @@ export default function GenerateStudents() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 70-minute timed examination
-              </li>
-            </>
-          ) : isGuest ? (
-            <>
-              <li className="flex items-start gap-2 text-sm text-wolf">
-                <svg className="w-5 h-5 text-duo-purple flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                25 fun, accessible test questions
-              </li>
-              <li className="flex items-start gap-2 text-sm text-wolf">
-                <svg className="w-5 h-5 text-duo-purple flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Perfect for parents and prospective students
-              </li>
-              <li className="flex items-start gap-2 text-sm text-wolf">
-                <svg className="w-5 h-5 text-duo-purple flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Different questions from practice &amp; official
-              </li>
-              <li className="flex items-start gap-2 text-sm text-wolf">
-                <svg className="w-5 h-5 text-duo-purple flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Great for demos and preparation
               </li>
             </>
           ) : (

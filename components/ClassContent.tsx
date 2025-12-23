@@ -5,7 +5,7 @@ import Link from 'next/link'
 import CompetitionModeToggle from './CompetitionModeToggle'
 import OfficialCompetitionCodeEntry from './OfficialCompetitionCodeEntry'
 
-type CompetitionMode = 'mock' | 'real' | 'guest'
+type CompetitionMode = 'mock' | 'real'
 
 type Student = {
   id: string
@@ -13,7 +13,7 @@ type Student = {
   full_name: string | null
   has_completed_exam: boolean
   plain_password: string | null
-  competition_mode?: CompetitionMode
+  competition_mode?: string
 }
 
 type Score = {
@@ -21,7 +21,7 @@ type Score = {
   correct_count: number
   total_answered: number
   score_percentage: number
-  competition_mode?: CompetitionMode
+  competition_mode?: string
   confidence_points?: number
 }
 
@@ -102,7 +102,7 @@ export default function ClassContent({
             realUnlocked={realUnlocked}
             onModeChange={setMode}
           />
-          {(mode === 'mock' || mode === 'guest' || realUnlocked) && (
+          {(mode === 'mock' || realUnlocked) && (
             <Link className="btn btn-primary" href={`/teacher/class/${classId}/generate?mode=${mode}`}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
@@ -296,17 +296,15 @@ export default function ClassContent({
                   </svg>
                 </div>
                 <h3 className="text-lg font-bold text-eel mb-2">
-                  No {mode === 'real' ? 'Official Competition ' : mode === 'guest' ? 'Guest Test ' : ''}Students Yet
+                  No {mode === 'real' ? 'Official Competition ' : ''}Students Yet
                 </h3>
                 <p className="text-wolf mb-4">
                   {mode === 'real'
                     ? 'Generate new credentials for the official competition. These are separate from mock credentials.'
-                    : mode === 'guest'
-                    ? 'Generate guest test credentials for parents or students to try out the system.'
                     : 'Generate credentials for your students to get started.'}
                 </p>
                 <Link href={`/teacher/class/${classId}/generate?mode=${mode}`} className="btn btn-primary">
-                  Generate {mode === 'real' ? 'Official ' : mode === 'guest' ? 'Guest ' : ''}Credentials
+                  Generate {mode === 'real' ? 'Official ' : ''}Credentials
                 </Link>
               </div>
             )}
