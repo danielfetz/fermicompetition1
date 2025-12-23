@@ -99,13 +99,9 @@ export default function Done() {
           {/* Score Card */}
           <div className="card">
             <h2 className="font-bold text-eel mb-4">Your Score</h2>
-            <div className="flex justify-center items-center gap-2 mb-4">
+            <div className="flex justify-center items-center mb-4">
               <div className="text-5xl font-extrabold text-duo-green">
                 {results.score.confidencePoints}
-              </div>
-              <div className="text-left">
-                <div className="text-sm font-semibold text-eel">Confidence</div>
-                <div className="text-sm text-wolf">Points</div>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4 text-center">
