@@ -22,8 +22,18 @@ export default function ConfidenceSelector({
   disabled = false,
 }: ConfidenceSelectorProps) {
   return (
-    <div className="space-y-2">
-      <label className="label">How confident are you?</label>
+    <div>
+      <label className="label !mb-4 !flex items-center gap-2">
+        How confident are you?
+        <span className="group relative">
+          <svg className="w-4 h-4 text-wolf cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-eel text-white text-xs font-normal normal-case tracking-normal rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 w-56 text-center">
+            Higher confidence = more points if correct, but also more lost if wrong
+          </span>
+        </span>
+      </label>
       <div className="flex gap-2">
         {CONFIDENCE_LEVELS.map((level) => (
           <button

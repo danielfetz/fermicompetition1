@@ -28,18 +28,57 @@ export async function POST(req: NextRequest) {
 
   const supa = createSupabaseServiceRole()
 
+  // Check if the exam session has expired
+  const { data: session } = await supa
+    .from('student_exam_sessions')
+    .select('ends_at, submitted_at')
+    .eq('student_id', payload.studentId)
+    .single()
+
+  if (session) {
+    // If already submitted, reject new answers
+    if (session.submitted_at) {
+      return NextResponse.json({ error: 'Exam already submitted' }, { status: 400 })
+    }
+
+    // If deadline has passed, reject new answers (with 1 minute grace period for network latency)
+    const deadline = new Date(session.ends_at).getTime()
+    const gracePeriod = 60 * 1000 // 1 minute
+    if (Date.now() > deadline + gracePeriod) {
+      return NextResponse.json({ error: 'Exam time has expired' }, { status: 400 })
+    }
+  }
+
+  // Separate answers to upsert vs delete (value 0 means delete)
+  const toUpsert = parsed.data.answers.filter(a => a.value !== 0)
+  const toDelete = parsed.data.answers.filter(a => a.value === 0)
+
+  // Delete answers with value 0
+  if (toDelete.length > 0) {
+    const deleteIds = toDelete.map(a => a.question_id)
+    await supa
+      .from('answers')
+      .delete()
+      .eq('student_id', payload.studentId)
+      .in('class_question_id', deleteIds)
+  }
+
   // Map answers - now using class_question_id (the id passed from questions API)
-  const rows = parsed.data.answers.map(a => ({
+  const rows = toUpsert.map(a => ({
     student_id: payload.studentId,
     class_question_id: a.question_id, // This is actually the class_question ID
     value: a.value,
     confidence_pct: a.confidence_pct
   }))
 
-  // Upsert answers
-  const { error } = await supa
-    .from('answers')
-    .upsert(rows, { onConflict: 'student_id,class_question_id' })
+  // Upsert answers (only if there are any)
+  let error = null
+  if (rows.length > 0) {
+    const result = await supa
+      .from('answers')
+      .upsert(rows, { onConflict: 'student_id,class_question_id' })
+    error = result.error
+  }
 
   if (error) {
     console.error('Error saving answers:', error)

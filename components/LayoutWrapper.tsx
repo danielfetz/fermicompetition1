@@ -14,6 +14,7 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
   const isExamRoute = pathname?.startsWith('/student/exam/')
   const isHomePage = pathname === '/'
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [moreDropdownOpen, setMoreDropdownOpen] = useState(false)
 
   if (isExamRoute) {
     // Exam mode: minimal layout with just the content
@@ -23,15 +24,15 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
   const navLinks = [
     { href: '/#faq', label: 'FAQ' },
     { href: '/#how-it-works', label: 'How It Works' },
-    { href: '/#about-fermi', label: 'About Fermi' },
+    { href: '/#about-fermi', label: 'Enrico Fermi' },
   ]
 
   // Normal layout with header and footer
   return (
-    <>
+    <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="bg-white border-b-2 border-swan sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <header className="bg-white border-b-2 border-swan sticky top-0 z-50 h-[70px]">
+        <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 group">
             <div className="w-10 h-10 bg-duo-green rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform sm:hidden">
               <span className="text-white font-extrabold text-lg">F</span>
@@ -42,30 +43,84 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden md:flex items-center">
             {isHomePage && navLinks.map(link => (
               <a
                 key={link.href}
                 href={link.href}
-                className="text-wolf font-semibold hover:text-eel transition-colors"
+                className="text-sm font-bold uppercase px-3 hover:text-eel transition-colors"
+                style={{ color: '#a2a2a2', letterSpacing: '1px' }}
               >
                 {link.label}
               </a>
             ))}
-            {isTeacherLoggedIn ? (
+            {isHomePage && (
+              <div
+                className="relative"
+                onMouseEnter={() => setMoreDropdownOpen(true)}
+                onMouseLeave={() => setMoreDropdownOpen(false)}
+              >
+                <button
+                  className="text-sm font-bold uppercase px-3 hover:text-eel transition-colors flex items-center gap-1"
+                  style={{ color: '#a2a2a2', letterSpacing: '1px' }}
+                >
+                  More
+                  <svg
+                    className={`w-4 h-4 transition-transform ${moreDropdownOpen ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {moreDropdownOpen && (
+                  <div className="absolute top-full right-0 pt-2">
+                    <div className="bg-white border-2 border-swan rounded-lg py-2 min-w-[160px]">
+                      <Link
+                        href="/leaderboard"
+                        className="block px-4 py-2 text-sm font-bold uppercase hover:text-eel transition-colors"
+                        style={{ color: '#a2a2a2', letterSpacing: '1px' }}
+                      >
+                        Leaderboard
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            {isHomePage && isTeacherLoggedIn && (
               <Link
                 href="/teacher/dashboard"
-                className="btn btn-primary btn-sm"
+                className="btn btn-primary btn-sm ml-4"
               >
                 Dashboard
               </Link>
-            ) : (
-              <Link
-                href="/teacher"
-                className="btn btn-primary btn-sm"
-              >
-                Get Started
-              </Link>
+            )}
+            {!isHomePage && (
+              isTeacherLoggedIn ? (
+                <Link
+                  href="/teacher/dashboard"
+                  className="btn btn-primary btn-sm"
+                >
+                  Dashboard
+                </Link>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <Link
+                    href="/teacher"
+                    className="btn btn-primary btn-sm"
+                  >
+                    I&apos;m a Teacher
+                  </Link>
+                  <Link
+                    href="/student/login"
+                    className="btn btn-outline btn-sm"
+                  >
+                    I&apos;m a Student
+                  </Link>
+                </div>
+              )
             )}
           </nav>
 
@@ -96,13 +151,24 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="text-wolf font-semibold hover:text-eel transition-colors py-2"
+                  className="text-sm font-bold uppercase py-2 hover:text-eel transition-colors"
+                  style={{ color: '#a2a2a2', letterSpacing: '1px' }}
                 >
                   {link.label}
                 </a>
               ))}
-              <div className="border-t border-swan pt-3 mt-1">
-                {isTeacherLoggedIn ? (
+              {isHomePage && (
+                <Link
+                  href="/leaderboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-sm font-bold uppercase py-2 hover:text-eel transition-colors"
+                  style={{ color: '#a2a2a2', letterSpacing: '1px' }}
+                >
+                  Leaderboard
+                </Link>
+              )}
+              {isHomePage && isTeacherLoggedIn && (
+                <div className="border-t border-swan pt-3 mt-1">
                   <Link
                     href="/teacher/dashboard"
                     onClick={() => setMobileMenuOpen(false)}
@@ -110,32 +176,45 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
                   >
                     Dashboard
                   </Link>
-                ) : (
-                  <div className="flex flex-col gap-2">
+                </div>
+              )}
+              {!isHomePage && (
+                <div className="border-t border-swan pt-3 mt-1">
+                  {isTeacherLoggedIn ? (
                     <Link
-                      href="/teacher"
+                      href="/teacher/dashboard"
                       onClick={() => setMobileMenuOpen(false)}
                       className="btn btn-primary w-full"
                     >
-                      I&apos;m a Teacher
+                      Dashboard
                     </Link>
-                    <Link
-                      href="/student/login"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="btn btn-outline w-full"
-                    >
-                      I&apos;m a Student
-                    </Link>
-                  </div>
-                )}
-              </div>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      <Link
+                        href="/teacher"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="btn btn-primary w-full"
+                      >
+                        I&apos;m a Teacher
+                      </Link>
+                      <Link
+                        href="/student/login"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="btn btn-outline w-full"
+                      >
+                        I&apos;m a Student
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
             </nav>
           </div>
         )}
       </header>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <main className="flex-1 max-w-6xl mx-auto px-4 py-8 w-full">
         {children}
       </main>
 
@@ -152,6 +231,6 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
           </Link>
         </div>
       </footer>
-    </>
+    </div>
   )
 }

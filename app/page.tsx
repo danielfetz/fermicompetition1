@@ -29,18 +29,6 @@ export default function Home() {
       {/* Features Section */}
       <section className="!mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="card text-center">
-          <div className="w-16 h-16 mx-auto mb-4 bg-duo-green/10 rounded-full flex items-center justify-center">
-            <svg className="w-8 h-8 text-duo-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-            </svg>
-          </div>
-          <h3 className="text-xl font-bold mb-2">Think Like Fermi</h3>
-          <p className="text-wolf">
-            Answer questions like &ldquo;How many dentists work in the US?&rdquo; by breaking them into smaller parts.
-          </p>
-        </div>
-
-        <div className="card text-center">
           <div className="w-16 h-16 mx-auto mb-4 bg-duo-blue/10 rounded-full flex items-center justify-center">
             <svg className="w-8 h-8 text-duo-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -48,7 +36,19 @@ export default function Home() {
           </div>
           <h3 className="text-xl font-bold mb-2">70-Minute Challenge</h3>
           <p className="text-wolf">
-            Answer up to 25 Fermi questions under time pressure. Start with the ones you can break down most easily.
+            Answer up to 25 Fermi questions like &ldquo;How many dentists work in the US?&rdquo; under time pressure.
+          </p>
+        </div>
+
+        <div className="card text-center">
+          <div className="w-16 h-16 mx-auto mb-4 bg-duo-green/10 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-duo-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold mb-2">Think Like Fermi</h3>
+          <p className="text-wolf">
+            Break questions into smaller parts: How often do you go to the dentist? How long is an appointment?
           </p>
         </div>
 

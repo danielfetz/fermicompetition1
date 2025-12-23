@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import Timer from '@/components/Timer'
-import ProgressBar from '@/components/ProgressBar'
 import ConfidenceSelector from '@/components/ConfidenceSelector'
 
 type Question = { id: string; prompt: string; hint?: string }
@@ -67,6 +67,7 @@ export default function StudentExam() {
   const [inputValue, setInputValue] = useState('')
   const [loading, setLoading] = useState(true)
   const initialized = useRef(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   // Load questions, session, and existing answers
   useEffect(() => {
@@ -163,17 +164,6 @@ export default function StudentExam() {
     }
   }, [answers])
 
-  // Auto-save every 30 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (Object.keys(answers).length > 0) {
-        saveAnswers()
-      }
-    }, 30000)
-
-    return () => clearInterval(interval)
-  }, [answers, saveAnswers])
-
   // Check for halftime to unlock hints (35 minutes into a 70-minute exam)
   useEffect(() => {
     if (!deadline || hintsUnlocked) return
@@ -209,9 +199,10 @@ export default function StudentExam() {
     }
   }, [seenHints, classId])
 
-  // Save on page unload
+  // Save on page unload and warn before leaving
   useEffect(() => {
-    const handleBeforeUnload = () => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // Save answers
       if (Object.keys(answers).length > 0) {
         const token = localStorage.getItem('studentToken')
         if (token) {
@@ -220,11 +211,34 @@ export default function StudentExam() {
           navigator.sendBeacon('/api/student/answers', new Blob([payload], { type: 'application/json' }))
         }
       }
+      // Show browser confirmation dialog
+      e.preventDefault()
+      e.returnValue = ''
+      return ''
     }
 
     window.addEventListener('beforeunload', handleBeforeUnload)
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [answers])
+
+  // Intercept browser back button
+  useEffect(() => {
+    // Push a state so we can intercept back navigation
+    window.history.pushState({ examPage: true }, '')
+
+    const handlePopState = () => {
+      if (confirm('Are you sure you want to leave? Your progress has been saved, but time is still running out!')) {
+        // Actually go back
+        window.history.back()
+      } else {
+        // Stay on page - push state again
+        window.history.pushState({ examPage: true }, '')
+      }
+    }
+
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
 
   // Save when answers change (debounced)
   useEffect(() => {
@@ -268,12 +282,13 @@ export default function StudentExam() {
   function updateAnswer(value: string) {
     setInputValue(value)
     if (!currentQuestion) return
-    const numValue = parseFloat(value) || 0
+    const numValue = parseFloat(value)
+    // Store 0 when empty so it saves to Supabase
     setAnswers(prev => ({
       ...prev,
       [currentQuestion.id]: {
         question_id: currentQuestion.id,
-        value: numValue,
+        value: isNaN(numValue) ? 0 : numValue,
         confidence_pct: prev[currentQuestion.id]?.confidence_pct || 50
       }
     }))
@@ -296,7 +311,7 @@ export default function StudentExam() {
 
     setCurrentIndex(index)
     const q = questions[index]
-    if (q && answers[q.id]) {
+    if (q && answers[q.id] && answers[q.id].value !== 0) {
       setInputValue(answers[q.id].value.toString())
     } else {
       setInputValue('')
@@ -306,6 +321,15 @@ export default function StudentExam() {
     if (hintsUnlocked && q?.hint) {
       setSeenHints(prev => new Set([...prev, q.id]))
     }
+
+    // Focus input after state updates and move cursor to end
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus()
+        const len = inputRef.current.value.length
+        inputRef.current.setSelectionRange(len, len)
+      }
+    }, 0)
   }
 
   function nextQuestion() {
@@ -322,9 +346,35 @@ export default function StudentExam() {
 
   const answeredCount = Object.keys(answers).filter(k => answers[k].value !== 0).length
 
+  const handleClose = () => {
+    if (confirm('Are you sure you want to leave? Your progress has been saved, but time is still running out!')) {
+      router.push('/student/login')
+    }
+  }
+
+  const handleLogoClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (confirm('Are you sure you want to leave? Your progress has been saved, but time is still running out!')) {
+      router.push('/')
+    }
+  }
+
+  const handleSubmitClick = () => {
+    if (!hintsUnlocked) {
+      if (!confirm('Hints have not been revealed yet! Are you sure you want to submit before halftime?')) {
+        return
+      }
+    } else {
+      if (!confirm('Are you sure you want to submit your answers? You will not be able to make changes after submitting.')) {
+        return
+      }
+    }
+    submit()
+  }
+
   if (loading || questions.length === 0) {
     return (
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-2xl mx-auto space-y-6 px-4 py-6">
         <div className="card text-center py-12">
           <div className="animate-spin w-12 h-12 border-4 border-duo-green border-t-transparent rounded-full mx-auto mb-4"></div>
           <p className="text-wolf">Loading questions...</p>
@@ -335,106 +385,160 @@ export default function StudentExam() {
 
   return (
     <>
-      <div className="max-w-3xl mx-auto space-y-6 pb-28">
-        {/* Timer and Progress */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+      {/* Exam Header */}
+      <header className="bg-white border-b-2 border-swan sticky top-0 z-50 h-[70px]">
+        <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
+          <a href="/" onClick={handleLogoClick} className="flex items-center gap-2 cursor-pointer">
+            <div className="w-10 h-10 bg-duo-green rounded-xl flex items-center justify-center sm:hidden">
+              <span className="text-white font-extrabold text-lg">F</span>
+            </div>
+            <span className="text-xl font-extrabold text-duo-green hidden sm:block">
+              Fermi Competition
+            </span>
+          </a>
+          <div className="flex items-center gap-3">
             <Timer deadline={deadline} onTimeUp={handleTimeUp} urgentThreshold={5} />
-            {!hintsUnlocked && (
-              <span className="text-xs text-wolf hidden sm:inline">Hints at halftime</span>
-            )}
-          </div>
-          <div className="text-sm text-wolf">
-            {answeredCount}/{questions.length} answered
-          </div>
-        </div>
-
-        <ProgressBar current={answeredCount} total={questions.length} />
-
-        {/* Question Navigation Dots */}
-        <div className="flex flex-wrap justify-center gap-2">
-          {questions.map((q, idx) => {
-            const hasUnseenHint = hintsUnlocked && q.hint && !seenHints.has(q.id)
-            return (
-              <button
-              key={q.id}
-              onClick={() => goToQuestion(idx)}
-              className={`relative w-8 h-8 rounded-full font-bold text-sm transition-all ${
-                idx === currentIndex
-                  ? 'bg-duo-blue text-white scale-110'
-                  : answers[q.id]?.value
-                    ? 'bg-duo-green text-white'
-                    : 'bg-swan text-wolf hover:bg-hare'
-              }`}
+            <button
+              onClick={handleClose}
+              className="icon-btn"
+              title="Exit competition"
             >
-              {idx + 1}
-              {hasUnseenHint && (
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-duo-red rounded-full" />
-              )}
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
-          )
-        })}
-      </div>
-
-      {/* Current Question Card */}
-      {currentQuestion && (
-        <div className="question-card fade-in-up">
-          <div className="flex items-start gap-4 mb-6">
-            <div className="question-number">{currentIndex + 1}</div>
-            <div className="flex-1">
-              <p className="question-text">{currentQuestion.prompt}</p>
-              {hintsUnlocked && currentQuestion.hint && (
-                <div className="mt-3 p-3 bg-duo-yellow/10 rounded-duo border border-duo-yellow/30">
-                  <p className="text-xs text-duo-yellow-dark font-semibold mb-1">Hint unlocked at halftime!</p>
-                  <p className="text-sm text-eel">{currentQuestion.hint}</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            {/* Answer Input */}
-            <div className="form-group">
-              <label className="label" htmlFor="answer">Your Estimate</label>
-              <input
-                id="answer"
-                type="number"
-                className="input text-xl font-bold text-center"
-                placeholder="Enter a number"
-                value={inputValue}
-                onChange={e => updateAnswer(e.target.value)}
-                onWheel={e => e.currentTarget.blur()}
-                autoFocus
-              />
-              <p className="text-sm text-wolf text-center mt-2">
-                {inputValue && parseFloat(inputValue) ? (
-                  <span className="text-duo-blue font-semibold">{formatNumberReadable(parseFloat(inputValue))}</span>
-                ) : (
-                  'Enter your best estimate as a number'
-                )}
-              </p>
-            </div>
-
-            {/* Confidence Selector */}
-            <ConfidenceSelector
-              value={answers[currentQuestion.id]?.confidence_pct || 50}
-              onChange={updateConfidence}
-            />
           </div>
         </div>
-      )}
+      </header>
 
-        {/* Error Message */}
-        {error && (
-          <div className="bg-duo-red/10 border-2 border-duo-red rounded-duo p-4 text-center">
-            <p className="text-duo-red-dark font-semibold">{error}</p>
+      {/* Main Content */}
+      <main className="max-w-2xl mx-auto px-4 py-6">
+        <div className="space-y-6 pb-28">
+          {/* Question Navigation Dots */}
+          <div className="flex flex-wrap justify-center gap-2">
+            {questions.map((q, idx) => {
+              const hasUnseenHint = hintsUnlocked && q.hint && !seenHints.has(q.id)
+              return (
+                <button
+                  key={q.id}
+                  onClick={() => goToQuestion(idx)}
+                  className={`relative w-8 h-8 rounded-full font-bold text-sm transition-all ${
+                    idx === currentIndex
+                      ? 'bg-duo-blue text-white scale-110'
+                      : answers[q.id]?.value
+                        ? 'bg-duo-green text-white'
+                        : 'bg-white text-wolf border-2 border-swan hover:border-hare'
+                  }`}
+                >
+                  {idx + 1}
+                  {hasUnseenHint && (
+                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-duo-red rounded-full" />
+                  )}
+                </button>
+              )
+            })}
           </div>
-        )}
-      </div>
+
+          {/* Current Question Card */}
+          {currentQuestion && (
+            <div className="question-card fade-in-up">
+              <div className="mb-6">
+                <p className="question-text">{currentQuestion.prompt}</p>
+                {hintsUnlocked && currentQuestion.hint && (
+                  <div className="mt-4 card bg-duo-yellow/5 border-duo-yellow/20">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-10 h-10 bg-duo-yellow/20 rounded-full flex items-center justify-center">
+                        <svg className="w-5 h-5 text-duo-yellow-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-duo-yellow-dark">Hint</h3>
+                        <p className="text-wolf mt-1" style={{ fontSize: '0.9375rem' }}>{currentQuestion.hint}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-6">
+                {/* Answer Input */}
+                <div className="form-group">
+                  <label className="label !flex items-center justify-between" htmlFor="answer">
+                    <span className="flex items-center gap-2">
+                      Your Estimate
+                      <span className="group relative">
+                        <svg className="w-4 h-4 text-wolf cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-eel text-white text-xs font-normal normal-case tracking-normal rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 w-48 text-center">
+                          Your answer is correct if within ±50% of the actual answer
+                        </span>
+                      </span>
+                    </span>
+                    {inputValue && parseFloat(inputValue) ? (
+                      <span className="text-duo-blue font-semibold normal-case tracking-normal">{formatNumberReadable(parseFloat(inputValue))}</span>
+                    ) : null}
+                  </label>
+                  <input
+                    ref={inputRef}
+                    id="answer"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    className="input font-bold text-center"
+                    style={{ fontSize: '1.0675rem' }}
+                    placeholder="Enter a number"
+                    value={inputValue}
+                    onChange={e => {
+                      // Allow only digits
+                      const val = e.target.value
+                      if (val === '' || /^\d+$/.test(val)) {
+                        updateAnswer(val)
+                      }
+                    }}
+                    autoFocus
+                  />
+                </div>
+
+                {/* Confidence Selector */}
+                <ConfidenceSelector
+                  value={answers[currentQuestion.id]?.confidence_pct || 50}
+                  onChange={updateConfidence}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Hints Info Card */}
+          <div className="card bg-duo-blue/5 border-duo-blue/20">
+            <div className="flex gap-3">
+              <div className="flex-shrink-0 w-10 h-10 bg-duo-blue/20 rounded-full flex items-center justify-center">
+                <svg className="w-5 h-5 text-duo-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-bold text-duo-blue">Learn more about hints</h3>
+                <p className="text-wolf mt-1" style={{ fontSize: '0.9375rem' }}>
+                  Hints are unlocked at halftime (35 minutes). Use the new information to update your estimates and confidence, but find the balance between overreacting and underreacting!
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="bg-duo-red/10 border-2 border-duo-red rounded-duo p-4 text-center">
+              <p className="text-duo-red-dark font-semibold">{error}</p>
+            </div>
+          )}
+        </div>
+      </main>
 
       {/* Fixed Navigation Footer */}
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t-2 border-swan">
-        <div className="max-w-3xl mx-auto px-4 sm:px-0 py-4 flex items-center justify-between">
+        <div className="max-w-2xl mx-auto px-4 pt-4 flex items-center justify-between" style={{ paddingBottom: '1.125rem' }}>
           <button
             onClick={prevQuestion}
             disabled={currentIndex === 0}
@@ -448,7 +552,7 @@ export default function StudentExam() {
 
           {currentIndex === questions.length - 1 ? (
             <button
-              onClick={submit}
+              onClick={handleSubmitClick}
               disabled={submitting}
               className="btn btn-primary"
             >
