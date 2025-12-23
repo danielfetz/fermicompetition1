@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
   const supa = createSupabaseServiceRole()
 
   // Get student's competition mode from token if provided
-  let competitionMode: 'mock' | 'real' = 'mock'
+  let competitionMode: 'mock' | 'real' | 'guest' = 'mock'
   const auth = req.headers.get('authorization')
   const token = auth?.startsWith('Bearer ') ? auth.slice(7) : null
 
@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
         .single()
 
       if (student?.competition_mode) {
-        competitionMode = student.competition_mode as 'mock' | 'real'
+        competitionMode = student.competition_mode as 'mock' | 'real' | 'guest'
       }
     }
   }

@@ -2,11 +2,13 @@
 
 import { useState } from 'react'
 
+type CompetitionMode = 'mock' | 'real' | 'guest'
+
 type Props = {
   classId: string
-  defaultMode?: 'mock' | 'real'
+  defaultMode?: CompetitionMode
   realUnlocked?: boolean
-  onModeChange?: (mode: 'mock' | 'real') => void
+  onModeChange?: (mode: CompetitionMode) => void
 }
 
 export default function CompetitionModeToggle({
@@ -15,9 +17,9 @@ export default function CompetitionModeToggle({
   realUnlocked = false,
   onModeChange
 }: Props) {
-  const [mode, setMode] = useState<'mock' | 'real'>(defaultMode)
+  const [mode, setMode] = useState<CompetitionMode>(defaultMode)
 
-  const handleModeChange = (newMode: 'mock' | 'real') => {
+  const handleModeChange = (newMode: CompetitionMode) => {
     setMode(newMode)
     onModeChange?.(newMode)
   }
@@ -43,6 +45,16 @@ export default function CompetitionModeToggle({
         }`}
       >
         Official (soon)
+      </button>
+      <button
+        onClick={() => handleModeChange('guest')}
+        className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${
+          mode === 'guest'
+            ? 'bg-duo-purple text-white'
+            : 'text-wolf hover:text-eel'
+        }`}
+      >
+        Guest Test
       </button>
     </div>
   )

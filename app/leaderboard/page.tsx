@@ -7,7 +7,7 @@ type LeaderboardEntry = {
   confidence_points: number
   correct_count: number
   total_answered: number
-  competition_mode: 'mock' | 'real'
+  competition_mode: 'mock' | 'real' | 'guest'
 }
 
 export const revalidate = 60 // Revalidate every 60 seconds
@@ -25,9 +25,10 @@ export default async function LeaderboardPage() {
 
   const leaderboard = (scores || []) as LeaderboardEntry[]
 
-  // Separate mock and real leaderboards
+  // Separate mock, real, and guest leaderboards
   const mockLeaderboard = leaderboard.filter(e => e.competition_mode === 'mock')
   const realLeaderboard = leaderboard.filter(e => e.competition_mode === 'real')
+  const guestLeaderboard = leaderboard.filter(e => e.competition_mode === 'guest')
 
   return (
     <div className="min-h-screen">
@@ -66,6 +67,17 @@ export default async function LeaderboardPage() {
             <p className="text-wolf text-center py-8">No scores yet. Be the first to compete!</p>
           )}
         </div>
+
+        {/* Guest Test Leaderboard */}
+        {guestLeaderboard.length > 0 && (
+          <div className="card mt-6">
+            <h2 className="text-xl font-bold text-eel mb-4 flex items-center gap-2">
+              <span className="text-2xl">🧪</span>
+              Guest Test Mode
+            </h2>
+            <LeaderboardTable entries={guestLeaderboard} />
+          </div>
+        )}
 
         {/* Scoring explanation */}
         <div className="mt-8 p-4 bg-white rounded-xl border border-swan">

@@ -11,7 +11,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   }
 
   // Validate competition_mode
-  if (competition_mode !== 'mock' && competition_mode !== 'real') {
+  if (competition_mode !== 'mock' && competition_mode !== 'real' && competition_mode !== 'guest') {
     return NextResponse.json({ error: 'Invalid competition mode' }, { status: 400 })
   }
 

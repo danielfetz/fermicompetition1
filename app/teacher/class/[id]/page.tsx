@@ -45,7 +45,7 @@ export default async function ClassDetail({ params, searchParams }: Params) {
     .select('student_id, correct_count, total_answered, score_percentage, competition_mode, confidence_points')
     .eq('class_id', cls.id)
 
-  const initialMode = (searchParams.mode === 'real' ? 'real' : 'mock') as 'mock' | 'real'
+  const initialMode = (searchParams.mode === 'real' ? 'real' : searchParams.mode === 'guest' ? 'guest' : 'mock') as 'mock' | 'real' | 'guest'
 
   return (
     <ClassContent
