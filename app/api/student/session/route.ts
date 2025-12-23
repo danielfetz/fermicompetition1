@@ -13,10 +13,10 @@ export async function GET(req: NextRequest) {
 
   const supa = createSupabaseServiceRole()
 
-  // Check if student has already completed the exam
+  // Check if student has already completed the exam and get their competition mode
   const { data: student } = await supa
     .from('students')
-    .select('has_completed_exam')
+    .select('has_completed_exam, competition_mode')
     .eq('id', payload.studentId)
     .single()
 
@@ -24,11 +24,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Exam already completed' }, { status: 400 })
   }
 
+  const competitionMode = student?.competition_mode || 'mock'
+
   // Try to get existing session
   let { data: session } = await supa
     .from('student_exam_sessions')
     .select('id, started_at, ends_at, submitted_at')
     .eq('student_id', payload.studentId)
+    .eq('competition_mode', competitionMode)
     .single()
 
   // If no session exists, create one
@@ -42,7 +45,8 @@ export async function GET(req: NextRequest) {
         student_id: payload.studentId,
         class_id: payload.classId,
         started_at: now.toISOString(),
-        ends_at: endsAt.toISOString()
+        ends_at: endsAt.toISOString(),
+        competition_mode: competitionMode
       })
       .select('id, started_at, ends_at, submitted_at')
       .single()
