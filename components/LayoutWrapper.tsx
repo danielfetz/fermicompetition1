@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 interface LayoutWrapperProps {
@@ -11,10 +11,26 @@ interface LayoutWrapperProps {
 
 export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWrapperProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const isExamRoute = pathname?.startsWith('/student/exam/')
   const isHomePage = pathname === '/'
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false)
+  const [guestLoading, setGuestLoading] = useState(false)
+
+  async function playAsGuest() {
+    setGuestLoading(true)
+    const res = await fetch('/api/student/guest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    if (res.ok) {
+      const { token, classId } = await res.json()
+      localStorage.setItem('studentToken', token)
+      router.push(`/student/exam/${classId}`)
+    }
+    setGuestLoading(false)
+  }
 
   if (isExamRoute) {
     // Exam mode: minimal layout with just the content
@@ -46,9 +62,9 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
               <p className="text-wolf mt-1 mb-3" style={{ fontSize: '0.9375rem', lineHeight: '1.25rem' }}>
                 Play a demo with 25 fun test questions - no login required.
               </p>
-              <Link href="/student/login" className="btn btn-secondary">
-                Try as Guest
-              </Link>
+              <button onClick={playAsGuest} disabled={guestLoading} className="btn btn-secondary w-full">
+                {guestLoading ? 'Starting...' : 'Try as Guest'}
+              </button>
             </div>
           </div>
           {/* Desktop layout */}
@@ -67,9 +83,9 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
                 </p>
               </div>
             </div>
-            <Link href="/student/login" className="btn btn-secondary">
-              Try as Guest
-            </Link>
+            <button onClick={playAsGuest} disabled={guestLoading} className="btn btn-secondary w-full">
+              {guestLoading ? 'Starting...' : 'Try as Guest'}
+            </button>
           </div>
         </div>
       )}
