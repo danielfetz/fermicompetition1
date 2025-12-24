@@ -4,31 +4,6 @@ import FAQ from '@/components/FAQ'
 export default function Home() {
   return (
     <div className="space-y-12 max-w-2xl mx-auto">
-      {/* Try as Guest Card */}
-      <section className="!-mt-4">
-        <div className="bg-duo-blue/5 p-4 border-0" style={{ borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
-          <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
-            <div className="flex gap-4 items-center flex-1">
-              <div className="flex-shrink-0 w-12 h-12 bg-duo-blue/20 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-duo-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-bold text-eel">Want to try it out first?</h3>
-                <p className="text-wolf" style={{ fontSize: '0.9375rem', lineHeight: '1.25rem' }}>
-                  Play a demo with 25 fun test questions - no login required.
-                </p>
-              </div>
-            </div>
-            <Link href="/student/login" className="btn btn-primary w-full sm:w-auto">
-              Try as Guest
-            </Link>
-          </div>
-        </div>
-      </section>
-
       {/* Hero Section */}
       <section className="text-center py-8">
         <div className="flex flex-col items-center gap-2">

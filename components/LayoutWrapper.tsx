@@ -30,6 +30,33 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
   // Normal layout with header and footer
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Try as Guest Banner - Homepage only */}
+      {isHomePage && (
+        <div className="bg-duo-blue/5 p-4 border-0" style={{ borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
+          <div className="max-w-6xl mx-auto">
+            <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+              <div className="flex gap-4 items-center flex-1">
+                <div className="flex-shrink-0 w-12 h-12 bg-duo-blue/20 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-duo-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-eel">Want to try it out first?</h3>
+                  <p className="text-wolf" style={{ fontSize: '0.9375rem', lineHeight: '1.25rem' }}>
+                    Play a demo with 25 fun test questions - no login required.
+                  </p>
+                </div>
+              </div>
+              <Link href="/student/login" className="btn btn-secondary w-full sm:w-auto">
+                Try as Guest
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="bg-white border-b-2 border-swan sticky top-0 z-50 h-[70px]">
         <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
