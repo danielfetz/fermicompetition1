@@ -50,23 +50,17 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
       {/* Try as Guest Banner - Homepage only */}
       {isHomePage && (
         <div className="bg-duo-blue/5 border-0" style={{ margin: '0 12px', padding: '20px', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
-          {/* Mobile layout - matches student login page structure */}
-          <div className="flex gap-3 sm:hidden">
-            <div className="flex-shrink-0 w-10 h-10 bg-duo-blue/20 rounded-full flex items-center justify-center">
-              <svg className="w-5 h-5 text-duo-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
+          {/* Mobile layout */}
+          <div className="flex gap-3 items-center sm:hidden">
             <div className="flex-1">
               <h3 className="font-bold text-eel">Want to try it out first?</h3>
-              <p className="text-wolf mt-1 mb-3" style={{ fontSize: '0.9375rem', lineHeight: '1.25rem' }}>
-                Play a demo with 25 fun test questions - no login required.
+              <p className="text-wolf mt-1" style={{ fontSize: '0.9375rem', lineHeight: '1.25rem' }}>
+                Play a demo, no login required.
               </p>
-              <button onClick={playAsGuest} disabled={guestLoading} className="btn btn-secondary w-full sm:w-auto">
-                {guestLoading ? 'Starting...' : 'Try it out'}
-              </button>
             </div>
+            <button onClick={playAsGuest} disabled={guestLoading} className="btn btn-secondary">
+              {guestLoading ? '...' : 'Try'}
+            </button>
           </div>
           {/* Desktop layout */}
           <div className="hidden sm:flex gap-4 items-center">
@@ -84,8 +78,8 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
                 </p>
               </div>
             </div>
-            <button onClick={playAsGuest} disabled={guestLoading} className="btn btn-secondary w-full sm:w-auto">
-              {guestLoading ? 'Starting...' : 'Try as Guest'}
+            <button onClick={playAsGuest} disabled={guestLoading} className="btn btn-secondary">
+              {guestLoading ? 'Starting...' : 'Try it out'}
             </button>
           </div>
         </div>
