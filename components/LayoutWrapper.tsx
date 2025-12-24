@@ -62,7 +62,7 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
               <p className="text-wolf mt-1 mb-3" style={{ fontSize: '0.9375rem', lineHeight: '1.25rem' }}>
                 Play a demo with 25 fun test questions - no login required.
               </p>
-              <button onClick={playAsGuest} disabled={guestLoading} className="btn btn-secondary w-full">
+              <button onClick={playAsGuest} disabled={guestLoading} className="btn btn-secondary w-full sm:w-auto">
                 {guestLoading ? 'Starting...' : 'Try as Guest'}
               </button>
             </div>
@@ -83,7 +83,7 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
                 </p>
               </div>
             </div>
-            <button onClick={playAsGuest} disabled={guestLoading} className="btn btn-secondary w-full">
+            <button onClick={playAsGuest} disabled={guestLoading} className="btn btn-secondary w-full sm:w-auto">
               {guestLoading ? 'Starting...' : 'Try as Guest'}
             </button>
           </div>
@@ -92,7 +92,7 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
 
       {/* Header */}
       <header className="bg-white border-b-2 border-swan sticky top-0 z-50 h-[70px]">
-        <div className="mx-auto px-6 h-full flex items-center justify-between">
+        <div className="mx-auto px-6 h-full flex items-center justify-between" style={{ padding: '0 2rem' }}>
           <Link href="/" className="flex items-center gap-2 group">
             <div className="w-10 h-10 bg-duo-green rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform sm:hidden">
               <span className="text-white font-extrabold text-lg">F</span>
@@ -121,7 +121,7 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
                 onMouseLeave={() => setMoreDropdownOpen(false)}
               >
                 <button
-                  className="text-sm font-bold uppercase px-3 hover:text-eel transition-colors flex items-center gap-1"
+                  className="text-sm font-bold uppercase pl-3 pr-0 hover:text-eel transition-colors flex items-center gap-1"
                   style={{ color: '#a2a2a2', letterSpacing: '1px' }}
                 >
                   More
