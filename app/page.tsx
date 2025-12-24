@@ -26,6 +26,29 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Try as Guest Card */}
+      <section className="!mt-8">
+        <div className="card bg-duo-purple/5 border-duo-purple/20">
+          <div className="flex gap-4 items-center">
+            <div className="flex-shrink-0 w-12 h-12 bg-duo-purple/20 rounded-full flex items-center justify-center">
+              <svg className="w-6 h-6 text-duo-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-eel">Want to try it out first?</h3>
+              <p className="text-wolf" style={{ fontSize: '0.9375rem', lineHeight: '1.25rem' }}>
+                Play a demo with 25 fun test questions - no login required.
+              </p>
+            </div>
+            <Link href="/student/login" className="btn bg-duo-purple hover:bg-duo-purple/90 text-white border-0" style={{ boxShadow: '0 4px 0 0 #a469cb' }}>
+              Try as Guest
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section className="!mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="card text-center">
