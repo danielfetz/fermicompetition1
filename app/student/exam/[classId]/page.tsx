@@ -520,7 +520,7 @@ export default function StudentExam() {
               </div>
               <div>
                 <h3 className="font-bold text-duo-blue">Learn more about hints</h3>
-                <p className="text-wolf mt-1" style={{ fontSize: '0.9375rem' }}>
+                <p className="text-wolf" style={{ fontSize: '0.9375rem', marginTop: '1.25rem' }}>
                   Hints are unlocked at halftime (35 minutes). Use the new information to update your estimates and confidence, but find the balance between overreacting and underreacting!
                 </p>
               </div>

@@ -134,13 +134,14 @@ export default function StudentLogin() {
           </div>
           <div className="flex-1">
             <h3 className="font-bold text-eel">No credentials? Try it out!</h3>
-            <p className="text-sm text-wolf mt-1 mb-3">
+            <p className="text-wolf mt-1 mb-3" style={{ fontSize: '0.9375rem', lineHeight: '1.25rem' }}>
               Parents and students can play a demo with 25 fun test questions - no login required.
             </p>
             <button
               onClick={playAsGuest}
               disabled={loading || guestLoading}
               className="btn bg-duo-purple hover:bg-duo-purple/90 text-white border-0 w-full sm:w-auto"
+              style={{ boxShadow: '0 4px 0 0 #a469cb' }}
             >
               {guestLoading ? (
                 <span className="flex items-center gap-2">
@@ -173,7 +174,7 @@ export default function StudentLogin() {
           </div>
           <div>
             <h3 className="font-bold text-eel">Need your credentials?</h3>
-            <p className="text-sm text-wolf mt-1">
+            <p className="text-wolf mt-1" style={{ fontSize: '0.9375rem', lineHeight: '1.25rem' }}>
               Ask your teacher for your username and password.
               They look something like &quot;cosmicfermi01&quot;.
             </p>
