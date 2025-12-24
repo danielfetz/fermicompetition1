@@ -16,7 +16,7 @@ export default function Home() {
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-3 mt-4 w-full sm:w-auto">
-            <Link href="/teacher" className="btn btn-secondary w-full sm:w-auto">
+            <Link href="/teacher" className="btn btn-primary w-full sm:w-auto">
               I&apos;m a Teacher
             </Link>
             <Link href="/student/login" className="btn btn-outline w-full sm:w-auto">
@@ -203,6 +203,60 @@ export default function Home() {
                 Think about: population, households with pianos, tuning frequency, time per tuning...
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pedagogical Value Section */}
+      <section id="pedagogical-value" className="space-y-6 scroll-mt-20">
+        <h2 className="text-3xl font-extrabold text-center">Why It Matters</h2>
+        <div className="card bg-gradient-to-br from-duo-purple/5 to-duo-blue/5">
+          <div className="space-y-4">
+            <p className="text-wolf leading-relaxed">
+              The Fermi Competition brings together three powerful cognitive skills that are typically confined to elite professional contexts—intelligence analysis, quantitative finance, and forecasting tournaments—and makes them accessible to secondary education students.
+            </p>
+
+            <div className="space-y-4 mt-6">
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-10 h-10 bg-duo-green/20 rounded-full flex items-center justify-center">
+                  <svg className="w-5 h-5 text-duo-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="font-bold text-eel">Fermi Estimation</h4>
+                  <p className="text-sm text-wolf">Breaking down complex, seemingly impossible questions into manageable components. This skill builds quantitative intuition and structured problem-solving abilities.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-10 h-10 bg-duo-yellow/20 rounded-full flex items-center justify-center">
+                  <svg className="w-5 h-5 text-duo-yellow-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="font-bold text-eel">Calibration Training</h4>
+                  <p className="text-sm text-wolf">Learning to honestly assess your own uncertainty. When you say you&apos;re 80% confident, you should be right about 80% of the time—a skill that prevents overconfidence and improves decision-making.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-10 h-10 bg-duo-purple/20 rounded-full flex items-center justify-center">
+                  <svg className="w-5 h-5 text-duo-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="font-bold text-eel">Bayesian Updating</h4>
+                  <p className="text-sm text-wolf">The halftime hint mechanism teaches dynamic belief revision—how to appropriately update your estimates when new information arrives, finding the balance between overreacting and underreacting.</p>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-wolf leading-relaxed mt-4 pt-4 border-t border-swan">
+              This combination is unique at the secondary education level. Students develop the same analytical frameworks used by professional forecasters, while having fun with engaging estimation challenges.
+            </p>
           </div>
         </div>
       </section>
