@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 interface LayoutWrapperProps {
@@ -11,10 +11,35 @@ interface LayoutWrapperProps {
 
 export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWrapperProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const isExamRoute = pathname?.startsWith('/student/exam/')
   const isHomePage = pathname === '/'
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false)
+  const [guestLoading, setGuestLoading] = useState(false)
+
+  // Reset loading state when navigating back to homepage
+  useEffect(() => {
+    if (isHomePage) {
+      setGuestLoading(false)
+    }
+  }, [isHomePage])
+
+  async function playAsGuest() {
+    setGuestLoading(true)
+    const res = await fetch('/api/student/guest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    if (res.ok) {
+      const { token, classId } = await res.json()
+      localStorage.setItem('studentToken', token)
+      router.push(`/student/exam/${classId}`)
+      // Don't set loading to false - we're navigating away
+    } else {
+      setGuestLoading(false)
+    }
+  }
 
   if (isExamRoute) {
     // Exam mode: minimal layout with just the content
@@ -25,19 +50,54 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
     { href: '/#faq', label: 'FAQ' },
     { href: '/#how-it-works', label: 'How It Works' },
     { href: '/#about-fermi', label: 'Enrico Fermi' },
+    { href: '/#pedagogical-value', label: 'Why It Matters' },
   ]
 
   // Normal layout with header and footer
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Try as Guest Banner - Homepage only */}
+      {isHomePage && (
+        <>
+          {/* Mobile layout */}
+          <div className="flex gap-3 items-center sm:hidden bg-duo-blue/5 border-0" style={{ padding: '20px' }}>
+            <div className="flex-1">
+              <h3 className="font-bold text-eel">Want to try it out first?</h3>
+              <p className="text-wolf mt-1" style={{ fontSize: '0.9375rem', lineHeight: '1.25rem' }}>
+                Play a demo, no login required.
+              </p>
+            </div>
+            <button onClick={playAsGuest} disabled={guestLoading} className="btn btn-secondary">
+              {guestLoading ? '...' : 'Try it'}
+            </button>
+          </div>
+          {/* Desktop layout */}
+          <div className="hidden sm:flex gap-4 items-center bg-duo-blue/5 border-0" style={{ margin: '0 12px', padding: '20px', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
+            <div className="flex gap-4 items-center flex-1">
+              <div className="flex-shrink-0 w-12 h-12 bg-duo-blue/20 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-duo-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-eel">Want to try it out first?</h3>
+                <p className="text-wolf" style={{ fontSize: '0.9375rem', lineHeight: '1.25rem' }}>
+                  Play a demo with 25 fun test questions - no login required.
+                </p>
+              </div>
+            </div>
+            <button onClick={playAsGuest} disabled={guestLoading} className="btn btn-secondary">
+              {guestLoading ? 'Starting...' : 'Try it out'}
+            </button>
+          </div>
+        </>
+      )}
+
       {/* Header */}
       <header className="bg-white border-b-2 border-swan sticky top-0 z-50 h-[70px]">
-        <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
+        <div className="mx-auto h-full flex items-center justify-between px-5 sm:px-8">
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 bg-duo-green rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform sm:hidden">
-              <span className="text-white font-extrabold text-lg">F</span>
-            </div>
-            <span className="text-xl font-extrabold text-duo-green hidden sm:block">
+            <span className="text-xl font-extrabold text-duo-green">
               Fermi Competition
             </span>
           </Link>
@@ -61,7 +121,7 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
                 onMouseLeave={() => setMoreDropdownOpen(false)}
               >
                 <button
-                  className="text-sm font-bold uppercase px-3 hover:text-eel transition-colors flex items-center gap-1"
+                  className="text-sm font-bold uppercase pl-3 pr-0 hover:text-eel transition-colors flex items-center gap-1"
                   style={{ color: '#a2a2a2', letterSpacing: '1px' }}
                 >
                   More

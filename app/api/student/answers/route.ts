@@ -28,11 +28,21 @@ export async function POST(req: NextRequest) {
 
   const supa = createSupabaseServiceRole()
 
+  // Get the student's competition mode
+  const { data: student } = await supa
+    .from('students')
+    .select('competition_mode')
+    .eq('id', payload.studentId)
+    .single()
+
+  const competitionMode = student?.competition_mode || 'mock'
+
   // Check if the exam session has expired
   const { data: session } = await supa
     .from('student_exam_sessions')
     .select('ends_at, submitted_at')
     .eq('student_id', payload.studentId)
+    .eq('competition_mode', competitionMode)
     .single()
 
   if (session) {
@@ -68,7 +78,8 @@ export async function POST(req: NextRequest) {
     student_id: payload.studentId,
     class_question_id: a.question_id, // This is actually the class_question ID
     value: a.value,
-    confidence_pct: a.confidence_pct
+    confidence_pct: a.confidence_pct,
+    competition_mode: competitionMode
   }))
 
   // Upsert answers (only if there are any)
@@ -76,7 +87,7 @@ export async function POST(req: NextRequest) {
   if (rows.length > 0) {
     const result = await supa
       .from('answers')
-      .upsert(rows, { onConflict: 'student_id,class_question_id' })
+      .upsert(rows, { onConflict: 'student_id,class_question_id,competition_mode' })
     error = result.error
   }
 
@@ -97,6 +108,7 @@ export async function POST(req: NextRequest) {
       .from('student_exam_sessions')
       .update({ submitted_at: new Date().toISOString() })
       .eq('student_id', payload.studentId)
+      .eq('competition_mode', competitionMode)
   }
 
   return NextResponse.json({ ok: true })

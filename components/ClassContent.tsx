@@ -5,13 +5,15 @@ import Link from 'next/link'
 import CompetitionModeToggle from './CompetitionModeToggle'
 import OfficialCompetitionCodeEntry from './OfficialCompetitionCodeEntry'
 
+type CompetitionMode = 'mock' | 'real'
+
 type Student = {
   id: string
   username: string
   full_name: string | null
   has_completed_exam: boolean
   plain_password: string | null
-  competition_mode?: 'mock' | 'real'
+  competition_mode?: string
 }
 
 type Score = {
@@ -19,7 +21,7 @@ type Score = {
   correct_count: number
   total_answered: number
   score_percentage: number
-  competition_mode?: 'mock' | 'real'
+  competition_mode?: string
   confidence_points?: number
 }
 
@@ -31,7 +33,7 @@ type Props = {
   students: Student[]
   scores: Score[]
   realUnlocked: boolean
-  initialMode?: 'mock' | 'real'
+  initialMode?: CompetitionMode
 }
 
 export default function ClassContent({
@@ -44,7 +46,7 @@ export default function ClassContent({
   realUnlocked: initialRealUnlocked,
   initialMode = 'mock'
 }: Props) {
-  const [mode, setMode] = useState<'mock' | 'real'>(initialMode)
+  const [mode, setMode] = useState<CompetitionMode>(initialMode)
   const [realUnlocked, setRealUnlocked] = useState(initialRealUnlocked)
   const [checkingAccess, setCheckingAccess] = useState(false)
   const [copied, setCopied] = useState(false)

@@ -2,11 +2,13 @@
 
 import { useState } from 'react'
 
+type CompetitionMode = 'mock' | 'real'
+
 type Props = {
   classId: string
-  defaultMode?: 'mock' | 'real'
+  defaultMode?: CompetitionMode
   realUnlocked?: boolean
-  onModeChange?: (mode: 'mock' | 'real') => void
+  onModeChange?: (mode: CompetitionMode) => void
 }
 
 export default function CompetitionModeToggle({
@@ -15,9 +17,9 @@ export default function CompetitionModeToggle({
   realUnlocked = false,
   onModeChange
 }: Props) {
-  const [mode, setMode] = useState<'mock' | 'real'>(defaultMode)
+  const [mode, setMode] = useState<CompetitionMode>(defaultMode)
 
-  const handleModeChange = (newMode: 'mock' | 'real') => {
+  const handleModeChange = (newMode: CompetitionMode) => {
     setMode(newMode)
     onModeChange?.(newMode)
   }
