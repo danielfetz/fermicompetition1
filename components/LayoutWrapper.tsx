@@ -49,9 +49,9 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
     <div className="min-h-screen flex flex-col">
       {/* Try as Guest Banner - Homepage only */}
       {isHomePage && (
-        <div className="bg-duo-blue/5 border-0" style={{ margin: '0 12px', padding: '20px', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
+        <>
           {/* Mobile layout */}
-          <div className="flex gap-3 items-center sm:hidden">
+          <div className="flex gap-3 items-center sm:hidden bg-duo-blue/5 border-0" style={{ padding: '20px' }}>
             <div className="flex-1">
               <h3 className="font-bold text-eel">Want to try it out first?</h3>
               <p className="text-wolf mt-1" style={{ fontSize: '0.9375rem', lineHeight: '1.25rem' }}>
@@ -59,16 +59,15 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
               </p>
             </div>
             <button onClick={playAsGuest} disabled={guestLoading} className="btn btn-secondary">
-              {guestLoading ? '...' : 'Try'}
+              {guestLoading ? '...' : 'Try it'}
             </button>
           </div>
           {/* Desktop layout */}
-          <div className="hidden sm:flex gap-4 items-center">
+          <div className="hidden sm:flex gap-4 items-center bg-duo-blue/5 border-0" style={{ margin: '0 12px', padding: '20px', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
             <div className="flex gap-4 items-center flex-1">
               <div className="flex-shrink-0 w-12 h-12 bg-duo-blue/20 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 text-duo-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
               </div>
               <div className="flex-1">
@@ -82,17 +81,14 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
               {guestLoading ? 'Starting...' : 'Try it out'}
             </button>
           </div>
-        </div>
+        </>
       )}
 
       {/* Header */}
       <header className="bg-white border-b-2 border-swan sticky top-0 z-50 h-[70px]">
-        <div className="mx-auto px-4 h-full flex items-center justify-between sm:px-0" style={{ paddingLeft: '2rem', paddingRight: '2rem' }}>
+        <div className="mx-auto h-full flex items-center justify-between px-5 sm:px-8">
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 bg-duo-green rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform sm:hidden">
-              <span className="text-white font-extrabold text-lg">F</span>
-            </div>
-            <span className="text-xl font-extrabold text-duo-green hidden sm:block">
+            <span className="text-xl font-extrabold text-duo-green">
               Fermi Competition
             </span>
           </Link>
