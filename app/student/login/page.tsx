@@ -41,8 +41,8 @@ export default function StudentLogin() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' }
     })
-    setGuestLoading(false)
     if (!res.ok) {
+      setGuestLoading(false)
       const body = await res.json().catch(() => ({ error: 'Error' }))
       setError(body.error || 'Failed to start guest session')
       return
@@ -50,6 +50,7 @@ export default function StudentLogin() {
     const { token, classId } = await res.json()
     localStorage.setItem('studentToken', token)
     router.push(`/student/exam/${classId}`)
+    // Don't set loading to false - we're navigating away
   }
 
   return (

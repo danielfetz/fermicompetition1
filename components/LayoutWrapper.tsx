@@ -28,8 +28,10 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
       const { token, classId } = await res.json()
       localStorage.setItem('studentToken', token)
       router.push(`/student/exam/${classId}`)
+      // Don't set loading to false - we're navigating away
+    } else {
+      setGuestLoading(false)
     }
-    setGuestLoading(false)
   }
 
   if (isExamRoute) {
