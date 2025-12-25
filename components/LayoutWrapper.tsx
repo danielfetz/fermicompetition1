@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 
@@ -17,6 +17,13 @@ export default function LayoutWrapper({ children, isTeacherLoggedIn }: LayoutWra
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false)
   const [guestLoading, setGuestLoading] = useState(false)
+
+  // Reset loading state when navigating back to homepage
+  useEffect(() => {
+    if (isHomePage) {
+      setGuestLoading(false)
+    }
+  }, [isHomePage])
 
   async function playAsGuest() {
     setGuestLoading(true)
