@@ -14,6 +14,11 @@ type CalibrationDataPoint = {
 
 type CalibrationStatus = 'well-calibrated' | 'overconfident' | 'underconfident' | 'insufficient-data'
 
+type BucketStatus = {
+  confidence: number
+  status: CalibrationStatus
+}
+
 type Results = {
   score: {
     confidencePoints: number
@@ -24,6 +29,7 @@ type Results = {
   calibration: {
     data: CalibrationDataPoint[]
     status: CalibrationStatus
+    bucketStatuses?: BucketStatus[]
   }
 }
 
@@ -129,6 +135,7 @@ export default function Done() {
             <CalibrationCurve
               data={results.calibration.data}
               status={results.calibration.status}
+              bucketStatuses={results.calibration.bucketStatuses}
             />
           </div>
 

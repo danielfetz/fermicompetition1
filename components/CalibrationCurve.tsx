@@ -9,9 +9,15 @@ type CalibrationDataPoint = {
 
 type CalibrationStatus = 'well-calibrated' | 'overconfident' | 'underconfident' | 'insufficient-data'
 
+type BucketStatus = {
+  confidence: number
+  status: CalibrationStatus
+}
+
 interface CalibrationCurveProps {
   data: CalibrationDataPoint[]
   status: CalibrationStatus
+  bucketStatuses?: BucketStatus[]
 }
 
 const CONFIDENCE_LABELS: Record<number, string> = {
@@ -22,7 +28,7 @@ const CONFIDENCE_LABELS: Record<number, string> = {
   90: '80-100%'
 }
 
-export default function CalibrationCurve({ data, status }: CalibrationCurveProps) {
+export default function CalibrationCurve({ data, status, bucketStatuses }: CalibrationCurveProps) {
   // Chart dimensions
   const width = 300
   const height = 220
@@ -47,21 +53,52 @@ export default function CalibrationCurve({ data, status }: CalibrationCurveProps
       }).join(' ')
     : null
 
+  // Generate detailed bucket feedback
+  const getBucketDetails = (): string => {
+    if (!bucketStatuses || bucketStatuses.length === 0) return ''
+
+    const overconfidentBuckets = bucketStatuses
+      .filter(b => b.status === 'overconfident')
+      .map(b => CONFIDENCE_LABELS[b.confidence])
+    const underconfidentBuckets = bucketStatuses
+      .filter(b => b.status === 'underconfident')
+      .map(b => CONFIDENCE_LABELS[b.confidence])
+
+    const details: string[] = []
+
+    if (overconfidentBuckets.length > 0) {
+      details.push(`Overconfident at: ${overconfidentBuckets.join(', ')}`)
+    }
+    if (underconfidentBuckets.length > 0) {
+      details.push(`Underconfident at: ${underconfidentBuckets.join(', ')}`)
+    }
+
+    return details.join('. ')
+  }
+
+  const bucketDetails = getBucketDetails()
+
   const statusConfig: Record<CalibrationStatus, { label: string; color: string; description: string }> = {
     'well-calibrated': {
       label: 'Well Calibrated',
       color: 'text-duo-green',
-      description: 'Your confidence levels closely match your actual accuracy. Great calibration!'
+      description: bucketDetails
+        ? `Your confidence levels closely match your actual accuracy overall. ${bucketDetails}.`
+        : 'Your confidence levels closely match your actual accuracy. Great calibration!'
     },
     'overconfident': {
       label: 'Overconfident',
       color: 'text-duo-red',
-      description: 'You tend to be more confident than your accuracy warrants. Consider being more conservative with high confidence ratings.'
+      description: bucketDetails
+        ? `You tend to be more confident than your accuracy warrants. ${bucketDetails}. Consider being more conservative with high confidence ratings.`
+        : 'You tend to be more confident than your accuracy warrants. Consider being more conservative with high confidence ratings.'
     },
     'underconfident': {
       label: 'Underconfident',
       color: 'text-duo-blue',
-      description: 'You\'re actually more accurate than your confidence suggests. You can trust your estimates more!'
+      description: bucketDetails
+        ? `You're actually more accurate than your confidence suggests. ${bucketDetails}. You can trust your estimates more!`
+        : 'You\'re actually more accurate than your confidence suggests. You can trust your estimates more!'
     },
     'insufficient-data': {
       label: 'Insufficient Data',
@@ -78,7 +115,7 @@ export default function CalibrationCurve({ data, status }: CalibrationCurveProps
       <div className="flex justify-center">
         <svg width={width} height={height} className="font-sans">
           {/* Grid lines */}
-          {[0, 25, 50, 75, 100].map(tick => (
+          {[0, 20, 40, 60, 80, 100].map(tick => (
             <g key={tick}>
               {/* Horizontal grid lines */}
               <line

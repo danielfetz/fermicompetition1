@@ -199,6 +199,9 @@ export async function GET(req: NextRequest) {
   const bucketsWithData = calibrationData.filter(d => d.count >= 1)
   const totalAnswersInBuckets = bucketsWithData.reduce((sum, d) => sum + d.count, 0)
 
+  // Store per-bucket assessments for detailed feedback
+  const bucketStatuses: { confidence: number; status: 'well-calibrated' | 'overconfident' | 'underconfident' | 'insufficient-data' }[] = []
+
   if (bucketsWithData.length < 1 || totalAnswersInBuckets < 3) {
     calibrationStatus = 'insufficient-data'
   } else {
@@ -209,8 +212,14 @@ export async function GET(req: NextRequest) {
         bucket.count,
         bucket.expectedAccuracy
       )
+      // Store the bucket status for detailed feedback
+      bucketStatuses.push({
+        confidence: bucket.confidence,
+        status: assessment.status
+      })
       return {
         ...assessment,
+        confidence: bucket.confidence,
         weight: bucket.count // Weight by number of answers in bucket
       }
     })
@@ -259,7 +268,8 @@ export async function GET(req: NextRequest) {
     },
     calibration: {
       data: calibrationData,
-      status: calibrationStatus
+      status: calibrationStatus,
+      bucketStatuses // Per-bucket calibration assessment
     }
   })
 }
