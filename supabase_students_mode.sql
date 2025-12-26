@@ -27,14 +27,14 @@ SELECT
   count(a.id) AS total_answered,
   count(*) FILTER (
     WHERE fq.correct_value IS NOT NULL
-      AND a.value BETWEEN (fq.correct_value * 0.5) AND (fq.correct_value * 1.5)
+      AND a.value BETWEEN (fq.correct_value * 0.5) AND (fq.correct_value * 2)
   ) AS correct_count,
   round(
     CASE
       WHEN count(a.id) > 0 THEN
         (count(*) FILTER (
           WHERE fq.correct_value IS NOT NULL
-            AND a.value BETWEEN (fq.correct_value * 0.5) AND (fq.correct_value * 1.5)
+            AND a.value BETWEEN (fq.correct_value * 0.5) AND (fq.correct_value * 2)
         )::numeric / count(a.id)::numeric) * 100
       ELSE 0
     END, 1

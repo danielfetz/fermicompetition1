@@ -138,14 +138,14 @@ select
   count(a.id) as total_answered,
   count(*) filter (
     where fq.correct_value is not null
-      and a.value between (fq.correct_value * 0.5) and (fq.correct_value * 1.5)
+      and a.value between (fq.correct_value * 0.5) and (fq.correct_value * 2)
   ) as correct_count,
   round(
     case
       when count(a.id) > 0 then
         (count(*) filter (
           where fq.correct_value is not null
-            and a.value between (fq.correct_value * 0.5) and (fq.correct_value * 1.5)
+            and a.value between (fq.correct_value * 0.5) and (fq.correct_value * 2)
         )::numeric / count(a.id)::numeric) * 100
       else 0
     end, 1

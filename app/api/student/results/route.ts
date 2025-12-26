@@ -60,13 +60,13 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Check if each answer was correct (within 50% of correct value)
+    // Check if each answer was correct (within factor of 2 of correct value)
     const correctAtLevel = answersAtLevel.filter(a => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const classQuestion = a.class_question as any
       const correctValue = classQuestion?.fermi_question?.correct_value as number | null
       if (correctValue === null || correctValue === undefined) return false
-      return a.value >= correctValue * 0.5 && a.value <= correctValue * 1.5
+      return a.value >= correctValue * 0.5 && a.value <= correctValue * 2
     }).length
 
     return {
