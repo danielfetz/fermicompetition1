@@ -77,14 +77,28 @@ function betaCDF(a: number, b: number, x: number): number {
   return betaIncomplete(a, b, x)
 }
 
+// Confidence bucket ranges (the actual ranges users select)
+const CONFIDENCE_RANGES: Record<number, { lower: number; upper: number }> = {
+  10: { lower: 0, upper: 20 },
+  30: { lower: 20, upper: 40 },
+  50: { lower: 40, upper: 60 },
+  70: { lower: 60, upper: 80 },
+  90: { lower: 80, upper: 100 }
+}
+
 // Bayesian calibration assessment for a single bucket
-// Returns: 'well-calibrated' | 'overconfident' | 'underconfident' | 'insufficient-data'
+// Uses P(accuracy ∈ [lower, upper]) to check if user is well-calibrated
 function assessBucketCalibration(
   successes: number,
   total: number,
-  expectedAccuracy: number
+  confidenceLevel: number
 ): { status: 'well-calibrated' | 'overconfident' | 'underconfident' | 'insufficient-data', evidence: number } {
   if (total < 1) {
+    return { status: 'insufficient-data', evidence: 0 }
+  }
+
+  const range = CONFIDENCE_RANGES[confidenceLevel]
+  if (!range) {
     return { status: 'insufficient-data', evidence: 0 }
   }
 
@@ -93,26 +107,29 @@ function assessBucketCalibration(
   const alpha = 1 + successes
   const beta = 1 + failures
 
-  // Expected accuracy as a proportion (0-1)
-  const expected = expectedAccuracy / 100
+  // Convert range to proportions (0-1)
+  const lower = range.lower / 100
+  const upper = range.upper / 100
 
-  // Calculate posterior probability that true accuracy is below expected (overconfident)
-  const probBelow = betaCDF(alpha, beta, expected)
-  // Probability that true accuracy is above expected (underconfident)
-  const probAbove = 1 - probBelow
+  // Calculate posterior probabilities
+  const probBelowLower = betaCDF(alpha, beta, lower)  // P(accuracy < lower)
+  const probBelowUpper = betaCDF(alpha, beta, upper)  // P(accuracy <= upper)
+  const probInRange = probBelowUpper - probBelowLower // P(accuracy ∈ [lower, upper])
+  const probAboveUpper = 1 - probBelowUpper           // P(accuracy > upper)
 
-  // Threshold for strong evidence (80% posterior probability)
-  const threshold = 0.80
+  // Threshold for strong evidence (75% posterior probability)
+  const threshold = 0.75
 
-  if (probBelow > threshold) {
-    // Strong evidence that true accuracy is below expected -> overconfident
-    return { status: 'overconfident', evidence: probBelow }
-  } else if (probAbove > threshold) {
-    // Strong evidence that true accuracy is above expected -> underconfident
-    return { status: 'underconfident', evidence: probAbove }
+  if (probBelowLower > threshold) {
+    // Strong evidence that true accuracy is below the range -> overconfident
+    return { status: 'overconfident', evidence: probBelowLower }
+  } else if (probAboveUpper > threshold) {
+    // Strong evidence that true accuracy is above the range -> underconfident
+    return { status: 'underconfident', evidence: probAboveUpper }
   } else {
-    // No strong evidence either way -> well-calibrated
-    return { status: 'well-calibrated', evidence: Math.max(probBelow, probAbove) }
+    // No strong evidence of miscalibration -> well-calibrated
+    // Evidence here is how likely they are within range
+    return { status: 'well-calibrated', evidence: probInRange }
   }
 }
 
@@ -210,7 +227,7 @@ export async function GET(req: NextRequest) {
       const assessment = assessBucketCalibration(
         bucket.correctCount,
         bucket.count,
-        bucket.expectedAccuracy
+        bucket.confidence
       )
       // Store the bucket status for detailed feedback
       bucketStatuses.push({
