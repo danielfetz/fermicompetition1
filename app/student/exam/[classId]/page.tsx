@@ -472,7 +472,7 @@ export default function StudentExam() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-eel text-white text-xs font-normal normal-case tracking-normal rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 w-48 text-center">
-                          Your answer is correct if within ±50% of the actual answer
+                          Your answer is correct if within a factor of 2 (half to double the actual answer)
                         </span>
                       </span>
                     </span>
