@@ -53,8 +53,21 @@ export default function Timer({
       return true
     }
 
+    // Handle visibility change - check timer immediately when page becomes visible
+    // This fixes mobile browsers where setInterval is throttled/paused in background
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        updateTimer()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
     // Initial update
-    if (!updateTimer()) return
+    if (!updateTimer()) {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      return
+    }
 
     const interval = setInterval(() => {
       if (!updateTimer()) {
@@ -62,7 +75,10 @@ export default function Timer({
       }
     }, 1000)
 
-    return () => clearInterval(interval)
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
   }, [deadline, urgentThreshold, formatTime])
 
   return (
