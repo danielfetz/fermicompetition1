@@ -45,26 +45,26 @@ const CONFIDENCE_LABELS: Record<number, string> = {
   90: '80-100%'
 }
 
-// Human-readable descriptions for detailed status
+// Human-readable descriptions for detailed status (full sentences)
 const DETAILED_STATUS_DESCRIPTIONS: Record<DetailedCalibrationStatus, string> = {
-  'decisive-overconfidence': 'decisive evidence for overconfidence',
-  'very-strong-overconfidence': 'very strong evidence for overconfidence',
-  'strong-overconfidence': 'strong evidence for overconfidence',
-  'moderate-overconfidence': 'moderate evidence for overconfidence',
-  'decisive-underconfidence': 'decisive evidence for underconfidence',
-  'very-strong-underconfidence': 'very strong evidence for underconfidence',
-  'strong-underconfidence': 'strong evidence for underconfidence',
-  'moderate-underconfidence': 'moderate evidence for underconfidence',
-  'good-calibration': 'good calibration supported',
-  'no-miscalibration-evidence': 'no evidence of miscalibration',
-  'insufficient-data': 'insufficient data'
+  'decisive-overconfidence': 'there is decisive evidence for overconfidence',
+  'very-strong-overconfidence': 'there is very strong evidence for overconfidence',
+  'strong-overconfidence': 'there is strong evidence for overconfidence',
+  'moderate-overconfidence': 'there is substantial evidence for overconfidence',
+  'decisive-underconfidence': 'there is decisive evidence for underconfidence',
+  'very-strong-underconfidence': 'there is very strong evidence for underconfidence',
+  'strong-underconfidence': 'there is strong evidence for underconfidence',
+  'moderate-underconfidence': 'there is substantial evidence for underconfidence',
+  'good-calibration': 'good calibration is supported',
+  'no-miscalibration-evidence': 'there is no evidence of miscalibration',
+  'insufficient-data': 'there is insufficient evidence to judge'
 }
 
 export default function CalibrationCurve({ data, status, bucketStatuses }: CalibrationCurveProps) {
-  // Chart dimensions
+  // Chart dimensions - increased bottom padding for axis label spacing
   const width = 300
-  const height = 220
-  const padding = { top: 20, right: 20, bottom: 40, left: 45 }
+  const height = 240
+  const padding = { top: 20, right: 20, bottom: 55, left: 50 }
   const chartWidth = width - padding.left - padding.right
   const chartHeight = height - padding.top - padding.bottom
 
@@ -85,7 +85,7 @@ export default function CalibrationCurve({ data, status, bucketStatuses }: Calib
       }).join(' ')
     : null
 
-  // Generate per-bucket verdict descriptions
+  // Generate per-bucket verdict descriptions as full sentences
   const generateBucketVerdicts = (): string => {
     if (!bucketStatuses || bucketStatuses.length === 0) {
       return 'Not enough data to assess calibration.'
@@ -94,21 +94,23 @@ export default function CalibrationCurve({ data, status, bucketStatuses }: Calib
     // Sort by confidence level for consistent ordering
     const sortedBuckets = [...bucketStatuses].sort((a, b) => a.confidence - b.confidence)
 
-    const verdicts: string[] = []
+    const sentences: string[] = []
 
     for (const bucket of sortedBuckets) {
       const label = CONFIDENCE_LABELS[bucket.confidence]
       if (bucket.detailedStatus) {
         const description = DETAILED_STATUS_DESCRIPTIONS[bucket.detailedStatus]
-        verdicts.push(`${label}: ${description}`)
+        // Capitalize first letter of the description for a proper sentence
+        const capitalizedDesc = description.charAt(0).toUpperCase() + description.slice(1)
+        sentences.push(`At ${label}, ${description}.`)
       }
     }
 
-    if (verdicts.length === 0) {
+    if (sentences.length === 0) {
       return 'Not enough data to assess calibration.'
     }
 
-    return verdicts.join('. ') + '.'
+    return sentences.join(' ')
   }
 
   const bucketVerdicts = generateBucketVerdicts()
@@ -201,12 +203,12 @@ export default function CalibrationCurve({ data, status, bucketStatuses }: Calib
             )
           })}
 
-          {/* X-axis labels */}
+          {/* X-axis tick labels (bucket percentages) */}
           {data.map((d, i) => (
             <text
               key={i}
               x={xScale(d.confidence)}
-              y={height - 10}
+              y={padding.top + chartHeight + 18}
               textAnchor="middle"
               className="text-[10px] fill-wolf"
             >
@@ -214,20 +216,20 @@ export default function CalibrationCurve({ data, status, bucketStatuses }: Calib
             </text>
           ))}
 
-          {/* Axis labels */}
+          {/* Axis title labels */}
           <text
             x={width / 2}
-            y={height - 0}
+            y={height - 8}
             textAnchor="middle"
             className="text-xs fill-eel font-semibold"
           >
             Confidence Selected
           </text>
           <text
-            x={12}
-            y={height / 2}
+            x={14}
+            y={padding.top + chartHeight / 2}
             textAnchor="middle"
-            transform={`rotate(-90, 12, ${height / 2})`}
+            transform={`rotate(-90, 14, ${padding.top + chartHeight / 2})`}
             className="text-xs fill-eel font-semibold"
           >
             Actual Accuracy

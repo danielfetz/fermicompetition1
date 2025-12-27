@@ -37,6 +37,10 @@ const FAQ_ITEMS: FAQItem[] = [
     answer: 'Calibration is the skill of accurately assessing your own uncertainty. Well-calibrated people are right about 70% of the time when they say they\'re 70% confident. This competition trains calibration by rewarding honest confidence assessments and penalizing overconfidence. After the competition, students see their calibration curve—a visual comparison of their stated confidence versus actual accuracy—helping them identify whether they tend to be overconfident or underconfident.',
   },
   {
+    question: 'How is the calibration assessment calculated?',
+    answer: 'We use Bayesian inference with a Beta distribution to assess calibration at each confidence level. For each bucket (0-20%, 20-40%, 40-60%, 60-80%, 80-100%), we calculate the posterior probability that your true accuracy falls within that range. Evidence thresholds: >99% = decisive, >97% = very strong, >91% = strong, >75% = substantial. If P(accuracy in range) > 75%, good calibration is supported; if > 50%, there\'s no evidence of miscalibration. Minimum samples required: 2 answers for 0-20% and 80-100% buckets, 3 for 20-40% and 60-80%, and 4 for the 40-60% bucket (since middle ranges need more data to distinguish from chance).',
+  },
+  {
     question: 'Can students change their answers?',
     answer: 'Yes! Students can navigate between questions and update their answers and confidence levels at any time during the competition. All progress is automatically saved.',
   },
