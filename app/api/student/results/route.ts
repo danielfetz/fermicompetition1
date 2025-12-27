@@ -195,20 +195,13 @@ function assessBucketCalibration(
     return { status: 'well-calibrated', detailedStatus: 'good-calibration', probBelow, probAbove, probInRange }
   }
 
-  // Priority 4: Check slight tendencies (P > 50%)
-  // At this point we know P(below) < 75%, P(above) < 75%, P(in range) <= 75%
-  if (probBelow > 0.50) {
-    return { status: 'overconfident', detailedStatus: 'slight-overconfidence', probBelow, probAbove, probInRange }
-  }
-  if (probAbove > 0.50) {
-    return { status: 'underconfident', detailedStatus: 'slight-underconfidence', probBelow, probAbove, probInRange }
-  }
+  // Priority 4: Check slight tendency towards good calibration (P(in range) > 50%)
   if (probInRange > 0.50) {
     return { status: 'well-calibrated', detailedStatus: 'slight-good-calibration', probBelow, probAbove, probInRange }
   }
 
   // Priority 5: Fallback - no strong evidence either way
-  // P(below) <= 50%, P(above) <= 50%, P(in range) <= 50%
+  // Don't show slight overconfidence/underconfidence (too demotivating for weak evidence)
   return { status: 'well-calibrated', detailedStatus: 'no-miscalibration-evidence', probBelow, probAbove, probInRange }
 }
 
