@@ -9,9 +9,26 @@ type CalibrationDataPoint = {
 
 type CalibrationStatus = 'well-calibrated' | 'overconfident' | 'underconfident' | 'insufficient-data'
 
+type DetailedCalibrationStatus =
+  | 'decisive-overconfidence'
+  | 'very-strong-overconfidence'
+  | 'strong-overconfidence'
+  | 'moderate-overconfidence'
+  | 'decisive-underconfidence'
+  | 'very-strong-underconfidence'
+  | 'strong-underconfidence'
+  | 'moderate-underconfidence'
+  | 'likely-well-calibrated'
+  | 'plausibly-well-calibrated'
+  | 'insufficient-data'
+
 type BucketStatus = {
   confidence: number
   status: CalibrationStatus
+  detailedStatus?: DetailedCalibrationStatus
+  probBelow?: number
+  probAbove?: number
+  probInRange?: number
 }
 
 interface CalibrationCurveProps {
@@ -26,6 +43,21 @@ const CONFIDENCE_LABELS: Record<number, string> = {
   50: '40-60%',
   70: '60-80%',
   90: '80-100%'
+}
+
+// Human-readable labels for detailed status
+const DETAILED_STATUS_LABELS: Record<DetailedCalibrationStatus, { label: string; strength: string }> = {
+  'decisive-overconfidence': { label: 'decisively overconfident', strength: 'decisive' },
+  'very-strong-overconfidence': { label: 'very strongly overconfident', strength: 'very strong' },
+  'strong-overconfidence': { label: 'strongly overconfident', strength: 'strong' },
+  'moderate-overconfidence': { label: 'moderately overconfident', strength: 'moderate' },
+  'decisive-underconfidence': { label: 'decisively underconfident', strength: 'decisive' },
+  'very-strong-underconfidence': { label: 'very strongly underconfident', strength: 'very strong' },
+  'strong-underconfidence': { label: 'strongly underconfident', strength: 'strong' },
+  'moderate-underconfidence': { label: 'moderately underconfident', strength: 'moderate' },
+  'likely-well-calibrated': { label: 'likely well-calibrated', strength: 'likely' },
+  'plausibly-well-calibrated': { label: 'plausibly well-calibrated', strength: 'plausible' },
+  'insufficient-data': { label: 'insufficient data', strength: '' }
 }
 
 export default function CalibrationCurve({ data, status, bucketStatuses }: CalibrationCurveProps) {
@@ -53,61 +85,75 @@ export default function CalibrationCurve({ data, status, bucketStatuses }: Calib
       }).join(' ')
     : null
 
-  // Generate detailed bucket feedback
-  const getBucketDetails = (): string => {
-    if (!bucketStatuses || bucketStatuses.length === 0) return ''
+  // Generate detailed bucket feedback with gradations
+  const getBucketFeedback = (): { overconfident: string[]; underconfident: string[]; wellCalibrated: string[] } => {
+    const result = { overconfident: [] as string[], underconfident: [] as string[], wellCalibrated: [] as string[] }
+    if (!bucketStatuses || bucketStatuses.length === 0) return result
 
-    const overconfidentBuckets = bucketStatuses
-      .filter(b => b.status === 'overconfident')
-      .map(b => CONFIDENCE_LABELS[b.confidence])
-    const underconfidentBuckets = bucketStatuses
-      .filter(b => b.status === 'underconfident')
-      .map(b => CONFIDENCE_LABELS[b.confidence])
+    for (const b of bucketStatuses) {
+      const label = CONFIDENCE_LABELS[b.confidence]
+      const detailedInfo = b.detailedStatus ? DETAILED_STATUS_LABELS[b.detailedStatus] : null
 
-    const details: string[] = []
-
-    if (overconfidentBuckets.length > 0) {
-      details.push(`Overconfident at: ${overconfidentBuckets.join(', ')}`)
-    }
-    if (underconfidentBuckets.length > 0) {
-      details.push(`Underconfident at: ${underconfidentBuckets.join(', ')}`)
+      if (b.status === 'overconfident' && detailedInfo) {
+        result.overconfident.push(`${label} (${detailedInfo.strength})`)
+      } else if (b.status === 'underconfident' && detailedInfo) {
+        result.underconfident.push(`${label} (${detailedInfo.strength})`)
+      } else if (b.status === 'well-calibrated' && detailedInfo) {
+        result.wellCalibrated.push(`${label}`)
+      }
     }
 
-    return details.join('. ')
+    return result
   }
 
-  const bucketDetails = getBucketDetails()
+  const bucketFeedback = getBucketFeedback()
 
-  const statusConfig: Record<CalibrationStatus, { label: string; color: string; description: string }> = {
+  // Build detailed description
+  const buildDescription = (): string => {
+    const parts: string[] = []
+
+    if (bucketFeedback.overconfident.length > 0) {
+      parts.push(`Overconfident at: ${bucketFeedback.overconfident.join(', ')}`)
+    }
+    if (bucketFeedback.underconfident.length > 0) {
+      parts.push(`Underconfident at: ${bucketFeedback.underconfident.join(', ')}`)
+    }
+    if (bucketFeedback.wellCalibrated.length > 0 && status !== 'well-calibrated') {
+      parts.push(`Well-calibrated at: ${bucketFeedback.wellCalibrated.join(', ')}`)
+    }
+
+    return parts.join('. ')
+  }
+
+  const bucketDetails = buildDescription()
+
+  const statusConfig: Record<CalibrationStatus, { label: string; color: string; baseDescription: string }> = {
     'well-calibrated': {
       label: 'Well Calibrated',
       color: 'text-duo-green',
-      description: bucketDetails
-        ? `Your confidence levels closely match your actual accuracy overall. ${bucketDetails}.`
-        : 'Your confidence levels closely match your actual accuracy. Great calibration!'
+      baseDescription: 'Your confidence levels closely match your actual accuracy.'
     },
     'overconfident': {
       label: 'Overconfident',
       color: 'text-duo-red',
-      description: bucketDetails
-        ? `You tend to be more confident than your accuracy warrants. ${bucketDetails}. Consider being more conservative with high confidence ratings.`
-        : 'You tend to be more confident than your accuracy warrants. Consider being more conservative with high confidence ratings.'
+      baseDescription: 'You tend to be more confident than your accuracy warrants.'
     },
     'underconfident': {
       label: 'Underconfident',
       color: 'text-duo-blue',
-      description: bucketDetails
-        ? `You're actually more accurate than your confidence suggests. ${bucketDetails}. You can trust your estimates more!`
-        : 'You\'re actually more accurate than your confidence suggests. You can trust your estimates more!'
+      baseDescription: 'You\'re actually more accurate than your confidence suggests.'
     },
     'insufficient-data': {
       label: 'Insufficient Data',
       color: 'text-wolf',
-      description: 'Not enough answers at different confidence levels to determine calibration.'
+      baseDescription: 'Not enough answers at different confidence levels to determine calibration.'
     }
   }
 
   const currentStatus = statusConfig[status]
+  const fullDescription = bucketDetails
+    ? `${currentStatus.baseDescription} ${bucketDetails}.`
+    : currentStatus.baseDescription
 
   return (
     <div className="space-y-4">
@@ -237,7 +283,7 @@ export default function CalibrationCurve({ data, status, bucketStatuses }: Calib
           {currentStatus.label}
         </div>
         <p className="text-sm text-wolf">
-          {currentStatus.description}
+          {fullDescription}
         </p>
       </div>
 

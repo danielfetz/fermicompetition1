@@ -14,9 +14,26 @@ type CalibrationDataPoint = {
 
 type CalibrationStatus = 'well-calibrated' | 'overconfident' | 'underconfident' | 'insufficient-data'
 
+type DetailedCalibrationStatus =
+  | 'decisive-overconfidence'
+  | 'very-strong-overconfidence'
+  | 'strong-overconfidence'
+  | 'moderate-overconfidence'
+  | 'decisive-underconfidence'
+  | 'very-strong-underconfidence'
+  | 'strong-underconfidence'
+  | 'moderate-underconfidence'
+  | 'likely-well-calibrated'
+  | 'plausibly-well-calibrated'
+  | 'insufficient-data'
+
 type BucketStatus = {
   confidence: number
   status: CalibrationStatus
+  detailedStatus: DetailedCalibrationStatus
+  probBelow: number
+  probAbove: number
+  probInRange: number
 }
 
 type Results = {

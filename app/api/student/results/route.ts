@@ -86,20 +86,58 @@ const CONFIDENCE_RANGES: Record<number, { lower: number; upper: number }> = {
   90: { lower: 80, upper: 100 }
 }
 
-// Bayesian calibration assessment for a single bucket
-// Uses P(accuracy ∈ [lower, upper]) to check if user is well-calibrated
+// Bucket-specific minimum sample sizes for reliable assessment
+// Edge buckets (0-20%, 80-100%) need fewer samples since they're at extremes
+const BUCKET_MIN_SAMPLES: Record<number, number> = {
+  10: 2,  // 0-20%: n=2 minimum
+  30: 3,  // 20-40%: n=3 minimum
+  50: 4,  // 40-60%: n=4 minimum
+  70: 3,  // 60-80%: n=3 minimum
+  90: 2   // 80-100%: n=2 minimum
+}
+
+// Detailed calibration status with gradations
+type DetailedCalibrationStatus =
+  | 'decisive-overconfidence'
+  | 'very-strong-overconfidence'
+  | 'strong-overconfidence'
+  | 'moderate-overconfidence'
+  | 'decisive-underconfidence'
+  | 'very-strong-underconfidence'
+  | 'strong-underconfidence'
+  | 'moderate-underconfidence'
+  | 'likely-well-calibrated'
+  | 'plausibly-well-calibrated'
+  | 'insufficient-data'
+
+// Simplified status for overall assessment
+type SimpleCalibrationStatus = 'well-calibrated' | 'overconfident' | 'underconfident' | 'insufficient-data'
+
+// Bayesian calibration assessment for a single bucket with gradations
+// Priority order: overconfidence → underconfidence → well-calibrated → insufficient-data
 function assessBucketCalibration(
   successes: number,
   total: number,
   confidenceLevel: number
-): { status: 'well-calibrated' | 'overconfident' | 'underconfident' | 'insufficient-data', evidence: number } {
-  if (total < 1) {
-    return { status: 'insufficient-data', evidence: 0 }
-  }
-
+): {
+  status: SimpleCalibrationStatus
+  detailedStatus: DetailedCalibrationStatus
+  probBelow: number
+  probAbove: number
+  probInRange: number
+} {
   const range = CONFIDENCE_RANGES[confidenceLevel]
-  if (!range) {
-    return { status: 'insufficient-data', evidence: 0 }
+  const minSamples = BUCKET_MIN_SAMPLES[confidenceLevel] || 3
+
+  // Check minimum sample size for this bucket
+  if (total < minSamples || !range) {
+    return {
+      status: 'insufficient-data',
+      detailedStatus: 'insufficient-data',
+      probBelow: 0,
+      probAbove: 0,
+      probInRange: 0
+    }
   }
 
   const failures = total - successes
@@ -112,25 +150,49 @@ function assessBucketCalibration(
   const upper = range.upper / 100
 
   // Calculate posterior probabilities
-  const probBelowLower = betaCDF(alpha, beta, lower)  // P(accuracy < lower)
-  const probBelowUpper = betaCDF(alpha, beta, upper)  // P(accuracy <= upper)
-  const probInRange = probBelowUpper - probBelowLower // P(accuracy ∈ [lower, upper])
-  const probAboveUpper = 1 - probBelowUpper           // P(accuracy > upper)
+  const probBelow = betaCDF(alpha, beta, lower)     // P(accuracy < lower)
+  const probBelowUpper = betaCDF(alpha, beta, upper) // P(accuracy <= upper)
+  const probInRange = probBelowUpper - probBelow    // P(accuracy ∈ [lower, upper])
+  const probAbove = 1 - probBelowUpper              // P(accuracy > upper)
 
-  // Threshold for strong evidence (75% posterior probability)
-  const threshold = 0.75
-
-  if (probBelowLower > threshold) {
-    // Strong evidence that true accuracy is below the range -> overconfident
-    return { status: 'overconfident', evidence: probBelowLower }
-  } else if (probAboveUpper > threshold) {
-    // Strong evidence that true accuracy is above the range -> underconfident
-    return { status: 'underconfident', evidence: probAboveUpper }
-  } else {
-    // No strong evidence of miscalibration -> well-calibrated
-    // Evidence here is how likely they are within range
-    return { status: 'well-calibrated', evidence: probInRange }
+  // Priority 1: Check overconfidence (P(accuracy < lower bound))
+  if (probBelow > 0.99) {
+    return { status: 'overconfident', detailedStatus: 'decisive-overconfidence', probBelow, probAbove, probInRange }
   }
+  if (probBelow > 0.90) {
+    return { status: 'overconfident', detailedStatus: 'very-strong-overconfidence', probBelow, probAbove, probInRange }
+  }
+  if (probBelow > 0.75) {
+    return { status: 'overconfident', detailedStatus: 'strong-overconfidence', probBelow, probAbove, probInRange }
+  }
+  if (probBelow > 0.50) {
+    return { status: 'overconfident', detailedStatus: 'moderate-overconfidence', probBelow, probAbove, probInRange }
+  }
+
+  // Priority 2: Check underconfidence (P(accuracy > upper bound))
+  if (probAbove > 0.99) {
+    return { status: 'underconfident', detailedStatus: 'decisive-underconfidence', probBelow, probAbove, probInRange }
+  }
+  if (probAbove > 0.90) {
+    return { status: 'underconfident', detailedStatus: 'very-strong-underconfidence', probBelow, probAbove, probInRange }
+  }
+  if (probAbove > 0.75) {
+    return { status: 'underconfident', detailedStatus: 'strong-underconfidence', probBelow, probAbove, probInRange }
+  }
+  if (probAbove > 0.50) {
+    return { status: 'underconfident', detailedStatus: 'moderate-underconfidence', probBelow, probAbove, probInRange }
+  }
+
+  // Priority 3: Check well-calibrated (P(accuracy ∈ range))
+  if (probInRange > 0.50) {
+    return { status: 'well-calibrated', detailedStatus: 'likely-well-calibrated', probBelow, probAbove, probInRange }
+  }
+  if (probInRange > 0.25) {
+    return { status: 'well-calibrated', detailedStatus: 'plausibly-well-calibrated', probBelow, probAbove, probInRange }
+  }
+
+  // Priority 4: Fallback - ambiguous, spread across regions
+  return { status: 'insufficient-data', detailedStatus: 'insufficient-data', probBelow, probAbove, probInRange }
 }
 
 export async function GET(req: NextRequest) {
@@ -211,13 +273,21 @@ export async function GET(req: NextRequest) {
   })
 
   // Determine overall calibration status using Bayesian Beta Distribution per bucket
-  let calibrationStatus: 'well-calibrated' | 'overconfident' | 'underconfident' | 'insufficient-data'
+  let calibrationStatus: SimpleCalibrationStatus
 
   const bucketsWithData = calibrationData.filter(d => d.count >= 1)
   const totalAnswersInBuckets = bucketsWithData.reduce((sum, d) => sum + d.count, 0)
 
   // Store per-bucket assessments for detailed feedback
-  const bucketStatuses: { confidence: number; status: 'well-calibrated' | 'overconfident' | 'underconfident' | 'insufficient-data' }[] = []
+  type BucketStatusEntry = {
+    confidence: number
+    status: SimpleCalibrationStatus
+    detailedStatus: DetailedCalibrationStatus
+    probBelow: number
+    probAbove: number
+    probInRange: number
+  }
+  const bucketStatuses: BucketStatusEntry[] = []
 
   if (bucketsWithData.length < 1 || totalAnswersInBuckets < 3) {
     calibrationStatus = 'insufficient-data'
@@ -232,7 +302,11 @@ export async function GET(req: NextRequest) {
       // Store the bucket status for detailed feedback
       bucketStatuses.push({
         confidence: bucket.confidence,
-        status: assessment.status
+        status: assessment.status,
+        detailedStatus: assessment.detailedStatus,
+        probBelow: Math.round(assessment.probBelow * 100),
+        probAbove: Math.round(assessment.probAbove * 100),
+        probInRange: Math.round(assessment.probInRange * 100)
       })
       return {
         ...assessment,
@@ -250,18 +324,19 @@ export async function GET(req: NextRequest) {
     for (const assessment of bucketAssessments) {
       totalWeight += assessment.weight
       if (assessment.status === 'overconfident') {
-        overconfidentWeight += assessment.weight * assessment.evidence
+        // Use probBelow as evidence strength for overconfidence
+        overconfidentWeight += assessment.weight * assessment.probBelow
       } else if (assessment.status === 'underconfident') {
-        underconfidentWeight += assessment.weight * assessment.evidence
+        // Use probAbove as evidence strength for underconfidence
+        underconfidentWeight += assessment.weight * assessment.probAbove
       } else if (assessment.status === 'well-calibrated') {
-        wellCalibratedWeight += assessment.weight
+        wellCalibratedWeight += assessment.weight * assessment.probInRange
       }
     }
 
     // Normalize weights
     const normalizedOverconfident = overconfidentWeight / totalWeight
     const normalizedUnderconfident = underconfidentWeight / totalWeight
-    const normalizedWellCalibrated = wellCalibratedWeight / totalWeight
 
     // Determine overall status based on strongest signal
     // Threshold: need at least 40% of weighted evidence to declare overconfident/underconfident
