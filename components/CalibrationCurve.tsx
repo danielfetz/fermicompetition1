@@ -18,8 +18,8 @@ type DetailedCalibrationStatus =
   | 'very-strong-underconfidence'
   | 'strong-underconfidence'
   | 'moderate-underconfidence'
-  | 'likely-well-calibrated'
-  | 'plausibly-well-calibrated'
+  | 'good-calibration'
+  | 'no-miscalibration-evidence'
   | 'insufficient-data'
 
 type BucketStatus = {
@@ -55,8 +55,8 @@ const DETAILED_STATUS_LABELS: Record<DetailedCalibrationStatus, { label: string;
   'very-strong-underconfidence': { label: 'very strongly underconfident', strength: 'very strong' },
   'strong-underconfidence': { label: 'strongly underconfident', strength: 'strong' },
   'moderate-underconfidence': { label: 'moderately underconfident', strength: 'moderate' },
-  'likely-well-calibrated': { label: 'likely well-calibrated', strength: 'likely' },
-  'plausibly-well-calibrated': { label: 'plausibly well-calibrated', strength: 'plausible' },
+  'good-calibration': { label: 'good calibration', strength: 'good' },
+  'no-miscalibration-evidence': { label: 'no miscalibration evidence', strength: '' },
   'insufficient-data': { label: 'insufficient data', strength: '' }
 }
 

@@ -106,8 +106,8 @@ type DetailedCalibrationStatus =
   | 'very-strong-underconfidence'
   | 'strong-underconfidence'
   | 'moderate-underconfidence'
-  | 'likely-well-calibrated'
-  | 'plausibly-well-calibrated'
+  | 'good-calibration'
+  | 'no-miscalibration-evidence'
   | 'insufficient-data'
 
 // Simplified status for overall assessment
@@ -156,42 +156,48 @@ function assessBucketCalibration(
   const probAbove = 1 - probBelowUpper              // P(accuracy > upper)
 
   // Priority 1: Check overconfidence (P(accuracy < lower bound))
+  // Thresholds: >99% decisive, >97% very strong, >91% strong, >75% moderate
   if (probBelow > 0.99) {
     return { status: 'overconfident', detailedStatus: 'decisive-overconfidence', probBelow, probAbove, probInRange }
   }
-  if (probBelow > 0.90) {
+  if (probBelow > 0.97) {
     return { status: 'overconfident', detailedStatus: 'very-strong-overconfidence', probBelow, probAbove, probInRange }
   }
-  if (probBelow > 0.75) {
+  if (probBelow > 0.91) {
     return { status: 'overconfident', detailedStatus: 'strong-overconfidence', probBelow, probAbove, probInRange }
   }
-  if (probBelow > 0.50) {
+  if (probBelow > 0.75) {
     return { status: 'overconfident', detailedStatus: 'moderate-overconfidence', probBelow, probAbove, probInRange }
   }
 
   // Priority 2: Check underconfidence (P(accuracy > upper bound))
+  // Same thresholds as overconfidence
   if (probAbove > 0.99) {
     return { status: 'underconfident', detailedStatus: 'decisive-underconfidence', probBelow, probAbove, probInRange }
   }
-  if (probAbove > 0.90) {
+  if (probAbove > 0.97) {
     return { status: 'underconfident', detailedStatus: 'very-strong-underconfidence', probBelow, probAbove, probInRange }
   }
-  if (probAbove > 0.75) {
+  if (probAbove > 0.91) {
     return { status: 'underconfident', detailedStatus: 'strong-underconfidence', probBelow, probAbove, probInRange }
   }
-  if (probAbove > 0.50) {
+  if (probAbove > 0.75) {
     return { status: 'underconfident', detailedStatus: 'moderate-underconfidence', probBelow, probAbove, probInRange }
   }
 
   // Priority 3: Check well-calibrated (P(accuracy ∈ range))
-  if (probInRange > 0.50) {
-    return { status: 'well-calibrated', detailedStatus: 'likely-well-calibrated', probBelow, probAbove, probInRange }
+  // At this point we know P(below) < 75% AND P(above) < 75%
+  if (probInRange > 0.75) {
+    // Good calibration support
+    return { status: 'well-calibrated', detailedStatus: 'good-calibration', probBelow, probAbove, probInRange }
   }
-  if (probInRange > 0.25) {
-    return { status: 'well-calibrated', detailedStatus: 'plausibly-well-calibrated', probBelow, probAbove, probInRange }
+  if (probInRange > 0.50) {
+    // No evidence of miscalibration
+    return { status: 'well-calibrated', detailedStatus: 'no-miscalibration-evidence', probBelow, probAbove, probInRange }
   }
 
-  // Priority 4: Fallback - ambiguous, spread across regions
+  // Priority 4: Fallback - insufficient evidence to judge
+  // P(below) < 75%, P(above) < 75%, P(in range) <= 50%
   return { status: 'insufficient-data', detailedStatus: 'insufficient-data', probBelow, probAbove, probInRange }
 }
 

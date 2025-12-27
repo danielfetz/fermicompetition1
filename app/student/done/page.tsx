@@ -23,8 +23,8 @@ type DetailedCalibrationStatus =
   | 'very-strong-underconfidence'
   | 'strong-underconfidence'
   | 'moderate-underconfidence'
-  | 'likely-well-calibrated'
-  | 'plausibly-well-calibrated'
+  | 'good-calibration'
+  | 'no-miscalibration-evidence'
   | 'insufficient-data'
 
 type BucketStatus = {
