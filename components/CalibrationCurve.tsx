@@ -9,9 +9,33 @@ type CalibrationDataPoint = {
 
 type CalibrationStatus = 'well-calibrated' | 'overconfident' | 'underconfident' | 'insufficient-data'
 
+type DetailedCalibrationStatus =
+  | 'decisive-overconfidence'
+  | 'very-strong-overconfidence'
+  | 'strong-overconfidence'
+  | 'moderate-overconfidence'
+  | 'decisive-underconfidence'
+  | 'very-strong-underconfidence'
+  | 'strong-underconfidence'
+  | 'moderate-underconfidence'
+  | 'good-calibration'
+  | 'slight-good-calibration'
+  | 'no-miscalibration-evidence'
+  | 'insufficient-data'
+
+type BucketStatus = {
+  confidence: number
+  status: CalibrationStatus
+  detailedStatus?: DetailedCalibrationStatus
+  probBelow?: number
+  probAbove?: number
+  probInRange?: number
+}
+
 interface CalibrationCurveProps {
   data: CalibrationDataPoint[]
   status: CalibrationStatus
+  bucketStatuses?: BucketStatus[]
 }
 
 const CONFIDENCE_LABELS: Record<number, string> = {
@@ -22,11 +46,27 @@ const CONFIDENCE_LABELS: Record<number, string> = {
   90: '80-100%'
 }
 
-export default function CalibrationCurve({ data, status }: CalibrationCurveProps) {
-  // Chart dimensions
+// Human-readable descriptions for detailed status (full sentences)
+const DETAILED_STATUS_DESCRIPTIONS: Record<DetailedCalibrationStatus, string> = {
+  'decisive-overconfidence': 'there is decisive evidence for overconfidence',
+  'very-strong-overconfidence': 'there is very strong evidence for overconfidence',
+  'strong-overconfidence': 'there is strong evidence for overconfidence',
+  'moderate-overconfidence': 'there is substantial evidence for overconfidence',
+  'decisive-underconfidence': 'there is decisive evidence for underconfidence',
+  'very-strong-underconfidence': 'there is very strong evidence for underconfidence',
+  'strong-underconfidence': 'there is strong evidence for underconfidence',
+  'moderate-underconfidence': 'there is substantial evidence for underconfidence',
+  'good-calibration': 'good calibration is supported',
+  'slight-good-calibration': 'there is a slight tendency towards good calibration',
+  'no-miscalibration-evidence': 'we don\'t have enough evidence to confirm good calibration, but we also found no evidence of miscalibration',
+  'insufficient-data': 'there is insufficient evidence to judge'
+}
+
+export default function CalibrationCurve({ data, status, bucketStatuses }: CalibrationCurveProps) {
+  // Chart dimensions - increased bottom padding for axis label spacing
   const width = 300
-  const height = 220
-  const padding = { top: 20, right: 20, bottom: 40, left: 45 }
+  const height = 240
+  const padding = { top: 20, right: 20, bottom: 55, left: 50 }
   const chartWidth = width - padding.left - padding.right
   const chartHeight = height - padding.top - padding.bottom
 
@@ -47,30 +87,60 @@ export default function CalibrationCurve({ data, status }: CalibrationCurveProps
       }).join(' ')
     : null
 
-  const statusConfig: Record<CalibrationStatus, { label: string; color: string; description: string }> = {
-    'well-calibrated': {
-      label: 'Well Calibrated',
-      color: 'text-duo-green',
-      description: 'Your confidence levels closely match your actual accuracy. Great calibration!'
-    },
-    'overconfident': {
-      label: 'Overconfident',
-      color: 'text-duo-red',
-      description: 'You tend to be more confident than your accuracy warrants. Consider being more conservative with high confidence ratings.'
-    },
-    'underconfident': {
-      label: 'Underconfident',
-      color: 'text-duo-blue',
-      description: 'You\'re actually more accurate than your confidence suggests. You can trust your estimates more!'
-    },
-    'insufficient-data': {
-      label: 'Insufficient Data',
-      color: 'text-wolf',
-      description: 'Not enough answers at different confidence levels to determine calibration.'
+  // Generate per-bucket verdict descriptions as full sentences, grouping same statuses
+  const generateBucketVerdicts = (): string => {
+    if (!bucketStatuses || bucketStatuses.length === 0) {
+      return 'Not enough data to assess calibration.'
     }
+
+    // Sort by confidence level for consistent ordering
+    const sortedBuckets = [...bucketStatuses].sort((a, b) => a.confidence - b.confidence)
+
+    // Group buckets by detailed status
+    const groupedByStatus: Record<string, string[]> = {}
+    for (const bucket of sortedBuckets) {
+      if (bucket.detailedStatus) {
+        const key = bucket.detailedStatus
+        const label = CONFIDENCE_LABELS[bucket.confidence]
+        if (!groupedByStatus[key]) {
+          groupedByStatus[key] = []
+        }
+        groupedByStatus[key].push(label)
+      }
+    }
+
+    // Build sentences, combining buckets with the same status
+    const sentences: string[] = []
+    // Maintain order based on first occurrence in sorted buckets
+    const processedStatuses = new Set<string>()
+
+    for (const bucket of sortedBuckets) {
+      if (bucket.detailedStatus && !processedStatuses.has(bucket.detailedStatus)) {
+        processedStatuses.add(bucket.detailedStatus)
+        const labels = groupedByStatus[bucket.detailedStatus]
+        const description = DETAILED_STATUS_DESCRIPTIONS[bucket.detailedStatus]
+
+        let bucketList: string
+        if (labels.length === 1) {
+          bucketList = labels[0]
+        } else if (labels.length === 2) {
+          bucketList = `${labels[0]} and ${labels[1]}`
+        } else {
+          bucketList = labels.slice(0, -1).join(', ') + ', and ' + labels[labels.length - 1]
+        }
+
+        sentences.push(`At ${bucketList}, ${description}.`)
+      }
+    }
+
+    if (sentences.length === 0) {
+      return 'Not enough data to assess calibration.'
+    }
+
+    return sentences.join(' ')
   }
 
-  const currentStatus = statusConfig[status]
+  const bucketVerdicts = generateBucketVerdicts()
 
   return (
     <div className="space-y-4">
@@ -78,7 +148,7 @@ export default function CalibrationCurve({ data, status }: CalibrationCurveProps
       <div className="flex justify-center">
         <svg width={width} height={height} className="font-sans">
           {/* Grid lines */}
-          {[0, 25, 50, 75, 100].map(tick => (
+          {[0, 20, 40, 60, 80, 100].map(tick => (
             <g key={tick}>
               {/* Horizontal grid lines */}
               <line
@@ -160,12 +230,12 @@ export default function CalibrationCurve({ data, status }: CalibrationCurveProps
             )
           })}
 
-          {/* X-axis labels */}
+          {/* X-axis tick labels (bucket percentages) */}
           {data.map((d, i) => (
             <text
               key={i}
               x={xScale(d.confidence)}
-              y={height - 10}
+              y={padding.top + chartHeight + 18}
               textAnchor="middle"
               className="text-[10px] fill-wolf"
             >
@@ -173,20 +243,20 @@ export default function CalibrationCurve({ data, status }: CalibrationCurveProps
             </text>
           ))}
 
-          {/* Axis labels */}
+          {/* Axis title labels */}
           <text
             x={width / 2}
-            y={height - 0}
+            y={height - 8}
             textAnchor="middle"
             className="text-xs fill-eel font-semibold"
           >
             Confidence Selected
           </text>
           <text
-            x={12}
-            y={height / 2}
+            x={6}
+            y={padding.top + chartHeight / 2}
             textAnchor="middle"
-            transform={`rotate(-90, 12, ${height / 2})`}
+            transform={`rotate(-90, 6, ${padding.top + chartHeight / 2})`}
             className="text-xs fill-eel font-semibold"
           >
             Actual Accuracy
@@ -194,13 +264,10 @@ export default function CalibrationCurve({ data, status }: CalibrationCurveProps
         </svg>
       </div>
 
-      {/* Status */}
-      <div className="text-center space-y-2">
-        <div className={`font-bold text-lg ${currentStatus.color}`}>
-          {currentStatus.label}
-        </div>
-        <p className="text-sm text-wolf">
-          {currentStatus.description}
+      {/* Per-bucket verdicts */}
+      <div className="text-center">
+        <p className="text-sm text-wolf leading-relaxed">
+          {bucketVerdicts}
         </p>
       </div>
 

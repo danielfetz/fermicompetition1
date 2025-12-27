@@ -14,6 +14,29 @@ type CalibrationDataPoint = {
 
 type CalibrationStatus = 'well-calibrated' | 'overconfident' | 'underconfident' | 'insufficient-data'
 
+type DetailedCalibrationStatus =
+  | 'decisive-overconfidence'
+  | 'very-strong-overconfidence'
+  | 'strong-overconfidence'
+  | 'moderate-overconfidence'
+  | 'decisive-underconfidence'
+  | 'very-strong-underconfidence'
+  | 'strong-underconfidence'
+  | 'moderate-underconfidence'
+  | 'good-calibration'
+  | 'slight-good-calibration'
+  | 'no-miscalibration-evidence'
+  | 'insufficient-data'
+
+type BucketStatus = {
+  confidence: number
+  status: CalibrationStatus
+  detailedStatus: DetailedCalibrationStatus
+  probBelow: number
+  probAbove: number
+  probInRange: number
+}
+
 type Results = {
   score: {
     confidencePoints: number
@@ -24,6 +47,7 @@ type Results = {
   calibration: {
     data: CalibrationDataPoint[]
     status: CalibrationStatus
+    bucketStatuses?: BucketStatus[]
   }
 }
 
@@ -129,6 +153,7 @@ export default function Done() {
             <CalibrationCurve
               data={results.calibration.data}
               status={results.calibration.status}
+              bucketStatuses={results.calibration.bucketStatuses}
             />
           </div>
 

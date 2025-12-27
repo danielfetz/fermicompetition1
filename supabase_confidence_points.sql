@@ -23,14 +23,14 @@ SELECT
   count(a.id) AS total_answered,
   count(*) FILTER (
     WHERE fq.correct_value IS NOT NULL
-      AND a.value BETWEEN (fq.correct_value * 0.5) AND (fq.correct_value * 1.5)
+      AND a.value BETWEEN (fq.correct_value * 0.5) AND (fq.correct_value * 2.0)
   ) AS correct_count,
   round(
     CASE
       WHEN count(a.id) > 0 THEN
         (count(*) FILTER (
           WHERE fq.correct_value IS NOT NULL
-            AND a.value BETWEEN (fq.correct_value * 0.5) AND (fq.correct_value * 1.5)
+            AND a.value BETWEEN (fq.correct_value * 0.5) AND (fq.correct_value * 2.0)
         )::numeric / count(a.id)::numeric) * 100
       ELSE 0
     END, 1
@@ -38,9 +38,9 @@ SELECT
   -- Confidence-based points: 250 base + sum of points per answer
   250 + COALESCE(SUM(
     CASE
-      -- Correct answer (within 50% of correct value)
+      -- Correct answer (within factor of 2: between half and double)
       WHEN fq.correct_value IS NOT NULL
-        AND a.value BETWEEN (fq.correct_value * 0.5) AND (fq.correct_value * 1.5) THEN
+        AND a.value BETWEEN (fq.correct_value * 0.5) AND (fq.correct_value * 2.0) THEN
         CASE a.confidence_pct
           WHEN 10 THEN 3
           WHEN 30 THEN 7
