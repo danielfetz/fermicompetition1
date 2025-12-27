@@ -45,19 +45,19 @@ const CONFIDENCE_LABELS: Record<number, string> = {
   90: '80-100%'
 }
 
-// Human-readable labels for detailed status
-const DETAILED_STATUS_LABELS: Record<DetailedCalibrationStatus, { label: string; strength: string }> = {
-  'decisive-overconfidence': { label: 'decisively overconfident', strength: 'decisive' },
-  'very-strong-overconfidence': { label: 'very strongly overconfident', strength: 'very strong' },
-  'strong-overconfidence': { label: 'strongly overconfident', strength: 'strong' },
-  'moderate-overconfidence': { label: 'moderately overconfident', strength: 'moderate' },
-  'decisive-underconfidence': { label: 'decisively underconfident', strength: 'decisive' },
-  'very-strong-underconfidence': { label: 'very strongly underconfident', strength: 'very strong' },
-  'strong-underconfidence': { label: 'strongly underconfident', strength: 'strong' },
-  'moderate-underconfidence': { label: 'moderately underconfident', strength: 'moderate' },
-  'good-calibration': { label: 'good calibration', strength: 'good' },
-  'no-miscalibration-evidence': { label: 'no miscalibration evidence', strength: '' },
-  'insufficient-data': { label: 'insufficient data', strength: '' }
+// Human-readable descriptions for detailed status
+const DETAILED_STATUS_DESCRIPTIONS: Record<DetailedCalibrationStatus, string> = {
+  'decisive-overconfidence': 'decisive evidence for overconfidence',
+  'very-strong-overconfidence': 'very strong evidence for overconfidence',
+  'strong-overconfidence': 'strong evidence for overconfidence',
+  'moderate-overconfidence': 'moderate evidence for overconfidence',
+  'decisive-underconfidence': 'decisive evidence for underconfidence',
+  'very-strong-underconfidence': 'very strong evidence for underconfidence',
+  'strong-underconfidence': 'strong evidence for underconfidence',
+  'moderate-underconfidence': 'moderate evidence for underconfidence',
+  'good-calibration': 'good calibration supported',
+  'no-miscalibration-evidence': 'no evidence of miscalibration',
+  'insufficient-data': 'insufficient data'
 }
 
 export default function CalibrationCurve({ data, status, bucketStatuses }: CalibrationCurveProps) {
@@ -85,75 +85,33 @@ export default function CalibrationCurve({ data, status, bucketStatuses }: Calib
       }).join(' ')
     : null
 
-  // Generate detailed bucket feedback with gradations
-  const getBucketFeedback = (): { overconfident: string[]; underconfident: string[]; wellCalibrated: string[] } => {
-    const result = { overconfident: [] as string[], underconfident: [] as string[], wellCalibrated: [] as string[] }
-    if (!bucketStatuses || bucketStatuses.length === 0) return result
+  // Generate per-bucket verdict descriptions
+  const generateBucketVerdicts = (): string => {
+    if (!bucketStatuses || bucketStatuses.length === 0) {
+      return 'Not enough data to assess calibration.'
+    }
 
-    for (const b of bucketStatuses) {
-      const label = CONFIDENCE_LABELS[b.confidence]
-      const detailedInfo = b.detailedStatus ? DETAILED_STATUS_LABELS[b.detailedStatus] : null
+    // Sort by confidence level for consistent ordering
+    const sortedBuckets = [...bucketStatuses].sort((a, b) => a.confidence - b.confidence)
 
-      if (b.status === 'overconfident' && detailedInfo) {
-        result.overconfident.push(`${label} (${detailedInfo.strength})`)
-      } else if (b.status === 'underconfident' && detailedInfo) {
-        result.underconfident.push(`${label} (${detailedInfo.strength})`)
-      } else if (b.status === 'well-calibrated' && detailedInfo) {
-        result.wellCalibrated.push(`${label}`)
+    const verdicts: string[] = []
+
+    for (const bucket of sortedBuckets) {
+      const label = CONFIDENCE_LABELS[bucket.confidence]
+      if (bucket.detailedStatus) {
+        const description = DETAILED_STATUS_DESCRIPTIONS[bucket.detailedStatus]
+        verdicts.push(`${label}: ${description}`)
       }
     }
 
-    return result
+    if (verdicts.length === 0) {
+      return 'Not enough data to assess calibration.'
+    }
+
+    return verdicts.join('. ') + '.'
   }
 
-  const bucketFeedback = getBucketFeedback()
-
-  // Build detailed description
-  const buildDescription = (): string => {
-    const parts: string[] = []
-
-    if (bucketFeedback.overconfident.length > 0) {
-      parts.push(`Overconfident at: ${bucketFeedback.overconfident.join(', ')}`)
-    }
-    if (bucketFeedback.underconfident.length > 0) {
-      parts.push(`Underconfident at: ${bucketFeedback.underconfident.join(', ')}`)
-    }
-    if (bucketFeedback.wellCalibrated.length > 0 && status !== 'well-calibrated') {
-      parts.push(`Well-calibrated at: ${bucketFeedback.wellCalibrated.join(', ')}`)
-    }
-
-    return parts.join('. ')
-  }
-
-  const bucketDetails = buildDescription()
-
-  const statusConfig: Record<CalibrationStatus, { label: string; color: string; baseDescription: string }> = {
-    'well-calibrated': {
-      label: 'Well Calibrated',
-      color: 'text-duo-green',
-      baseDescription: 'Your confidence levels closely match your actual accuracy.'
-    },
-    'overconfident': {
-      label: 'Overconfident',
-      color: 'text-duo-red',
-      baseDescription: 'You tend to be more confident than your accuracy warrants.'
-    },
-    'underconfident': {
-      label: 'Underconfident',
-      color: 'text-duo-blue',
-      baseDescription: 'You\'re actually more accurate than your confidence suggests.'
-    },
-    'insufficient-data': {
-      label: 'Insufficient Data',
-      color: 'text-wolf',
-      baseDescription: 'Not enough answers at different confidence levels to determine calibration.'
-    }
-  }
-
-  const currentStatus = statusConfig[status]
-  const fullDescription = bucketDetails
-    ? `${currentStatus.baseDescription} ${bucketDetails}.`
-    : currentStatus.baseDescription
+  const bucketVerdicts = generateBucketVerdicts()
 
   return (
     <div className="space-y-4">
@@ -277,13 +235,10 @@ export default function CalibrationCurve({ data, status, bucketStatuses }: Calib
         </svg>
       </div>
 
-      {/* Status */}
-      <div className="text-center space-y-2">
-        <div className={`font-bold text-lg ${currentStatus.color}`}>
-          {currentStatus.label}
-        </div>
-        <p className="text-sm text-wolf">
-          {fullDescription}
+      {/* Per-bucket verdicts */}
+      <div className="text-center">
+        <p className="text-sm text-wolf leading-relaxed">
+          {bucketVerdicts}
         </p>
       </div>
 
