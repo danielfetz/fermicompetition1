@@ -102,11 +102,14 @@ type DetailedCalibrationStatus =
   | 'very-strong-overconfidence'
   | 'strong-overconfidence'
   | 'moderate-overconfidence'
+  | 'slight-overconfidence'
   | 'decisive-underconfidence'
   | 'very-strong-underconfidence'
   | 'strong-underconfidence'
   | 'moderate-underconfidence'
+  | 'slight-underconfidence'
   | 'good-calibration'
+  | 'slight-good-calibration'
   | 'no-miscalibration-evidence'
   | 'insufficient-data'
 
@@ -185,20 +188,28 @@ function assessBucketCalibration(
     return { status: 'underconfident', detailedStatus: 'moderate-underconfidence', probBelow, probAbove, probInRange }
   }
 
-  // Priority 3: Check well-calibrated (P(accuracy ∈ range))
+  // Priority 3: Check well-calibrated (P(accuracy ∈ range) > 75%)
   // At this point we know P(below) < 75% AND P(above) < 75%
   if (probInRange > 0.75) {
     // Good calibration support
     return { status: 'well-calibrated', detailedStatus: 'good-calibration', probBelow, probAbove, probInRange }
   }
+
+  // Priority 4: Check slight tendencies (P > 50%)
+  // At this point we know P(below) < 75%, P(above) < 75%, P(in range) <= 75%
+  if (probBelow > 0.50) {
+    return { status: 'overconfident', detailedStatus: 'slight-overconfidence', probBelow, probAbove, probInRange }
+  }
+  if (probAbove > 0.50) {
+    return { status: 'underconfident', detailedStatus: 'slight-underconfidence', probBelow, probAbove, probInRange }
+  }
   if (probInRange > 0.50) {
-    // No evidence of miscalibration
-    return { status: 'well-calibrated', detailedStatus: 'no-miscalibration-evidence', probBelow, probAbove, probInRange }
+    return { status: 'well-calibrated', detailedStatus: 'slight-good-calibration', probBelow, probAbove, probInRange }
   }
 
-  // Priority 4: Fallback - insufficient evidence to judge
-  // P(below) < 75%, P(above) < 75%, P(in range) <= 50%
-  return { status: 'insufficient-data', detailedStatus: 'insufficient-data', probBelow, probAbove, probInRange }
+  // Priority 5: Fallback - no strong evidence either way
+  // P(below) <= 50%, P(above) <= 50%, P(in range) <= 50%
+  return { status: 'well-calibrated', detailedStatus: 'no-miscalibration-evidence', probBelow, probAbove, probInRange }
 }
 
 export async function GET(req: NextRequest) {

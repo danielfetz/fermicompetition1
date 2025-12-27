@@ -14,11 +14,14 @@ type DetailedCalibrationStatus =
   | 'very-strong-overconfidence'
   | 'strong-overconfidence'
   | 'moderate-overconfidence'
+  | 'slight-overconfidence'
   | 'decisive-underconfidence'
   | 'very-strong-underconfidence'
   | 'strong-underconfidence'
   | 'moderate-underconfidence'
+  | 'slight-underconfidence'
   | 'good-calibration'
+  | 'slight-good-calibration'
   | 'no-miscalibration-evidence'
   | 'insufficient-data'
 
@@ -51,12 +54,15 @@ const DETAILED_STATUS_DESCRIPTIONS: Record<DetailedCalibrationStatus, string> = 
   'very-strong-overconfidence': 'there is very strong evidence for overconfidence',
   'strong-overconfidence': 'there is strong evidence for overconfidence',
   'moderate-overconfidence': 'there is substantial evidence for overconfidence',
+  'slight-overconfidence': 'there is a slight tendency towards overconfidence',
   'decisive-underconfidence': 'there is decisive evidence for underconfidence',
   'very-strong-underconfidence': 'there is very strong evidence for underconfidence',
   'strong-underconfidence': 'there is strong evidence for underconfidence',
   'moderate-underconfidence': 'there is substantial evidence for underconfidence',
+  'slight-underconfidence': 'there is a slight tendency towards underconfidence',
   'good-calibration': 'good calibration is supported',
-  'no-miscalibration-evidence': 'there is no evidence of miscalibration',
+  'slight-good-calibration': 'there is a slight tendency towards good calibration',
+  'no-miscalibration-evidence': 'we don\'t have enough evidence to confirm good calibration, but we also found no evidence of miscalibration',
   'insufficient-data': 'there is insufficient evidence to judge'
 }
 
