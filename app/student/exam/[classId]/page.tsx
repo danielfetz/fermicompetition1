@@ -267,6 +267,11 @@ export default function StudentExam() {
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}))
       console.error('Submit error:', errorData)
+      // If time has expired, still go to results - answers were already auto-saved
+      if (errorData.error === 'Exam time has expired') {
+        router.push('/student/done')
+        return
+      }
       setError(`Submit failed: ${errorData.error || 'Unknown error'}${errorData.details ? ' - ' + JSON.stringify(errorData.details) : ''}`)
       return
     }
