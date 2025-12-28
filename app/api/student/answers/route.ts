@@ -55,6 +55,22 @@ export async function POST(req: NextRequest) {
     const deadline = new Date(session.ends_at).getTime()
     const gracePeriod = 60 * 1000 // 1 minute
     if (Date.now() > deadline + gracePeriod) {
+      // If this is a final submit request, allow it so student can see results
+      // Just don't save any new answers since time has expired
+      if (parsed.data.submit) {
+        await supa
+          .from('students')
+          .update({ has_completed_exam: true })
+          .eq('id', payload.studentId)
+
+        await supa
+          .from('student_exam_sessions')
+          .update({ submitted_at: new Date().toISOString() })
+          .eq('student_id', payload.studentId)
+          .eq('competition_mode', competitionMode)
+
+        return NextResponse.json({ ok: true, timeExpired: true })
+      }
       return NextResponse.json({ error: 'Exam time has expired' }, { status: 400 })
     }
   }
