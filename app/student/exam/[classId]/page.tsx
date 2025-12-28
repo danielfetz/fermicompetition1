@@ -277,6 +277,38 @@ export default function StudentExam() {
     submit()
   }, [submit])
 
+  // Safeguard: check deadline when page resumes from background
+  // This handles iOS Safari edge cases where Timer events might not fire correctly
+  useEffect(() => {
+    if (deadline === null) return
+
+    const checkDeadline = () => {
+      if (deadline - Date.now() <= 0 && !submitting) {
+        submit()
+      }
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkDeadline()
+      }
+    }
+
+    const handlePageShow = () => {
+      checkDeadline()
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('pageshow', handlePageShow)
+    window.addEventListener('focus', checkDeadline)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('pageshow', handlePageShow)
+      window.removeEventListener('focus', checkDeadline)
+    }
+  }, [deadline, submitting, submit])
+
   const currentQuestion = questions[currentIndex]
 
   function updateAnswer(value: string) {

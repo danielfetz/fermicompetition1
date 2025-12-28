@@ -53,19 +53,36 @@ export default function Timer({
       return true
     }
 
-    // Handle visibility change - check timer immediately when page becomes visible
+    // Handle page becoming visible again - check timer immediately
     // This fixes mobile browsers where setInterval is throttled/paused in background
+    // We use multiple events to cover different browser behaviors:
+    // - visibilitychange: standard API, works on most browsers
+    // - pageshow: more reliable on iOS Safari when returning from another app
+    // - focus: catches additional app switching scenarios
+    const handleResume = () => {
+      updateTimer()
+    }
+
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        updateTimer()
+        handleResume()
       }
     }
 
+    const handlePageShow = () => {
+      // Always check on pageshow - covers iOS Safari app switching
+      handleResume()
+    }
+
     document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('pageshow', handlePageShow)
+    window.addEventListener('focus', handleResume)
 
     // Initial update
     if (!updateTimer()) {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('pageshow', handlePageShow)
+      window.removeEventListener('focus', handleResume)
       return
     }
 
@@ -78,6 +95,8 @@ export default function Timer({
     return () => {
       clearInterval(interval)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('pageshow', handlePageShow)
+      window.removeEventListener('focus', handleResume)
     }
   }, [deadline, urgentThreshold, formatTime])
 
