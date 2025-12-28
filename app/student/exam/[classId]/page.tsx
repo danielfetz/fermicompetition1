@@ -240,6 +240,20 @@ export default function StudentExam() {
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
+  // Redirect to results if user returns to tab after time expired
+  useEffect(() => {
+    if (!deadline) return
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && Date.now() > deadline) {
+        router.push('/student/done')
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [deadline, router])
+
   // Save when answers change (debounced)
   useEffect(() => {
     if (Object.keys(answers).length === 0) return
