@@ -9,15 +9,13 @@ export async function verifyPassword(plain: string, hash: string) {
   return bcrypt.compare(plain, hash)
 }
 
-// Generate readable password with mix of consonants, vowels, and digits
+// Generate readable password - 8 uppercase alphanumeric characters
+// Excludes confusing characters: O, 0, I, 1
 export function generateReadablePassword(length = 8) {
-  const consonants = 'bcdfghjklmnpqrstvwxyz'
-  const vowels = 'aeiou'
-  const digits = '23456789'
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
   let out = ''
   for (let i = 0; i < length; i++) {
-    const set = i % 3 === 2 ? digits : i % 2 === 0 ? consonants : vowels
-    out += set[Math.floor(Math.random() * set.length)]
+    out += chars[Math.floor(Math.random() * chars.length)]
   }
   return out
 }
