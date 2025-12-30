@@ -167,7 +167,7 @@ export default function ClassContent({
                     <div className="relative group">
                       <button
                         onClick={() => {
-                          const text = filteredStudents.map(s => `${s.username}\t${s.plain_password || ''}`).join('\n')
+                          const text = filteredStudents.map(s => `${s.username}\t${s.plain_password || ''}\t${s.full_name || ''}`).join('\n')
                           navigator.clipboard.writeText(text)
                           setCopied(true)
                           setTimeout(() => setCopied(false), 2000)
@@ -191,7 +191,7 @@ export default function ClassContent({
                     <div className="relative group">
                       <button
                         onClick={() => {
-                          const csv = 'Username,Password\n' + filteredStudents.map(s => `${s.username},${s.plain_password || ''}`).join('\n')
+                          const csv = 'Username,Password,Name\n' + filteredStudents.map(s => `${s.username},${s.plain_password || ''},${s.full_name || ''}`).join('\n')
                           const blob = new Blob([csv], { type: 'text/csv' })
                           const url = URL.createObjectURL(blob)
                           const a = document.createElement('a')
