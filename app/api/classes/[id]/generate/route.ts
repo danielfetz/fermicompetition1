@@ -50,88 +50,66 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     competition_mode: string
     full_name?: string
   }[] = []
+  const otherModeRows: {
+    class_id: string
+    username: string
+    password_hash: string
+    plain_password: string
+    competition_mode: string
+    full_name?: string
+  }[] = []
 
-  // Check for existing students in the OTHER mode (for reuse)
   const otherMode = competition_mode === 'real' ? 'mock' : 'real'
-  const { data: otherModeStudents } = await service
-    .from('students')
-    .select('username, full_name')
-    .eq('class_id', cls.id)
-    .eq('competition_mode', otherMode)
-    .order('username')
 
-  // Check if students already exist in the CURRENT mode
-  const { data: existingStudents } = await service
-    .from('students')
-    .select('id')
-    .eq('class_id', cls.id)
-    .eq('competition_mode', competition_mode)
-    .limit(1)
-
-  if (existingStudents && existingStudents.length > 0) {
-    return NextResponse.json({ error: `${competition_mode === 'real' ? 'Official' : 'Practice'} competition students already exist for this class.` }, { status: 400 })
+  // Validate count is provided
+  if (count < 1 || count > 200) {
+    return NextResponse.json({ error: 'Count must be between 1 and 200' }, { status: 400 })
   }
 
-  // If students exist in the other mode, reuse their usernames with new passwords
-  if (otherModeStudents && otherModeStudents.length > 0) {
-    for (const student of otherModeStudents) {
-      const plainPassword = generateReadablePassword(8)
-      const passwordHash = await hashPassword(plainPassword)
+  // Efficiently get max numbers for each base username pattern
+  const { data: maxNumbers } = await service.rpc('get_username_max_numbers')
 
-      credentials.push({
-        username: student.username,
-        password: plainPassword,
-        full_name: student.full_name || undefined
-      })
-      rows.push({
-        class_id: cls.id,
-        username: student.username,
-        password_hash: passwordHash,
-        plain_password: plainPassword,
-        competition_mode: competition_mode,
-        full_name: student.full_name || undefined
-      })
-    }
-  } else {
-    // No students in either mode - generate new usernames
-    // Validate count is provided
-    if (count < 1 || count > 200) {
-      return NextResponse.json({ error: 'Count must be between 1 and 200' }, { status: 400 })
-    }
-
-    // Efficiently get max numbers for each base username pattern
-    const { data: maxNumbers } = await service.rpc('get_username_max_numbers')
-
-    // Build map of base -> max number
-    const existingMaxNumbers = new Map<string, number>()
-    if (maxNumbers) {
-      for (const row of maxNumbers as { base: string; max_num: number }[]) {
-        existingMaxNumbers.set(row.base, row.max_num)
-      }
-    }
-
-    // Generate fun scientist-themed credentials with globally unique usernames
-    const generatedCredentials = await generateStudentCredentials(count, existingMaxNumbers)
-
-    // Parse names array (ensure it's an array of strings)
-    const namesList: string[] = Array.isArray(names) ? names.filter((n: unknown) => typeof n === 'string' && n.trim()) : []
-
-    for (let i = 0; i < generatedCredentials.length; i++) {
-      const cred = generatedCredentials[i]
-      const fullName = namesList[i] || undefined
-      credentials.push({ username: cred.username, password: cred.plainPassword, full_name: fullName })
-      rows.push({
-        class_id: cls.id,
-        username: cred.username,
-        password_hash: cred.passwordHash,
-        plain_password: cred.plainPassword,
-        competition_mode: competition_mode,
-        full_name: fullName
-      })
+  // Build map of base -> max number
+  const existingMaxNumbers = new Map<string, number>()
+  if (maxNumbers) {
+    for (const row of maxNumbers as { base: string; max_num: number }[]) {
+      existingMaxNumbers.set(row.base, row.max_num)
     }
   }
 
-  // Insert students
+  // Generate fun scientist-themed credentials with globally unique usernames
+  const generatedCredentials = await generateStudentCredentials(count, existingMaxNumbers)
+
+  // Parse names array (ensure it's an array of strings)
+  const namesList: string[] = Array.isArray(names) ? names.filter((n: unknown) => typeof n === 'string' && n.trim()) : []
+
+  for (let i = 0; i < generatedCredentials.length; i++) {
+    const cred = generatedCredentials[i]
+    const fullName = namesList[i] || undefined
+    credentials.push({ username: cred.username, password: cred.plainPassword, full_name: fullName })
+    rows.push({
+      class_id: cls.id,
+      username: cred.username,
+      password_hash: cred.passwordHash,
+      plain_password: cred.plainPassword,
+      competition_mode: competition_mode,
+      full_name: fullName
+    })
+
+    // Also create student in the other mode with a different password
+    const otherPlainPassword = generateReadablePassword(8)
+    const otherPasswordHash = await hashPassword(otherPlainPassword)
+    otherModeRows.push({
+      class_id: cls.id,
+      username: cred.username,
+      password_hash: otherPasswordHash,
+      plain_password: otherPlainPassword,
+      competition_mode: otherMode,
+      full_name: fullName
+    })
+  }
+
+  // Insert students for the requested mode
   const { error: insertErr } = await service
     .from('students')
     .insert(rows)
@@ -139,6 +117,16 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   if (insertErr) {
     console.error('Insert error:', insertErr)
     return NextResponse.json({ error: insertErr.message }, { status: 400 })
+  }
+
+  // Insert students for the other mode too
+  const { error: otherInsertErr } = await service
+    .from('students')
+    .insert(otherModeRows)
+
+  if (otherInsertErr) {
+    console.error('Other mode insert error:', otherInsertErr)
+    // Don't fail the request, but log it - main mode was successful
   }
 
   // Update class num_students to reflect actual total student count
@@ -152,8 +140,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     .update({ num_students: totalStudents || 0 })
     .eq('id', cls.id)
 
-  // Seed the class with questions for this competition mode if not already done
+  // Seed the class with questions for both competition modes
   await service.rpc('seed_class_questions', { p_class_id: cls.id, p_mode: competition_mode })
+  await service.rpc('seed_class_questions', { p_class_id: cls.id, p_mode: otherMode })
 
   return NextResponse.json({ credentials, competition_mode })
 }
