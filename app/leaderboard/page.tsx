@@ -1,5 +1,6 @@
 import { createSupabaseServiceRole } from '@/lib/supabaseServer'
 import Link from 'next/link'
+import LeaderboardFilters from './LeaderboardFilters'
 
 type LeaderboardEntry = {
   student_id: string
@@ -8,20 +9,64 @@ type LeaderboardEntry = {
   correct_count: number
   total_answered: number
   competition_mode: 'mock' | 'real' | 'guest'
+  grade_level: string | null
+  country: string | null
 }
 
 export const revalidate = 60 // Revalidate every 60 seconds
 
-export default async function LeaderboardPage() {
+const GRADE_LEVELS = [
+  { value: '1', label: '1st Grade' },
+  { value: '2', label: '2nd Grade' },
+  { value: '3', label: '3rd Grade' },
+  { value: '4', label: '4th Grade' },
+  { value: '5', label: '5th Grade' },
+  { value: '6', label: '6th Grade' },
+  { value: '7', label: '7th Grade' },
+  { value: '8', label: '8th Grade' },
+  { value: '9', label: '9th Grade' },
+  { value: '10', label: '10th Grade' },
+  { value: '11', label: '11th Grade' },
+  { value: '12-13', label: '12th/13th Grade' },
+  { value: 'university', label: 'University' },
+]
+
+export default async function LeaderboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ grade?: string; country?: string }>
+}) {
+  const params = await searchParams
+  const gradeFilter = params.grade || ''
+  const countryFilter = params.country || ''
+
   const supabase = createSupabaseServiceRole()
 
-  // Fetch all students with their scores, ordered by confidence points
-  const { data: scores } = await supabase
+  // Build query with filters
+  let query = supabase
     .from('student_scores')
-    .select('student_id, username, confidence_points, correct_count, total_answered, competition_mode')
-    .gt('total_answered', 0) // Only show students who have answered at least one question
+    .select('student_id, username, confidence_points, correct_count, total_answered, competition_mode, grade_level, country')
+    .gt('total_answered', 0)
     .order('confidence_points', { ascending: false })
     .limit(100)
+
+  if (gradeFilter) {
+    query = query.eq('grade_level', gradeFilter)
+  }
+  if (countryFilter) {
+    query = query.eq('country', countryFilter)
+  }
+
+  const { data: scores } = await query
+
+  // Get unique countries for the filter dropdown
+  const { data: countries } = await supabase
+    .from('classes')
+    .select('country')
+    .not('country', 'is', null)
+    .order('country')
+
+  const uniqueCountries = [...new Set((countries || []).map(c => c.country).filter(Boolean))] as string[]
 
   const leaderboard = (scores || []) as LeaderboardEntry[]
 
@@ -29,6 +74,8 @@ export default async function LeaderboardPage() {
   const mockLeaderboard = leaderboard.filter(e => e.competition_mode === 'mock')
   const realLeaderboard = leaderboard.filter(e => e.competition_mode === 'real')
   const guestLeaderboard = leaderboard.filter(e => e.competition_mode === 'guest')
+
+  const hasFilters = gradeFilter || countryFilter
 
   return (
     <div className="min-h-screen">
@@ -43,6 +90,28 @@ export default async function LeaderboardPage() {
           <h1 className="text-3xl font-extrabold text-eel">Global Leaderboard</h1>
           <p className="text-wolf mt-2">Top performers ranked by confidence points</p>
         </div>
+
+        {/* Filters */}
+        <LeaderboardFilters
+          gradeLevels={GRADE_LEVELS}
+          countries={uniqueCountries}
+          currentGrade={gradeFilter}
+          currentCountry={countryFilter}
+        />
+
+        {hasFilters && (
+          <div className="mb-4 flex items-center gap-2 text-sm text-wolf">
+            <span>Filtering by:</span>
+            {gradeFilter && (
+              <span className="badge badge-blue">
+                {GRADE_LEVELS.find(g => g.value === gradeFilter)?.label || gradeFilter}
+              </span>
+            )}
+            {countryFilter && (
+              <span className="badge badge-green">{countryFilter}</span>
+            )}
+          </div>
+        )}
 
         {/* Official Competition Leaderboard */}
         {realLeaderboard.length > 0 && (
@@ -64,7 +133,9 @@ export default async function LeaderboardPage() {
           {mockLeaderboard.length > 0 ? (
             <LeaderboardTable entries={mockLeaderboard} />
           ) : (
-            <p className="text-wolf text-center py-8">No scores yet. Be the first to compete!</p>
+            <p className="text-wolf text-center py-8">
+              {hasFilters ? 'No scores match your filters.' : 'No scores yet. Be the first to compete!'}
+            </p>
           )}
         </div>
 

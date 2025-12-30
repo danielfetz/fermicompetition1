@@ -395,6 +395,8 @@ SELECT
   s.full_name,
   s.has_completed_exam,
   s.competition_mode,
+  c.grade_level,
+  c.country,
   count(a.id) AS total_answered,
   count(*) FILTER (
     WHERE fq.correct_value IS NOT NULL
@@ -438,10 +440,11 @@ SELECT
     END
   ), 0)::int AS confidence_points
 FROM public.students s
+JOIN public.classes c ON c.id = s.class_id
 LEFT JOIN public.answers a ON a.student_id = s.id
 LEFT JOIN public.class_questions cq ON cq.id = a.class_question_id
 LEFT JOIN public.fermi_questions fq ON fq.id = cq.fermi_question_id
-GROUP BY s.id, s.class_id, s.username, s.full_name, s.has_completed_exam, s.competition_mode;
+GROUP BY s.id, s.class_id, s.username, s.full_name, s.has_completed_exam, s.competition_mode, c.grade_level, c.country;
 
 -- 6.2: Coordinator teachers view
 CREATE OR REPLACE VIEW public.coordinator_teachers
