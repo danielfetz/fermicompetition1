@@ -51,7 +51,16 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Get questions through class_questions join to fermi_questions, filtered by competition_mode
+  // Get the class's school_year
+  const { data: classData } = await supa
+    .from('classes')
+    .select('school_year')
+    .eq('id', classId)
+    .single()
+
+  const schoolYear = classData?.school_year || '2025-26'
+
+  // Get questions through class_questions join to fermi_questions, filtered by competition_mode and school_year
   const { data: classQuestions, error } = await supa
     .from('class_questions')
     .select(`
@@ -68,6 +77,7 @@ export async function GET(req: NextRequest) {
     `)
     .eq('class_id', classId)
     .eq('competition_mode', competitionMode)
+    .eq('school_year', schoolYear)
     .order('order', { ascending: true })
 
   if (error) {
@@ -77,10 +87,14 @@ export async function GET(req: NextRequest) {
 
   // If no questions found for this class and mode, try to seed them first
   if (!classQuestions || classQuestions.length === 0) {
-    // Seed questions for this class and competition mode
-    await supa.rpc('seed_class_questions', { p_class_id: classId, p_mode: competitionMode })
+    // Seed questions for this class, competition mode, and school year
+    await supa.rpc('seed_class_questions', {
+      p_class_id: classId,
+      p_mode: competitionMode,
+      p_school_year: schoolYear
+    })
 
-    // Try fetching again with competition mode filter
+    // Try fetching again with competition mode and school year filter
     const { data: seededQuestions, error: seededError } = await supa
       .from('class_questions')
       .select(`
@@ -97,6 +111,7 @@ export async function GET(req: NextRequest) {
       `)
       .eq('class_id', classId)
       .eq('competition_mode', competitionMode)
+      .eq('school_year', schoolYear)
       .order('order', { ascending: true })
 
     if (seededError) {

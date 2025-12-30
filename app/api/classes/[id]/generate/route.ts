@@ -72,37 +72,36 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     .eq('class_id', cls.id)
     .eq('school_year', schoolYear)
 
-  // Find the most recent previous school year that has students
-  const { data: previousYearData } = await service
+  // Get ALL students from ALL previous years (to reuse all usernames/names)
+  // Order by school_year descending so more recent names take precedence
+  const { data: allPreviousStudents } = await service
     .from('students')
-    .select('school_year')
+    .select('username, full_name, school_year')
     .eq('class_id', cls.id)
     .eq('competition_mode', 'mock')
     .neq('school_year', schoolYear)
     .order('school_year', { ascending: false })
-    .limit(1)
 
-  const mostRecentPreviousYear = previousYearData?.[0]?.school_year
-
-  // Get students from the most recent previous year only (to reuse usernames/names)
+  // Build a map of all unique usernames from all previous years
+  // More recent full_name takes precedence (since we ordered by school_year desc)
   let previousStudentsMap = new Map<string, string | null>()
-  if (mostRecentPreviousYear) {
-    const { data: previousYearStudents } = await service
-      .from('students')
-      .select('username, full_name')
-      .eq('class_id', cls.id)
-      .eq('competition_mode', 'mock')
-      .eq('school_year', mostRecentPreviousYear)
-      .order('username')
-
-    if (previousYearStudents) {
-      for (const s of previousYearStudents) {
-        if (!previousStudentsMap.has(s.username)) {
-          previousStudentsMap.set(s.username, s.full_name)
-        }
+  if (allPreviousStudents) {
+    for (const s of allPreviousStudents) {
+      if (!previousStudentsMap.has(s.username)) {
+        previousStudentsMap.set(s.username, s.full_name)
       }
     }
   }
+
+  // Also get current year students to know which usernames already exist
+  const { data: currentYearStudents } = await service
+    .from('students')
+    .select('username')
+    .eq('class_id', cls.id)
+    .eq('competition_mode', 'mock')
+    .eq('school_year', schoolYear)
+
+  const currentYearUsernames = new Set(currentYearStudents?.map(s => s.username) || [])
 
   // If no students exist for current year but previous year students exist, reuse them
   if (currentYearCount === 0 && previousStudentsMap.size > 0) {
@@ -136,39 +135,41 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       })
     }
   } else {
-    // Generate new credentials (either first time or adding more to existing year)
+    // Adding students to existing year OR first time with no previous years
 
     // Validate count is provided
     if (count < 1 || count > 200) {
       return NextResponse.json({ error: 'Count must be between 1 and 200' }, { status: 400 })
     }
 
-    // Efficiently get max numbers for each base username pattern
-    const { data: maxNumbers } = await service.rpc('get_username_max_numbers')
-
-    // Build map of base -> max number
-    const existingMaxNumbers = new Map<string, number>()
-    if (maxNumbers) {
-      for (const row of maxNumbers as { base: string; max_num: number }[]) {
-        existingMaxNumbers.set(row.base, row.max_num)
-      }
-    }
-
-    // Generate fun scientist-themed credentials with globally unique usernames
-    const generatedCredentials = await generateStudentCredentials(count, existingMaxNumbers)
-
     // Parse names array (ensure it's an array of strings)
     const namesList: string[] = Array.isArray(names) ? names.filter((n: unknown) => typeof n === 'string' && n.trim()) : []
 
-    for (let i = 0; i < generatedCredentials.length; i++) {
-      const cred = generatedCredentials[i]
-      const fullName = namesList[i] || undefined
-      credentials.push({ username: cred.username, password: cred.plainPassword, full_name: fullName })
+    let studentsToCreate = count
+    let nameIndex = 0
+
+    // First, reuse any usernames from previous years that don't exist in current year yet
+    const missingFromCurrentYear: Array<{ username: string; full_name: string | null }> = []
+    for (const [username, fullName] of previousStudentsMap) {
+      if (!currentYearUsernames.has(username)) {
+        missingFromCurrentYear.push({ username, full_name: fullName })
+      }
+    }
+
+    // Reuse missing usernames first (up to the requested count)
+    for (const { username, full_name } of missingFromCurrentYear) {
+      if (studentsToCreate <= 0) break
+
+      const fullName = namesList[nameIndex] || full_name || undefined
+      const plainPassword = generateReadablePassword(8)
+      const passwordHash = await hashPassword(plainPassword)
+
+      credentials.push({ username, password: plainPassword, full_name: fullName || undefined })
       rows.push({
         class_id: cls.id,
-        username: cred.username,
-        password_hash: cred.passwordHash,
-        plain_password: cred.plainPassword,
+        username,
+        password_hash: passwordHash,
+        plain_password: plainPassword,
         competition_mode: competition_mode,
         school_year: schoolYear,
         full_name: fullName
@@ -179,13 +180,63 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       const otherPasswordHash = await hashPassword(otherPlainPassword)
       otherModeRows.push({
         class_id: cls.id,
-        username: cred.username,
+        username,
         password_hash: otherPasswordHash,
         plain_password: otherPlainPassword,
         competition_mode: otherMode,
         school_year: schoolYear,
         full_name: fullName
       })
+
+      studentsToCreate--
+      nameIndex++
+    }
+
+    // If we still need more students, generate new ones
+    if (studentsToCreate > 0) {
+      // Efficiently get max numbers for each base username pattern
+      const { data: maxNumbers } = await service.rpc('get_username_max_numbers')
+
+      // Build map of base -> max number
+      const existingMaxNumbers = new Map<string, number>()
+      if (maxNumbers) {
+        for (const row of maxNumbers as { base: string; max_num: number }[]) {
+          existingMaxNumbers.set(row.base, row.max_num)
+        }
+      }
+
+      // Generate fun scientist-themed credentials with globally unique usernames
+      const generatedCredentials = await generateStudentCredentials(studentsToCreate, existingMaxNumbers)
+
+      for (let i = 0; i < generatedCredentials.length; i++) {
+        const cred = generatedCredentials[i]
+        const fullName = namesList[nameIndex] || undefined
+        credentials.push({ username: cred.username, password: cred.plainPassword, full_name: fullName })
+        rows.push({
+          class_id: cls.id,
+          username: cred.username,
+          password_hash: cred.passwordHash,
+          plain_password: cred.plainPassword,
+          competition_mode: competition_mode,
+          school_year: schoolYear,
+          full_name: fullName
+        })
+
+        // Also create student in the other mode with a different password
+        const otherPlainPassword = generateReadablePassword(8)
+        const otherPasswordHash = await hashPassword(otherPlainPassword)
+        otherModeRows.push({
+          class_id: cls.id,
+          username: cred.username,
+          password_hash: otherPasswordHash,
+          plain_password: otherPlainPassword,
+          competition_mode: otherMode,
+          school_year: schoolYear,
+          full_name: fullName
+        })
+
+        nameIndex++
+      }
     }
   }
 
