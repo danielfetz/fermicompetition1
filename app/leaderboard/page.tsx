@@ -198,6 +198,8 @@ function LeaderboardTable({ entries }: { entries: LeaderboardEntry[] }) {
           <tr className="text-left border-b-2 border-swan">
             <th className="py-3 px-6 font-bold text-wolf uppercase tracking-wide text-xs w-16">Rank</th>
             <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Username</th>
+            <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Grade</th>
+            <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Country</th>
             <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs text-right">Points</th>
             <th className="py-3 px-6 font-bold text-wolf uppercase tracking-wide text-xs text-right">Accuracy</th>
           </tr>
@@ -208,6 +210,7 @@ function LeaderboardTable({ entries }: { entries: LeaderboardEntry[] }) {
             const accuracy = entry.total_answered > 0
               ? Math.round((entry.correct_count / entry.total_answered) * 100)
               : 0
+            const gradeLabel = GRADE_LEVELS.find(g => g.value === entry.grade_level)?.label || entry.grade_level
 
             return (
               <tr key={entry.student_id} className="hover:bg-snow transition-colors">
@@ -222,6 +225,12 @@ function LeaderboardTable({ entries }: { entries: LeaderboardEntry[] }) {
                 </td>
                 <td className="py-3 px-4">
                   <span className="font-mono font-semibold text-eel">{entry.username}</span>
+                </td>
+                <td className="py-3 px-4">
+                  <span className="text-wolf">{gradeLabel || '—'}</span>
+                </td>
+                <td className="py-3 px-4">
+                  <span className="text-wolf">{entry.country || '—'}</span>
                 </td>
                 <td className="py-3 px-4 text-right">
                   <span className={`font-bold ${entry.confidence_points >= 250 ? 'text-duo-green' : entry.confidence_points >= 200 ? 'text-duo-yellow-dark' : 'text-duo-red'}`}>
