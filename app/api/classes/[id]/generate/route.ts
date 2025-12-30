@@ -129,11 +129,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     // Don't fail the request, but log it - main mode was successful
   }
 
-  // Update class num_students to reflect actual total student count
+  // Update class num_students to reflect unique student count (count only one mode since both have same students)
   const { count: totalStudents } = await service
     .from('students')
     .select('*', { count: 'exact', head: true })
     .eq('class_id', cls.id)
+    .eq('competition_mode', 'mock')
 
   await service
     .from('classes')
