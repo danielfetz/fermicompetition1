@@ -22,20 +22,20 @@ type Props = {
   buckets: BucketAssessment[]
 }
 
-// Get display info for detailed status
+// Get display info for detailed status (phrasing matches student results page)
 function getStatusDisplay(status: DetailedStatus): { label: string; color: string; bgColor: string } {
   const displays: Record<DetailedStatus, { label: string; color: string; bgColor: string }> = {
-    'decisive-overconfidence': { label: 'Decisive overconfidence', color: 'text-duo-red', bgColor: 'bg-duo-red/20' },
-    'very-strong-overconfidence': { label: 'Very strong overconfidence', color: 'text-duo-red', bgColor: 'bg-duo-red/15' },
-    'strong-overconfidence': { label: 'Strong overconfidence', color: 'text-duo-red', bgColor: 'bg-duo-red/10' },
-    'moderate-overconfidence': { label: 'Moderate overconfidence', color: 'text-duo-orange', bgColor: 'bg-duo-orange/10' },
-    'decisive-underconfidence': { label: 'Decisive underconfidence', color: 'text-duo-blue', bgColor: 'bg-duo-blue/20' },
-    'very-strong-underconfidence': { label: 'Very strong underconfidence', color: 'text-duo-blue', bgColor: 'bg-duo-blue/15' },
-    'strong-underconfidence': { label: 'Strong underconfidence', color: 'text-duo-blue', bgColor: 'bg-duo-blue/10' },
-    'moderate-underconfidence': { label: 'Moderate underconfidence', color: 'text-duo-blue-dark', bgColor: 'bg-duo-blue/5' },
-    'good-calibration': { label: 'Good calibration', color: 'text-duo-green', bgColor: 'bg-duo-green/10' },
-    'slight-good-calibration': { label: 'Slight good calibration', color: 'text-duo-green', bgColor: 'bg-duo-green/5' },
-    'no-miscalibration-evidence': { label: 'No strong evidence', color: 'text-wolf', bgColor: 'bg-swan/30' },
+    'decisive-overconfidence': { label: 'Decisive evidence for overconfidence', color: 'text-duo-red', bgColor: 'bg-duo-red/20' },
+    'very-strong-overconfidence': { label: 'Very strong evidence for overconfidence', color: 'text-duo-red', bgColor: 'bg-duo-red/15' },
+    'strong-overconfidence': { label: 'Strong evidence for overconfidence', color: 'text-duo-red', bgColor: 'bg-duo-red/10' },
+    'moderate-overconfidence': { label: 'Substantial evidence for overconfidence', color: 'text-duo-orange', bgColor: 'bg-duo-orange/10' },
+    'decisive-underconfidence': { label: 'Decisive evidence for underconfidence', color: 'text-duo-blue', bgColor: 'bg-duo-blue/20' },
+    'very-strong-underconfidence': { label: 'Very strong evidence for underconfidence', color: 'text-duo-blue', bgColor: 'bg-duo-blue/15' },
+    'strong-underconfidence': { label: 'Strong evidence for underconfidence', color: 'text-duo-blue', bgColor: 'bg-duo-blue/10' },
+    'moderate-underconfidence': { label: 'Substantial evidence for underconfidence', color: 'text-duo-blue-dark', bgColor: 'bg-duo-blue/5' },
+    'good-calibration': { label: 'Evidence for good calibration', color: 'text-duo-green', bgColor: 'bg-duo-green/10' },
+    'slight-good-calibration': { label: 'Some evidence for good calibration', color: 'text-duo-green', bgColor: 'bg-duo-green/5' },
+    'no-miscalibration-evidence': { label: 'No evidence of miscalibration', color: 'text-wolf', bgColor: 'bg-swan/30' },
     'insufficient-data': { label: 'Insufficient data', color: 'text-hare', bgColor: 'bg-swan/20' }
   }
   return displays[status]
