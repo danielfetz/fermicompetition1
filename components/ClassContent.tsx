@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import CompetitionModeToggle from './CompetitionModeToggle'
 import OfficialCompetitionCodeEntry from './OfficialCompetitionCodeEntry'
 import CompetitionCountdown, { isCompetitionStarted } from './CompetitionCountdown'
@@ -47,6 +48,7 @@ export default function ClassContent({
   realUnlocked: initialRealUnlocked,
   initialMode = 'mock'
 }: Props) {
+  const router = useRouter()
   const [mode, setMode] = useState<CompetitionMode>(initialMode)
   const [realUnlocked, setRealUnlocked] = useState(initialRealUnlocked)
   const [checkingAccess, setCheckingAccess] = useState(false)
@@ -54,6 +56,8 @@ export default function ClassContent({
   const [competitionStarted, setCompetitionStarted] = useState(false)
   const [sortColumn, setSortColumn] = useState<'username' | 'full_name' | 'status' | 'accuracy' | 'points'>('username')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+  const [autoGenerating, setAutoGenerating] = useState(false)
+  const [autoGenError, setAutoGenError] = useState<string | null>(null)
 
   // Check access client-side on mount using API endpoint for reliability
   useEffect(() => {
@@ -88,9 +92,56 @@ export default function ClassContent({
     return () => clearInterval(timer)
   }, [])
 
-  // Filter students and scores by current mode
-  const filteredStudents = students.filter(s => (s.competition_mode || 'mock') === mode)
+  // Filter students by mode
+  const mockStudents = students.filter(s => (s.competition_mode || 'mock') === 'mock')
+  const realStudents = students.filter(s => (s.competition_mode || 'mock') === 'real')
+  const filteredStudents = mode === 'real' ? realStudents : mockStudents
   const filteredScores = scores.filter(sc => (sc.competition_mode || 'mock') === mode)
+
+  // Auto-generate official credentials when:
+  // - Mode is 'real', competition started, real is unlocked
+  // - There are mock students but NO real students
+  const autoGenerateCredentials = useCallback(async () => {
+    if (autoGenerating) return
+
+    setAutoGenerating(true)
+    setAutoGenError(null)
+
+    try {
+      const res = await fetch(`/api/classes/${classId}/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ competition_mode: 'real' })
+      })
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ error: 'Error' }))
+        setAutoGenError(body.error || 'Failed to generate credentials.')
+      } else {
+        // Refresh the page to get new students
+        router.refresh()
+      }
+    } catch (err) {
+      setAutoGenError('Failed to generate credentials.')
+    }
+
+    setAutoGenerating(false)
+  }, [classId, autoGenerating, router])
+
+  useEffect(() => {
+    // Auto-generate when conditions are met
+    if (
+      mode === 'real' &&
+      realUnlocked &&
+      competitionStarted &&
+      mockStudents.length > 0 &&
+      realStudents.length === 0 &&
+      !autoGenerating &&
+      !autoGenError
+    ) {
+      autoGenerateCredentials()
+    }
+  }, [mode, realUnlocked, competitionStarted, mockStudents.length, realStudents.length, autoGenerating, autoGenError, autoGenerateCredentials])
 
   // Create a map for quick score lookup
   const scoreMap = new Map(filteredScores.map(sc => [sc.student_id, sc]))
@@ -177,7 +228,7 @@ export default function ClassContent({
             realUnlocked={realUnlocked}
             onModeChange={setMode}
           />
-          {(mode === 'mock' || (realUnlocked && competitionStarted)) && (
+          {mode === 'mock' && (
             <Link className="btn btn-primary" href={`/teacher/class/${classId}/generate?mode=${mode}`}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
@@ -198,6 +249,12 @@ export default function ClassContent({
         <OfficialCompetitionCodeEntry onSuccess={() => setRealUnlocked(true)} />
       ) : mode === 'real' && !competitionStarted ? (
         <CompetitionCountdown />
+      ) : mode === 'real' && autoGenerating ? (
+        <div className="card text-center py-12">
+          <div className="animate-spin w-8 h-8 border-4 border-duo-blue border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-wolf">Generating official competition credentials...</p>
+          <p className="text-sm text-hare mt-2">Using same usernames with new passwords</p>
+        </div>
       ) : (
         <>
           {/* Stats */}
@@ -382,17 +439,33 @@ export default function ClassContent({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-bold text-eel mb-2">
-                  No {mode === 'real' ? 'Official Competition ' : ''}Students Yet
-                </h3>
-                <p className="text-wolf mb-4">
-                  {mode === 'real'
-                    ? 'Add students for the official competition. These are separate from mock mode.'
-                    : 'Add students to get started.'}
-                </p>
-                <Link href={`/teacher/class/${classId}/generate?mode=${mode}`} className="btn btn-primary">
-                  Add {mode === 'real' ? 'Official ' : ''}Students
-                </Link>
+                {mode === 'real' && mockStudents.length === 0 ? (
+                  <>
+                    <h3 className="text-lg font-bold text-eel mb-2">Add Practice Students First</h3>
+                    <p className="text-wolf mb-4">
+                      Switch to Practice mode and add students there first. Official credentials will be generated automatically using the same usernames.
+                    </p>
+                    <button onClick={() => setMode('mock')} className="btn btn-primary">
+                      Switch to Practice Mode
+                    </button>
+                  </>
+                ) : mode === 'real' && autoGenError ? (
+                  <>
+                    <h3 className="text-lg font-bold text-duo-red mb-2">Error Generating Credentials</h3>
+                    <p className="text-wolf mb-4">{autoGenError}</p>
+                    <button onClick={() => { setAutoGenError(null); autoGenerateCredentials(); }} className="btn btn-primary">
+                      Try Again
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="text-lg font-bold text-eel mb-2">No Students Yet</h3>
+                    <p className="text-wolf mb-4">Add students to get started.</p>
+                    <Link href={`/teacher/class/${classId}/generate?mode=${mode}`} className="btn btn-primary">
+                      Add Students
+                    </Link>
+                  </>
+                )}
               </div>
             )}
           </div>
