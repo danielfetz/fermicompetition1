@@ -72,6 +72,7 @@ CREATE TABLE public.classes (
   school_name text,
   grade_level text, -- '1' through '11', '12-13', 'university'
   country text,
+  school_year text NOT NULL DEFAULT '2025-26', -- Format: '2025-26', '2026-27', etc.
   num_students int NOT NULL DEFAULT 0 CHECK (num_students >= 0 AND num_students <= 500),
   competition_date date,
   is_active boolean NOT NULL DEFAULT true,

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServer, createSupabaseServiceRole } from '@/lib/supabaseServer'
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const { name, school_name, grade_level, country } = await req.json()
+  const { name, school_name, grade_level, country, school_year } = await req.json()
 
   const supabase = createSupabaseServer()
   const { data: { user } } = await supabase.auth.getUser()
@@ -33,6 +33,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (school_name !== undefined) updates.school_name = school_name || null
   if (grade_level !== undefined) updates.grade_level = grade_level || null
   if (country !== undefined) updates.country = country || null
+  if (school_year !== undefined) updates.school_year = school_year
 
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: 'No fields to update' }, { status: 400 })

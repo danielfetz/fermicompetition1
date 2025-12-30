@@ -33,6 +33,7 @@ type Props = {
   schoolName: string | null
   gradeLevel: string | null
   country: string | null
+  schoolYear: string | null
   numStudents: number
   students: Student[]
   scores: Score[]
@@ -67,12 +68,20 @@ const COUNTRIES = [
   'Thailand', 'Vietnam', 'Philippines', 'Pakistan', 'Bangladesh', 'Other'
 ]
 
+const SCHOOL_YEARS = [
+  '2024-25',
+  '2025-26',
+  '2026-27',
+  '2027-28',
+]
+
 export default function ClassContent({
   classId,
   className,
   schoolName,
   gradeLevel,
   country,
+  schoolYear,
   numStudents,
   students,
   scores,
@@ -96,6 +105,7 @@ export default function ClassContent({
   const [editSchool, setEditSchool] = useState(schoolName || '')
   const [editGrade, setEditGrade] = useState(gradeLevel || '')
   const [editCountry, setEditCountry] = useState(country || '')
+  const [editSchoolYear, setEditSchoolYear] = useState(schoolYear || '2025-26')
   const [editLoading, setEditLoading] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
 
@@ -109,7 +119,8 @@ export default function ClassContent({
         name: editName,
         school_name: editSchool,
         grade_level: editGrade,
-        country: editCountry
+        country: editCountry,
+        school_year: editSchoolYear
       })
     })
     setEditLoading(false)
@@ -304,10 +315,12 @@ export default function ClassContent({
           </div>
           <div className="flex flex-wrap items-center gap-2 text-sm text-wolf mt-1">
             {schoolName && <span>{schoolName}</span>}
-            {schoolName && (gradeLevel || country) && <span>•</span>}
+            {schoolName && (gradeLevel || country || schoolYear) && <span>•</span>}
             {gradeLevel && <span>{GRADE_LEVELS.find(g => g.value === gradeLevel)?.label || gradeLevel}</span>}
-            {gradeLevel && country && <span>•</span>}
+            {gradeLevel && (country || schoolYear) && <span>•</span>}
             {country && <span>{country}</span>}
+            {country && schoolYear && <span>•</span>}
+            {schoolYear && <span className="font-semibold text-duo-blue">{schoolYear}</span>}
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -619,6 +632,20 @@ export default function ClassContent({
                     <option value="">Select country...</option>
                     {COUNTRIES.map(c => (
                       <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="label" htmlFor="edit-school-year">School Year</label>
+                  <select
+                    id="edit-school-year"
+                    className="input"
+                    value={editSchoolYear}
+                    onChange={e => setEditSchoolYear(e.target.value)}
+                  >
+                    {SCHOOL_YEARS.map(y => (
+                      <option key={y} value={y}>{y}</option>
                     ))}
                   </select>
                 </div>
