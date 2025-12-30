@@ -262,13 +262,13 @@ export default function ClassContent({
                           <td className="py-3 px-4">
                             {total > 0 ? (
                               <div className="flex items-center gap-2">
-                                <span className={`font-bold ${correct >= maxQuestions/2 ? 'text-duo-green' : correct >= maxQuestions/3 ? 'text-duo-yellow-dark' : 'text-duo-red'}`}>
-                                  {correct}/{maxQuestions}
+                                <span className={`font-bold ${correct >= total/2 ? 'text-duo-green' : correct >= total/3 ? 'text-duo-yellow-dark' : 'text-duo-red'}`}>
+                                  {correct}/{total}
                                 </span>
                                 <div className="w-16 h-2 bg-swan rounded-full overflow-hidden">
                                   <div
-                                    className={`h-full rounded-full ${correct >= maxQuestions/2 ? 'bg-duo-green' : correct >= maxQuestions/3 ? 'bg-duo-yellow' : 'bg-duo-red'}`}
-                                    style={{ width: `${(correct / maxQuestions) * 100}%` }}
+                                    className={`h-full rounded-full ${correct >= total/2 ? 'bg-duo-green' : correct >= total/3 ? 'bg-duo-yellow' : 'bg-duo-red'}`}
+                                    style={{ width: `${(correct / total) * 100}%` }}
                                   />
                                 </div>
                               </div>
