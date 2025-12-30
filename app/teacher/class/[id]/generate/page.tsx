@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
 import FermiMascot from '@/components/FermiMascot'
 
 export default function GenerateStudents() {
@@ -22,6 +21,7 @@ export default function GenerateStudents() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
+    // Validate count
     if (count < 1 || count > 200) {
       setError('Please enter a number between 1 and 200.')
       return
@@ -156,21 +156,17 @@ export default function GenerateStudents() {
         </div>
 
         {/* Tip Card */}
-        <div className={`card ${isReal ? 'bg-duo-blue/10 border-duo-blue/30' : 'bg-duo-yellow/10 border-duo-yellow/30'}`}>
+        <div className="card bg-duo-yellow/10 border-duo-yellow/30">
           <div className="flex gap-3">
-            <div className={`flex-shrink-0 w-10 h-10 ${isReal ? 'bg-duo-blue/30' : 'bg-duo-yellow/30'} rounded-full flex items-center justify-center`}>
-              <svg className={`w-5 h-5 ${isReal ? 'text-duo-blue' : 'text-duo-yellow-dark'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex-shrink-0 w-10 h-10 bg-duo-yellow/30 rounded-full flex items-center justify-center">
+              <svg className="w-5 h-5 text-duo-yellow-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
               </svg>
             </div>
             <div>
-              <h3 className={`font-bold ${isReal ? 'text-duo-blue' : 'text-duo-yellow-dark'}`}>
-                {isReal ? 'Official Competition Mode' : 'Pro Tip'}
-              </h3>
+              <h3 className="font-bold text-duo-yellow-dark">Pro Tip</h3>
               <p className="text-sm text-eel mt-1">
-                {isReal
-                  ? 'These credentials are for the official competition with 25 official questions. Students cannot use mock credentials for the official competition.'
-                  : 'Students will enter their full name when they first log in. The fun scientist-themed usernames make credentials easy to distribute!'}
+                Credentials for the other mode will be auto-generated with the same usernames (but different passwords) when you view that mode. This allows tracking student performance across both competitions.
               </p>
             </div>
           </div>
@@ -179,7 +175,7 @@ export default function GenerateStudents() {
         {/* Navigation */}
         <div className="flex gap-3 justify-center">
           <button onClick={() => setResult(null)} className="btn btn-outline">
-            Generate More
+            Add More Students
           </button>
           <button onClick={() => {
             router.push(`/teacher/class/${params.id}?mode=${mode}`)
@@ -284,65 +280,32 @@ export default function GenerateStudents() {
 
       {/* Info Card */}
       <div className={`card ${isReal ? 'bg-duo-blue/5 border-duo-blue/20' : 'bg-duo-green/5 border-duo-green/20'}`}>
-        <h3 className="font-bold text-eel mb-3">
-          {isReal ? 'Official Competition Info:' : 'What you\'ll get:'}
-        </h3>
+        <h3 className="font-bold text-eel mb-3">What you&apos;ll get:</h3>
         <ul className="space-y-2">
-          {isReal ? (
-            <>
-              <li className="flex items-start gap-2 text-sm text-wolf">
-                <svg className="w-5 h-5 text-duo-blue flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                25 official Fermi estimation questions
-              </li>
-              <li className="flex items-start gap-2 text-sm text-wolf">
-                <svg className="w-5 h-5 text-duo-blue flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Separate credentials from mock competition
-              </li>
-              <li className="flex items-start gap-2 text-sm text-wolf">
-                <svg className="w-5 h-5 text-duo-blue flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Results tracked separately for ranking
-              </li>
-              <li className="flex items-start gap-2 text-sm text-wolf">
-                <svg className="w-5 h-5 text-duo-blue flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                70-minute timed examination
-              </li>
-            </>
-          ) : (
-            <>
-              <li className="flex items-start gap-2 text-sm text-wolf">
-                <svg className="w-5 h-5 text-duo-green flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Fun usernames like &quot;cosmicfermi01&quot; or &quot;quantumeinstein02&quot;
-              </li>
-              <li className="flex items-start gap-2 text-sm text-wolf">
-                <svg className="w-5 h-5 text-duo-green flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Secure, easy-to-type passwords
-              </li>
-              <li className="flex items-start gap-2 text-sm text-wolf">
-                <svg className="w-5 h-5 text-duo-green flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Pre-enter names or let students enter on first login
-              </li>
-              <li className="flex items-start gap-2 text-sm text-wolf">
-                <svg className="w-5 h-5 text-duo-green flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Copy or download as CSV to share
-              </li>
-            </>
-          )}
+          <li className="flex items-start gap-2 text-sm text-wolf">
+            <svg className={`w-5 h-5 ${isReal ? 'text-duo-blue' : 'text-duo-green'} flex-shrink-0 mt-0.5`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            Fun usernames like &quot;cosmicfermi01&quot; or &quot;quantumeinstein02&quot;
+          </li>
+          <li className="flex items-start gap-2 text-sm text-wolf">
+            <svg className={`w-5 h-5 ${isReal ? 'text-duo-blue' : 'text-duo-green'} flex-shrink-0 mt-0.5`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            Secure, easy-to-type passwords
+          </li>
+          <li className="flex items-start gap-2 text-sm text-wolf">
+            <svg className={`w-5 h-5 ${isReal ? 'text-duo-blue' : 'text-duo-green'} flex-shrink-0 mt-0.5`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            Credentials for other mode auto-generated with same usernames
+          </li>
+          <li className="flex items-start gap-2 text-sm text-wolf">
+            <svg className={`w-5 h-5 ${isReal ? 'text-duo-blue' : 'text-duo-green'} flex-shrink-0 mt-0.5`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            Copy or download as CSV to share
+          </li>
         </ul>
       </div>
 

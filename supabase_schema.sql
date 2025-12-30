@@ -70,7 +70,9 @@ CREATE TABLE public.classes (
   teacher_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name text NOT NULL,
   school_name text,
-  num_students int NOT NULL CHECK (num_students > 0 AND num_students <= 500),
+  grade_level text, -- '1' through '11', '12-13', 'university'
+  country text,
+  num_students int NOT NULL DEFAULT 0 CHECK (num_students >= 0 AND num_students <= 500),
   competition_date date,
   is_active boolean NOT NULL DEFAULT true,
   created_at timestamptz NOT NULL DEFAULT now()
@@ -393,6 +395,8 @@ SELECT
   s.full_name,
   s.has_completed_exam,
   s.competition_mode,
+  c.grade_level,
+  c.country,
   count(a.id) AS total_answered,
   count(*) FILTER (
     WHERE fq.correct_value IS NOT NULL
@@ -436,10 +440,11 @@ SELECT
     END
   ), 0)::int AS confidence_points
 FROM public.students s
+JOIN public.classes c ON c.id = s.class_id
 LEFT JOIN public.answers a ON a.student_id = s.id
 LEFT JOIN public.class_questions cq ON cq.id = a.class_question_id
 LEFT JOIN public.fermi_questions fq ON fq.id = cq.fermi_question_id
-GROUP BY s.id, s.class_id, s.username, s.full_name, s.has_completed_exam, s.competition_mode;
+GROUP BY s.id, s.class_id, s.username, s.full_name, s.has_completed_exam, s.competition_mode, c.grade_level, c.country;
 
 -- 6.2: Coordinator teachers view
 CREATE OR REPLACE VIEW public.coordinator_teachers

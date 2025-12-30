@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 
 // Competition date: March 5, 2026 at midnight
-const COMPETITION_DATE = new Date('2026-03-05T00:00:00')
+// TEMP: Set to past date for testing
+const COMPETITION_DATE = new Date('2020-01-01T00:00:00')
 
 type TimeLeft = {
   days: number

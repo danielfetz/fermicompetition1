@@ -11,42 +11,50 @@ export async function POST(req: NextRequest) {
 
   const supa = createSupabaseServiceRole()
 
-  // Find student by username (case insensitive)
-  const { data: student } = await supa
+  // Find all students with this username (may have entries for both mock and real modes)
+  const { data: students } = await supa
     .from('students')
-    .select('id, class_id, password_hash, full_name, first_login_at, has_completed_exam')
+    .select('id, class_id, password_hash, full_name, first_login_at, has_completed_exam, competition_mode')
     .ilike('username', username.toLowerCase().trim())
-    .maybeSingle()
 
-  if (!student) {
+  if (!students || students.length === 0) {
     return NextResponse.json({ error: 'Invalid username or password' }, { status: 401 })
   }
 
-  // Verify password
-  const ok = await verifyPassword(password, student.password_hash)
-  if (!ok) {
+  // Try to find a student whose password matches
+  let matchedStudent = null
+  for (const student of students) {
+    const ok = await verifyPassword(password, student.password_hash)
+    if (ok) {
+      matchedStudent = student
+      break
+    }
+  }
+
+  if (!matchedStudent) {
     return NextResponse.json({ error: 'Invalid username or password' }, { status: 401 })
   }
 
   // Update first_login_at if this is the first login
-  if (!student.first_login_at) {
+  if (!matchedStudent.first_login_at) {
     await supa
       .from('students')
       .update({ first_login_at: new Date().toISOString() })
-      .eq('id', student.id)
+      .eq('id', matchedStudent.id)
   }
 
   // Sign JWT token
   const token = signStudentToken({
-    studentId: student.id,
-    classId: student.class_id,
+    studentId: matchedStudent.id,
+    classId: matchedStudent.class_id,
     role: 'student'
   })
 
   return NextResponse.json({
     token,
-    classId: student.class_id,
-    needsName: !student.full_name,
-    hasCompleted: student.has_completed_exam
+    classId: matchedStudent.class_id,
+    needsName: !matchedStudent.full_name,
+    hasCompleted: matchedStudent.has_completed_exam,
+    competitionMode: matchedStudent.competition_mode
   })
 }

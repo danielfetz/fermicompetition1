@@ -7,17 +7,45 @@ import { supabase } from '@/lib/supabaseClient'
 import Link from 'next/link'
 import FermiMascot from '@/components/FermiMascot'
 
+const GRADE_LEVELS = [
+  { value: '1', label: '1st Grade' },
+  { value: '2', label: '2nd Grade' },
+  { value: '3', label: '3rd Grade' },
+  { value: '4', label: '4th Grade' },
+  { value: '5', label: '5th Grade' },
+  { value: '6', label: '6th Grade' },
+  { value: '7', label: '7th Grade' },
+  { value: '8', label: '8th Grade' },
+  { value: '9', label: '9th Grade' },
+  { value: '10', label: '10th Grade' },
+  { value: '11', label: '11th Grade' },
+  { value: '12-13', label: '12th/13th Grade' },
+  { value: 'university', label: 'University' },
+]
+
+const COUNTRIES = [
+  'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France',
+  'Netherlands', 'Belgium', 'Austria', 'Switzerland', 'Ireland', 'New Zealand',
+  'India', 'Singapore', 'Hong Kong', 'Japan', 'South Korea', 'China', 'Taiwan',
+  'Brazil', 'Mexico', 'Argentina', 'Spain', 'Italy', 'Portugal', 'Poland',
+  'Sweden', 'Norway', 'Denmark', 'Finland', 'Czech Republic', 'Hungary',
+  'South Africa', 'Nigeria', 'Kenya', 'Israel', 'United Arab Emirates',
+  'Saudi Arabia', 'Turkey', 'Russia', 'Ukraine', 'Indonesia', 'Malaysia',
+  'Thailand', 'Vietnam', 'Philippines', 'Pakistan', 'Bangladesh', 'Other'
+]
+
 export default function NewClass() {
   const [name, setName] = useState('')
   const [schoolName, setSchoolName] = useState('')
-  const [num, setNum] = useState<number>(25)
+  const [gradeLevel, setGradeLevel] = useState('')
+  const [country, setCountry] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const parsed = createClassSchema.safeParse({ name, num_students: num })
+    const parsed = createClassSchema.safeParse({ name })
     if (!parsed.success) {
       setError('Please check your inputs.')
       return
@@ -34,9 +62,11 @@ export default function NewClass() {
       .from('classes')
       .insert({
         name,
-        num_students: num,
+        num_students: 0,
         teacher_id: user.id,
-        school_name: schoolName || null
+        school_name: schoolName || null,
+        grade_level: gradeLevel || null,
+        country: country || null
       })
       .select('id')
       .single()
@@ -88,20 +118,35 @@ export default function NewClass() {
           </div>
 
           <div className="form-group">
-            <label className="label" htmlFor="numStudents">Number of Students *</label>
-            <input
-              id="numStudents"
-              type="number"
-              min={1}
-              max={200}
+            <label className="label" htmlFor="grade">Grade Level *</label>
+            <select
+              id="grade"
               className="input"
-              value={num}
-              onChange={e => setNum(parseInt(e.target.value || '0'))}
+              value={gradeLevel}
+              onChange={e => setGradeLevel(e.target.value)}
               required
-            />
-            <p className="text-sm text-wolf mt-1">
-              How many students will participate? (1-200)
-            </p>
+            >
+              <option value="">Select grade level...</option>
+              {GRADE_LEVELS.map(g => (
+                <option key={g.value} value={g.value}>{g.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label className="label" htmlFor="country">Country *</label>
+            <select
+              id="country"
+              className="input"
+              value={country}
+              onChange={e => setCountry(e.target.value)}
+              required
+            >
+              <option value="">Select country...</option>
+              {COUNTRIES.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
           </div>
 
           {error && (

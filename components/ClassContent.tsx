@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import CompetitionModeToggle from './CompetitionModeToggle'
 import OfficialCompetitionCodeEntry from './OfficialCompetitionCodeEntry'
 import CompetitionCountdown, { isCompetitionStarted } from './CompetitionCountdown'
@@ -30,6 +31,8 @@ type Props = {
   classId: string
   className: string
   schoolName: string | null
+  gradeLevel: string | null
+  country: string | null
   numStudents: number
   students: Student[]
   scores: Score[]
@@ -37,16 +40,46 @@ type Props = {
   initialMode?: CompetitionMode
 }
 
+const GRADE_LEVELS = [
+  { value: '1', label: '1st Grade' },
+  { value: '2', label: '2nd Grade' },
+  { value: '3', label: '3rd Grade' },
+  { value: '4', label: '4th Grade' },
+  { value: '5', label: '5th Grade' },
+  { value: '6', label: '6th Grade' },
+  { value: '7', label: '7th Grade' },
+  { value: '8', label: '8th Grade' },
+  { value: '9', label: '9th Grade' },
+  { value: '10', label: '10th Grade' },
+  { value: '11', label: '11th Grade' },
+  { value: '12-13', label: '12th/13th Grade' },
+  { value: 'university', label: 'University' },
+]
+
+const COUNTRIES = [
+  'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France',
+  'Netherlands', 'Belgium', 'Austria', 'Switzerland', 'Ireland', 'New Zealand',
+  'India', 'Singapore', 'Hong Kong', 'Japan', 'South Korea', 'China', 'Taiwan',
+  'Brazil', 'Mexico', 'Argentina', 'Spain', 'Italy', 'Portugal', 'Poland',
+  'Sweden', 'Norway', 'Denmark', 'Finland', 'Czech Republic', 'Hungary',
+  'South Africa', 'Nigeria', 'Kenya', 'Israel', 'United Arab Emirates',
+  'Saudi Arabia', 'Turkey', 'Russia', 'Ukraine', 'Indonesia', 'Malaysia',
+  'Thailand', 'Vietnam', 'Philippines', 'Pakistan', 'Bangladesh', 'Other'
+]
+
 export default function ClassContent({
   classId,
   className,
   schoolName,
+  gradeLevel,
+  country,
   numStudents,
   students,
   scores,
   realUnlocked: initialRealUnlocked,
   initialMode = 'mock'
 }: Props) {
+  const router = useRouter()
   const [mode, setMode] = useState<CompetitionMode>(initialMode)
   const [realUnlocked, setRealUnlocked] = useState(initialRealUnlocked)
   const [checkingAccess, setCheckingAccess] = useState(false)
@@ -54,6 +87,40 @@ export default function ClassContent({
   const [competitionStarted, setCompetitionStarted] = useState(false)
   const [sortColumn, setSortColumn] = useState<'username' | 'full_name' | 'status' | 'accuracy' | 'points'>('username')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+  const [autoGenerating, setAutoGenerating] = useState(false)
+  const [autoGenError, setAutoGenError] = useState<string | null>(null)
+
+  // Edit class state
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editName, setEditName] = useState(className)
+  const [editSchool, setEditSchool] = useState(schoolName || '')
+  const [editGrade, setEditGrade] = useState(gradeLevel || '')
+  const [editCountry, setEditCountry] = useState(country || '')
+  const [editLoading, setEditLoading] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
+
+  async function saveClassEdits() {
+    setEditLoading(true)
+    setEditError(null)
+    const res = await fetch(`/api/classes/${classId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: editName,
+        school_name: editSchool,
+        grade_level: editGrade,
+        country: editCountry
+      })
+    })
+    setEditLoading(false)
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: 'Error' }))
+      setEditError(body.error || 'Failed to update class')
+      return
+    }
+    setShowEditModal(false)
+    router.refresh()
+  }
 
   // Check access client-side on mount using API endpoint for reliability
   useEffect(() => {
@@ -88,9 +155,65 @@ export default function ClassContent({
     return () => clearInterval(timer)
   }, [])
 
-  // Filter students and scores by current mode
-  const filteredStudents = students.filter(s => (s.competition_mode || 'mock') === mode)
+  // Filter students by mode
+  const mockStudents = students.filter(s => (s.competition_mode || 'mock') === 'mock')
+  const realStudents = students.filter(s => (s.competition_mode || 'mock') === 'real')
+  const filteredStudents = mode === 'real' ? realStudents : mockStudents
   const filteredScores = scores.filter(sc => (sc.competition_mode || 'mock') === mode)
+
+  // Auto-generate credentials when viewing a mode that has no students
+  // but the OTHER mode has students (bidirectional)
+  const autoGenerateCredentials = useCallback(async (targetMode: 'mock' | 'real') => {
+    if (autoGenerating) return
+
+    setAutoGenerating(true)
+    setAutoGenError(null)
+
+    try {
+      const res = await fetch(`/api/classes/${classId}/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ competition_mode: targetMode })
+      })
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ error: 'Error' }))
+        setAutoGenError(body.error || 'Failed to generate credentials.')
+      } else {
+        // Refresh the page to get new students
+        router.refresh()
+      }
+    } catch (err) {
+      setAutoGenError('Failed to generate credentials.')
+    }
+
+    setAutoGenerating(false)
+  }, [classId, autoGenerating, router])
+
+  useEffect(() => {
+    // Auto-generate for real mode: when real is unlocked, competition started, mock students exist but no real
+    if (
+      mode === 'real' &&
+      realUnlocked &&
+      competitionStarted &&
+      mockStudents.length > 0 &&
+      realStudents.length === 0 &&
+      !autoGenerating &&
+      !autoGenError
+    ) {
+      autoGenerateCredentials('real')
+    }
+    // Auto-generate for mock mode: when real students exist but no mock
+    else if (
+      mode === 'mock' &&
+      realStudents.length > 0 &&
+      mockStudents.length === 0 &&
+      !autoGenerating &&
+      !autoGenError
+    ) {
+      autoGenerateCredentials('mock')
+    }
+  }, [mode, realUnlocked, competitionStarted, mockStudents.length, realStudents.length, autoGenerating, autoGenError, autoGenerateCredentials])
 
   // Create a map for quick score lookup
   const scoreMap = new Map(filteredScores.map(sc => [sc.student_id, sc]))
@@ -167,8 +290,25 @@ export default function ClassContent({
             </svg>
             Back to Dashboard
           </Link>
-          <h1 className="text-3xl font-extrabold text-eel">{className}</h1>
-          {schoolName && <p className="text-wolf">{schoolName}</p>}
+          <div className="flex items-center gap-2">
+            <h1 className="text-3xl font-extrabold text-eel">{className}</h1>
+            <button
+              onClick={() => setShowEditModal(true)}
+              className="p-1.5 text-wolf hover:text-duo-blue hover:bg-duo-blue/10 rounded-lg transition-colors"
+              title="Edit class details"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+            </button>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-sm text-wolf mt-1">
+            {schoolName && <span>{schoolName}</span>}
+            {schoolName && (gradeLevel || country) && <span>•</span>}
+            {gradeLevel && <span>{GRADE_LEVELS.find(g => g.value === gradeLevel)?.label || gradeLevel}</span>}
+            {gradeLevel && country && <span>•</span>}
+            {country && <span>{country}</span>}
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <CompetitionModeToggle
@@ -177,7 +317,7 @@ export default function ClassContent({
             realUnlocked={realUnlocked}
             onModeChange={setMode}
           />
-          {(mode === 'mock' || (realUnlocked && competitionStarted)) && (
+          {(mode === 'mock' || (mode === 'real' && realUnlocked && competitionStarted)) && (
             <Link className="btn btn-primary" href={`/teacher/class/${classId}/generate?mode=${mode}`}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
@@ -198,6 +338,12 @@ export default function ClassContent({
         <OfficialCompetitionCodeEntry onSuccess={() => setRealUnlocked(true)} />
       ) : mode === 'real' && !competitionStarted ? (
         <CompetitionCountdown />
+      ) : autoGenerating ? (
+        <div className="card text-center py-12">
+          <div className="animate-spin w-8 h-8 border-4 border-duo-blue border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-wolf">Generating {mode === 'real' ? 'official' : 'practice'} competition credentials...</p>
+          <p className="text-sm text-hare mt-2">Using same usernames with new passwords</p>
+        </div>
       ) : (
         <>
           {/* Stats */}
@@ -212,7 +358,7 @@ export default function ClassContent({
             </div>
             <div className="stat-card">
               <div className="stat-value text-duo-yellow-dark">{studentsGenerated - studentsCompleted}</div>
-              <div className="stat-label">In Progress</div>
+              <div className="stat-label">Pending</div>
             </div>
             <div className="stat-card">
               <div className="stat-value text-duo-purple">25</div>
@@ -382,21 +528,127 @@ export default function ClassContent({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-bold text-eel mb-2">
-                  No {mode === 'real' ? 'Official Competition ' : ''}Students Yet
-                </h3>
-                <p className="text-wolf mb-4">
-                  {mode === 'real'
-                    ? 'Add students for the official competition. These are separate from mock mode.'
-                    : 'Add students to get started.'}
-                </p>
-                <Link href={`/teacher/class/${classId}/generate?mode=${mode}`} className="btn btn-primary">
-                  Add {mode === 'real' ? 'Official ' : ''}Students
-                </Link>
+                {autoGenError ? (
+                  <>
+                    <h3 className="text-lg font-bold text-duo-red mb-2">Error Generating Credentials</h3>
+                    <p className="text-wolf mb-4">{autoGenError}</p>
+                    <button onClick={() => { setAutoGenError(null); autoGenerateCredentials(mode); }} className="btn btn-primary">
+                      Try Again
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="text-lg font-bold text-eel mb-2">No Students Yet</h3>
+                    <p className="text-wolf mb-4">
+                      Add students to get started. Credentials will auto-generate for the other mode using the same usernames.
+                    </p>
+                    <Link href={`/teacher/class/${classId}/generate?mode=${mode}`} className="btn btn-primary">
+                      Add Students
+                    </Link>
+                  </>
+                )}
               </div>
             )}
           </div>
         </>
+      )}
+
+      {/* Edit Class Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 !mt-0">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-eel">Edit Class</h2>
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="p-2 text-wolf hover:text-eel hover:bg-snow rounded-lg transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="form-group">
+                  <label className="label" htmlFor="edit-name">Class Name *</label>
+                  <input
+                    id="edit-name"
+                    className="input"
+                    value={editName}
+                    onChange={e => setEditName(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="label" htmlFor="edit-school">School Name</label>
+                  <input
+                    id="edit-school"
+                    className="input"
+                    value={editSchool}
+                    onChange={e => setEditSchool(e.target.value)}
+                    placeholder="e.g., Lincoln High School"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="label" htmlFor="edit-grade">Grade Level</label>
+                  <select
+                    id="edit-grade"
+                    className="input"
+                    value={editGrade}
+                    onChange={e => setEditGrade(e.target.value)}
+                  >
+                    <option value="">Select grade level...</option>
+                    {GRADE_LEVELS.map(g => (
+                      <option key={g.value} value={g.value}>{g.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="label" htmlFor="edit-country">Country</label>
+                  <select
+                    id="edit-country"
+                    className="input"
+                    value={editCountry}
+                    onChange={e => setEditCountry(e.target.value)}
+                  >
+                    <option value="">Select country...</option>
+                    {COUNTRIES.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {editError && (
+                  <div className="bg-duo-red/10 border-2 border-duo-red rounded-duo p-3">
+                    <p className="text-duo-red-dark text-sm font-semibold">{editError}</p>
+                  </div>
+                )}
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => setShowEditModal(false)}
+                    className="btn btn-outline flex-1"
+                    disabled={editLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={saveClassEdits}
+                    className="btn btn-primary flex-1"
+                    disabled={editLoading || !editName.trim()}
+                  >
+                    {editLoading ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
