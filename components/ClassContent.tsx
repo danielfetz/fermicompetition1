@@ -278,7 +278,7 @@ export default function ClassContent({
             </div>
             <div className="stat-card">
               <div className="stat-value text-duo-yellow-dark">{studentsGenerated - studentsCompleted}</div>
-              <div className="stat-label">In Progress</div>
+              <div className="stat-label">Pending</div>
             </div>
             <div className="stat-card">
               <div className="stat-value text-duo-purple">25</div>
