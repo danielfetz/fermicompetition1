@@ -65,54 +65,115 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   const otherMode = competition_mode === 'real' ? 'mock' : 'real'
 
-  // Validate count is provided
-  if (count < 1 || count > 200) {
-    return NextResponse.json({ error: 'Count must be between 1 and 200' }, { status: 400 })
-  }
+  // Check if students already exist for current school year
+  const { count: currentYearCount } = await service
+    .from('students')
+    .select('*', { count: 'exact', head: true })
+    .eq('class_id', cls.id)
+    .eq('school_year', schoolYear)
 
-  // Efficiently get max numbers for each base username pattern
-  const { data: maxNumbers } = await service.rpc('get_username_max_numbers')
+  // Check if students exist from previous school years (to reuse usernames/names)
+  const { data: previousYearStudents } = await service
+    .from('students')
+    .select('username, full_name')
+    .eq('class_id', cls.id)
+    .eq('competition_mode', 'mock') // Only get one mode to avoid duplicates
+    .neq('school_year', schoolYear)
+    .order('username')
 
-  // Build map of base -> max number
-  const existingMaxNumbers = new Map<string, number>()
-  if (maxNumbers) {
-    for (const row of maxNumbers as { base: string; max_num: number }[]) {
-      existingMaxNumbers.set(row.base, row.max_num)
+  // Get unique students from previous years (by username)
+  const previousStudentsMap = new Map<string, string | null>()
+  if (previousYearStudents) {
+    for (const s of previousYearStudents) {
+      if (!previousStudentsMap.has(s.username)) {
+        previousStudentsMap.set(s.username, s.full_name)
+      }
     }
   }
 
-  // Generate fun scientist-themed credentials with globally unique usernames
-  const generatedCredentials = await generateStudentCredentials(count, existingMaxNumbers)
+  // If no students exist for current year but previous year students exist, reuse them
+  if (currentYearCount === 0 && previousStudentsMap.size > 0) {
+    // Reuse usernames/names from previous years with new passwords
+    for (const [username, fullName] of previousStudentsMap) {
+      const plainPassword = generateReadablePassword(8)
+      const passwordHash = await hashPassword(plainPassword)
 
-  // Parse names array (ensure it's an array of strings)
-  const namesList: string[] = Array.isArray(names) ? names.filter((n: unknown) => typeof n === 'string' && n.trim()) : []
+      credentials.push({ username, password: plainPassword, full_name: fullName || undefined })
+      rows.push({
+        class_id: cls.id,
+        username,
+        password_hash: passwordHash,
+        plain_password: plainPassword,
+        competition_mode: competition_mode,
+        school_year: schoolYear,
+        full_name: fullName || undefined
+      })
 
-  for (let i = 0; i < generatedCredentials.length; i++) {
-    const cred = generatedCredentials[i]
-    const fullName = namesList[i] || undefined
-    credentials.push({ username: cred.username, password: cred.plainPassword, full_name: fullName })
-    rows.push({
-      class_id: cls.id,
-      username: cred.username,
-      password_hash: cred.passwordHash,
-      plain_password: cred.plainPassword,
-      competition_mode: competition_mode,
-      school_year: schoolYear,
-      full_name: fullName
-    })
+      // Also create student in the other mode with a different password
+      const otherPlainPassword = generateReadablePassword(8)
+      const otherPasswordHash = await hashPassword(otherPlainPassword)
+      otherModeRows.push({
+        class_id: cls.id,
+        username,
+        password_hash: otherPasswordHash,
+        plain_password: otherPlainPassword,
+        competition_mode: otherMode,
+        school_year: schoolYear,
+        full_name: fullName || undefined
+      })
+    }
+  } else {
+    // Generate new credentials (either first time or adding more to existing year)
 
-    // Also create student in the other mode with a different password
-    const otherPlainPassword = generateReadablePassword(8)
-    const otherPasswordHash = await hashPassword(otherPlainPassword)
-    otherModeRows.push({
-      class_id: cls.id,
-      username: cred.username,
-      password_hash: otherPasswordHash,
-      plain_password: otherPlainPassword,
-      competition_mode: otherMode,
-      school_year: schoolYear,
-      full_name: fullName
-    })
+    // Validate count is provided
+    if (count < 1 || count > 200) {
+      return NextResponse.json({ error: 'Count must be between 1 and 200' }, { status: 400 })
+    }
+
+    // Efficiently get max numbers for each base username pattern
+    const { data: maxNumbers } = await service.rpc('get_username_max_numbers')
+
+    // Build map of base -> max number
+    const existingMaxNumbers = new Map<string, number>()
+    if (maxNumbers) {
+      for (const row of maxNumbers as { base: string; max_num: number }[]) {
+        existingMaxNumbers.set(row.base, row.max_num)
+      }
+    }
+
+    // Generate fun scientist-themed credentials with globally unique usernames
+    const generatedCredentials = await generateStudentCredentials(count, existingMaxNumbers)
+
+    // Parse names array (ensure it's an array of strings)
+    const namesList: string[] = Array.isArray(names) ? names.filter((n: unknown) => typeof n === 'string' && n.trim()) : []
+
+    for (let i = 0; i < generatedCredentials.length; i++) {
+      const cred = generatedCredentials[i]
+      const fullName = namesList[i] || undefined
+      credentials.push({ username: cred.username, password: cred.plainPassword, full_name: fullName })
+      rows.push({
+        class_id: cls.id,
+        username: cred.username,
+        password_hash: cred.passwordHash,
+        plain_password: cred.plainPassword,
+        competition_mode: competition_mode,
+        school_year: schoolYear,
+        full_name: fullName
+      })
+
+      // Also create student in the other mode with a different password
+      const otherPlainPassword = generateReadablePassword(8)
+      const otherPasswordHash = await hashPassword(otherPlainPassword)
+      otherModeRows.push({
+        class_id: cls.id,
+        username: cred.username,
+        password_hash: otherPasswordHash,
+        plain_password: otherPlainPassword,
+        competition_mode: otherMode,
+        school_year: schoolYear,
+        full_name: fullName
+      })
+    }
   }
 
   // Insert students for the requested mode
@@ -152,5 +213,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   await service.rpc('seed_class_questions', { p_class_id: cls.id, p_mode: competition_mode, p_school_year: schoolYear })
   await service.rpc('seed_class_questions', { p_class_id: cls.id, p_mode: otherMode, p_school_year: schoolYear })
 
-  return NextResponse.json({ credentials, competition_mode })
+  // Include info about whether students were reused from previous year
+  const reusedFromPreviousYear = currentYearCount === 0 && previousStudentsMap.size > 0
+
+  return NextResponse.json({
+    credentials,
+    competition_mode,
+    reused_from_previous_year: reusedFromPreviousYear,
+    student_count: credentials.length
+  })
 }
