@@ -31,6 +31,8 @@ type Props = {
   classId: string
   className: string
   schoolName: string | null
+  gradeLevel: string | null
+  country: string | null
   numStudents: number
   students: Student[]
   scores: Score[]
@@ -38,10 +40,39 @@ type Props = {
   initialMode?: CompetitionMode
 }
 
+const GRADE_LEVELS = [
+  { value: '1', label: '1st Grade' },
+  { value: '2', label: '2nd Grade' },
+  { value: '3', label: '3rd Grade' },
+  { value: '4', label: '4th Grade' },
+  { value: '5', label: '5th Grade' },
+  { value: '6', label: '6th Grade' },
+  { value: '7', label: '7th Grade' },
+  { value: '8', label: '8th Grade' },
+  { value: '9', label: '9th Grade' },
+  { value: '10', label: '10th Grade' },
+  { value: '11', label: '11th Grade' },
+  { value: '12-13', label: '12th/13th Grade' },
+  { value: 'university', label: 'University' },
+]
+
+const COUNTRIES = [
+  'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France',
+  'Netherlands', 'Belgium', 'Austria', 'Switzerland', 'Ireland', 'New Zealand',
+  'India', 'Singapore', 'Hong Kong', 'Japan', 'South Korea', 'China', 'Taiwan',
+  'Brazil', 'Mexico', 'Argentina', 'Spain', 'Italy', 'Portugal', 'Poland',
+  'Sweden', 'Norway', 'Denmark', 'Finland', 'Czech Republic', 'Hungary',
+  'South Africa', 'Nigeria', 'Kenya', 'Israel', 'United Arab Emirates',
+  'Saudi Arabia', 'Turkey', 'Russia', 'Ukraine', 'Indonesia', 'Malaysia',
+  'Thailand', 'Vietnam', 'Philippines', 'Pakistan', 'Bangladesh', 'Other'
+]
+
 export default function ClassContent({
   classId,
   className,
   schoolName,
+  gradeLevel,
+  country,
   numStudents,
   students,
   scores,
@@ -58,6 +89,38 @@ export default function ClassContent({
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const [autoGenerating, setAutoGenerating] = useState(false)
   const [autoGenError, setAutoGenError] = useState<string | null>(null)
+
+  // Edit class state
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editName, setEditName] = useState(className)
+  const [editSchool, setEditSchool] = useState(schoolName || '')
+  const [editGrade, setEditGrade] = useState(gradeLevel || '')
+  const [editCountry, setEditCountry] = useState(country || '')
+  const [editLoading, setEditLoading] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
+
+  async function saveClassEdits() {
+    setEditLoading(true)
+    setEditError(null)
+    const res = await fetch(`/api/classes/${classId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: editName,
+        school_name: editSchool,
+        grade_level: editGrade,
+        country: editCountry
+      })
+    })
+    setEditLoading(false)
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: 'Error' }))
+      setEditError(body.error || 'Failed to update class')
+      return
+    }
+    setShowEditModal(false)
+    router.refresh()
+  }
 
   // Check access client-side on mount using API endpoint for reliability
   useEffect(() => {
@@ -227,8 +290,25 @@ export default function ClassContent({
             </svg>
             Back to Dashboard
           </Link>
-          <h1 className="text-3xl font-extrabold text-eel">{className}</h1>
-          {schoolName && <p className="text-wolf">{schoolName}</p>}
+          <div className="flex items-center gap-2">
+            <h1 className="text-3xl font-extrabold text-eel">{className}</h1>
+            <button
+              onClick={() => setShowEditModal(true)}
+              className="p-1.5 text-wolf hover:text-duo-blue hover:bg-duo-blue/10 rounded-lg transition-colors"
+              title="Edit class details"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+            </button>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-sm text-wolf mt-1">
+            {schoolName && <span>{schoolName}</span>}
+            {schoolName && (gradeLevel || country) && <span>•</span>}
+            {gradeLevel && <span>{GRADE_LEVELS.find(g => g.value === gradeLevel)?.label || gradeLevel}</span>}
+            {gradeLevel && country && <span>•</span>}
+            {country && <span>{country}</span>}
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <CompetitionModeToggle
@@ -471,6 +551,104 @@ export default function ClassContent({
             )}
           </div>
         </>
+      )}
+
+      {/* Edit Class Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-eel">Edit Class</h2>
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="p-2 text-wolf hover:text-eel hover:bg-snow rounded-lg transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="form-group">
+                  <label className="label" htmlFor="edit-name">Class Name *</label>
+                  <input
+                    id="edit-name"
+                    className="input"
+                    value={editName}
+                    onChange={e => setEditName(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="label" htmlFor="edit-school">School Name</label>
+                  <input
+                    id="edit-school"
+                    className="input"
+                    value={editSchool}
+                    onChange={e => setEditSchool(e.target.value)}
+                    placeholder="e.g., Lincoln High School"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="label" htmlFor="edit-grade">Grade Level</label>
+                  <select
+                    id="edit-grade"
+                    className="input"
+                    value={editGrade}
+                    onChange={e => setEditGrade(e.target.value)}
+                  >
+                    <option value="">Select grade level...</option>
+                    {GRADE_LEVELS.map(g => (
+                      <option key={g.value} value={g.value}>{g.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="label" htmlFor="edit-country">Country</label>
+                  <select
+                    id="edit-country"
+                    className="input"
+                    value={editCountry}
+                    onChange={e => setEditCountry(e.target.value)}
+                  >
+                    <option value="">Select country...</option>
+                    {COUNTRIES.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {editError && (
+                  <div className="bg-duo-red/10 border-2 border-duo-red rounded-duo p-3">
+                    <p className="text-duo-red-dark text-sm font-semibold">{editError}</p>
+                  </div>
+                )}
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => setShowEditModal(false)}
+                    className="btn btn-outline flex-1"
+                    disabled={editLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={saveClassEdits}
+                    className="btn btn-primary flex-1"
+                    disabled={editLoading || !editName.trim()}
+                  >
+                    {editLoading ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

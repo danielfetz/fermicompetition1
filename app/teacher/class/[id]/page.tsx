@@ -25,7 +25,7 @@ export default async function ClassDetail({ params, searchParams }: Params) {
 
   const { data: cls } = await service
     .from('classes')
-    .select('id, name, num_students, school_name, teacher_id')
+    .select('id, name, num_students, school_name, grade_level, country, teacher_id')
     .eq('id', params.id)
     .maybeSingle()
 
@@ -52,6 +52,8 @@ export default async function ClassDetail({ params, searchParams }: Params) {
       classId={cls.id}
       className={cls.name}
       schoolName={cls.school_name}
+      gradeLevel={cls.grade_level}
+      country={cls.country}
       numStudents={cls.num_students}
       students={students || []}
       scores={scores || []}
