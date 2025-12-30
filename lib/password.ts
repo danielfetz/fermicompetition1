@@ -10,9 +10,9 @@ export async function verifyPassword(plain: string, hash: string) {
 }
 
 // Generate readable password - 8 uppercase alphanumeric characters
-// Excludes confusing characters: O, 0, I, 1
+// Excludes confusing characters: O, 0, I, 1, S (looks like 5)
 export function generateReadablePassword(length = 8) {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  const chars = 'ABCDEFGHJKLMNPQRTUVWXYZ23456789'
   let out = ''
   for (let i = 0; i < length; i++) {
     out += chars[Math.floor(Math.random() * chars.length)]

@@ -2,6 +2,7 @@ import { createSupabaseServer } from '@/lib/supabaseServer'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import DeleteStudentButton from '@/components/DeleteStudentButton'
+import CalibrationAccordion from '@/components/CalibrationAccordion'
 
 type Params = { params: { id: string, studentId: string } }
 
@@ -25,20 +26,19 @@ function getFermiQuestion(fq: FermiQuestion | FermiQuestion[] | null): FermiQues
 }
 
 // Calculate orders of magnitude difference from correct answer
+// Green threshold: 0.301 orders of magnitude = factor of 2 (same as "correct" threshold)
 function getOrdersOfMagnitude(answer: number | null | undefined, correct: number | null | undefined): { value: number; label: string; color: string } | null {
   if (answer == null || correct == null || correct === 0 || answer === 0) return null
   const ordersDiff = Math.abs(Math.log10(answer) - Math.log10(correct))
   let color = 'text-duo-red'
   let label = ''
-  if (ordersDiff < 0.1) {
+  if (ordersDiff <= 0.301) {
+    // Within factor of 2 - considered "correct"
     color = 'text-duo-green'
-    label = '< 0.1 orders of magnitude'
-  } else if (ordersDiff < 0.5) {
-    color = 'text-duo-green'
-    label = `${ordersDiff.toFixed(1)} orders of magnitude`
+    label = ordersDiff < 0.1 ? '< 0.1 orders of magnitude' : `${ordersDiff.toFixed(2)} orders of magnitude`
   } else if (ordersDiff < 1) {
     color = 'text-duo-yellow-dark'
-    label = `${ordersDiff.toFixed(1)} orders of magnitude`
+    label = `${ordersDiff.toFixed(2)} orders of magnitude`
   } else {
     color = 'text-duo-red'
     label = `${ordersDiff.toFixed(1)} orders of magnitude`
@@ -191,25 +191,6 @@ function calculateCalibration(
   return { correctCount, totalAnswered, buckets: bucketAssessments }
 }
 
-// Get display info for detailed status
-function getStatusDisplay(status: DetailedStatus): { label: string; color: string; bgColor: string } {
-  const displays: Record<DetailedStatus, { label: string; color: string; bgColor: string }> = {
-    'decisive-overconfidence': { label: 'Decisive overconfidence', color: 'text-duo-red', bgColor: 'bg-duo-red/20' },
-    'very-strong-overconfidence': { label: 'Very strong overconfidence', color: 'text-duo-red', bgColor: 'bg-duo-red/15' },
-    'strong-overconfidence': { label: 'Strong overconfidence', color: 'text-duo-red', bgColor: 'bg-duo-red/10' },
-    'moderate-overconfidence': { label: 'Moderate overconfidence', color: 'text-duo-orange', bgColor: 'bg-duo-orange/10' },
-    'decisive-underconfidence': { label: 'Decisive underconfidence', color: 'text-duo-blue', bgColor: 'bg-duo-blue/20' },
-    'very-strong-underconfidence': { label: 'Very strong underconfidence', color: 'text-duo-blue', bgColor: 'bg-duo-blue/15' },
-    'strong-underconfidence': { label: 'Strong underconfidence', color: 'text-duo-blue', bgColor: 'bg-duo-blue/10' },
-    'moderate-underconfidence': { label: 'Moderate underconfidence', color: 'text-duo-blue-dark', bgColor: 'bg-duo-blue/5' },
-    'good-calibration': { label: 'Good calibration', color: 'text-duo-green', bgColor: 'bg-duo-green/10' },
-    'slight-good-calibration': { label: 'Slight good calibration', color: 'text-duo-green', bgColor: 'bg-duo-green/5' },
-    'no-miscalibration-evidence': { label: 'No strong evidence', color: 'text-wolf', bgColor: 'bg-swan/30' },
-    'insufficient-data': { label: 'Insufficient data', color: 'text-hare', bgColor: 'bg-swan/20' }
-  }
-  return displays[status]
-}
-
 // Map confidence values to display ranges
 function getConfidenceLabel(value: number): string {
   switch (value) {
@@ -262,9 +243,6 @@ export default async function EditStudent({ params }: Params) {
   // Calculate calibration with per-bucket Bayesian assessment
   const calibration = calculateCalibration(questions, answerMap as Map<string, { value: number | null; confidence_pct: number }>)
 
-  // Filter buckets that have data
-  const bucketsWithData = calibration.buckets.filter(b => b.total > 0)
-
   return (
     <div className="space-y-6">
       <div>
@@ -277,45 +255,14 @@ export default async function EditStudent({ params }: Params) {
         <h1 className="text-2xl font-extrabold">Edit {student.full_name || student.username}</h1>
       </div>
 
-      {/* Calibration Summary Card */}
+      {/* Calibration Summary Card (Accordion) */}
       {calibration.totalAnswered > 0 && (
-        <div className="card">
-          <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
-            <h2 className="font-bold text-eel">Calibration Assessment</h2>
-            <div className="flex gap-4 text-center">
-              <div>
-                <div className="text-2xl font-bold text-eel">{calibration.correctCount}/{calibration.totalAnswered}</div>
-                <div className="text-xs text-wolf">Correct</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-duo-green">{points}</div>
-                <div className="text-xs text-wolf">Points</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Per-bucket assessment */}
-          {bucketsWithData.length > 0 ? (
-            <div className="space-y-2">
-              {bucketsWithData.map(bucket => {
-                const display = getStatusDisplay(bucket.detailedStatus)
-                return (
-                  <div key={bucket.confidence} className={`flex items-center justify-between p-3 rounded-lg ${display.bgColor}`}>
-                    <div className="flex items-center gap-3">
-                      <div className="text-sm font-semibold text-eel w-16">{getConfidenceLabel(bucket.confidence)}</div>
-                      <div className={`text-sm font-medium ${display.color}`}>{display.label}</div>
-                    </div>
-                    <div className="text-sm text-wolf">
-                      {bucket.correct}/{bucket.total} correct ({bucket.actualPct}%)
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          ) : (
-            <p className="text-sm text-wolf">No answers yet to assess calibration.</p>
-          )}
-        </div>
+        <CalibrationAccordion
+          correctCount={calibration.correctCount}
+          totalAnswered={calibration.totalAnswered}
+          points={points}
+          buckets={calibration.buckets}
+        />
       )}
 
       <div className="card overflow-x-auto">
