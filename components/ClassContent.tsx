@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import CompetitionModeToggle from './CompetitionModeToggle'
 import OfficialCompetitionCodeEntry from './OfficialCompetitionCodeEntry'
+import CompetitionCountdown, { isCompetitionStarted } from './CompetitionCountdown'
 
 type CompetitionMode = 'mock' | 'real'
 
@@ -50,6 +51,7 @@ export default function ClassContent({
   const [realUnlocked, setRealUnlocked] = useState(initialRealUnlocked)
   const [checkingAccess, setCheckingAccess] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [competitionStarted, setCompetitionStarted] = useState(false)
 
   // Check access client-side on mount using API endpoint for reliability
   useEffect(() => {
@@ -73,6 +75,16 @@ export default function ClassContent({
 
     checkRealAccess()
   }, [realUnlocked])
+
+  // Check if competition has started (client-side only to avoid hydration mismatch)
+  useEffect(() => {
+    setCompetitionStarted(isCompetitionStarted())
+    // Check every minute in case the page is open when competition starts
+    const timer = setInterval(() => {
+      setCompetitionStarted(isCompetitionStarted())
+    }, 60000)
+    return () => clearInterval(timer)
+  }, [])
 
   // Filter students and scores by current mode
   const filteredStudents = students.filter(s => (s.competition_mode || 'mock') === mode)
@@ -102,7 +114,7 @@ export default function ClassContent({
             realUnlocked={realUnlocked}
             onModeChange={setMode}
           />
-          {(mode === 'mock' || realUnlocked) && (
+          {(mode === 'mock' || (realUnlocked && competitionStarted)) && (
             <Link className="btn btn-primary" href={`/teacher/class/${classId}/generate?mode=${mode}`}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
@@ -121,6 +133,8 @@ export default function ClassContent({
         </div>
       ) : mode === 'real' && !realUnlocked ? (
         <OfficialCompetitionCodeEntry onSuccess={() => setRealUnlocked(true)} />
+      ) : mode === 'real' && !competitionStarted ? (
+        <CompetitionCountdown />
       ) : (
         <>
           {/* Stats */}
