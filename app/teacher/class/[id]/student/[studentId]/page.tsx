@@ -26,14 +26,16 @@ function getFermiQuestion(fq: FermiQuestion | FermiQuestion[] | null): FermiQues
 }
 
 // Calculate orders of magnitude difference from correct answer
-// Green threshold: 0.301 orders of magnitude = factor of 2 (same as "correct" threshold)
+// Green threshold: log10(2) ≈ 0.30103 orders of magnitude = factor of 2 (same as "correct" threshold)
+const LOG10_2 = Math.log10(2) // ≈ 0.30103
+
 function getOrdersOfMagnitude(answer: number | null | undefined, correct: number | null | undefined): { value: number; label: string; color: string } | null {
   if (answer == null || correct == null || correct === 0 || answer === 0) return null
   const ordersDiff = Math.abs(Math.log10(answer) - Math.log10(correct))
   let color = 'text-duo-red'
   let label = ''
-  if (ordersDiff <= 0.301) {
-    // Within factor of 2 - considered "correct"
+  if (ordersDiff <= LOG10_2 + 0.0001) {
+    // Within factor of 2 - considered "correct" (small epsilon for floating point)
     color = 'text-duo-green'
     label = ordersDiff < 0.1 ? '< 0.1 orders of magnitude' : `${ordersDiff.toFixed(2)} orders of magnitude`
   } else if (ordersDiff < 1) {
