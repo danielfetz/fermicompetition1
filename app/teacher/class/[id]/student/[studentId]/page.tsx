@@ -222,6 +222,15 @@ export default async function EditStudent({ params }: Params) {
   // Get the student's competition mode (default to mock)
   const studentMode = student.competition_mode || 'mock'
 
+  // Get the class's school_year
+  const { data: classData } = await supabase
+    .from('classes')
+    .select('school_year')
+    .eq('id', params.id)
+    .single()
+
+  const schoolYear = classData?.school_year || '2025-26'
+
   // Fetch questions, answers, and student score in parallel
   const [{ data: classQuestions }, { data: answers }, { data: scoreData }] = await Promise.all([
     supabase.from('class_questions').select(`
@@ -232,7 +241,7 @@ export default async function EditStudent({ params }: Params) {
         prompt,
         correct_value
       )
-    `).eq('class_id', params.id).eq('competition_mode', studentMode).order('order'),
+    `).eq('class_id', params.id).eq('competition_mode', studentMode).eq('school_year', schoolYear).order('order'),
     supabase.from('answers').select('class_question_id, value, confidence_pct').eq('student_id', params.studentId),
     supabase.from('student_scores').select('confidence_points').eq('student_id', params.studentId).maybeSingle()
   ])
