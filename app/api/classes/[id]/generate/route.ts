@@ -5,11 +5,6 @@ import { generateStudentCredentials, generateReadablePassword, hashPassword } fr
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const { count = 10, competition_mode = 'mock', names = [] } = await req.json().catch(() => ({}))
 
-  // Validate count (only required for mock mode - real mode uses mock students)
-  if (competition_mode === 'mock' && (count < 1 || count > 200)) {
-    return NextResponse.json({ error: 'Count must be between 1 and 200' }, { status: 400 })
-  }
-
   // Validate competition_mode
   if (competition_mode !== 'mock' && competition_mode !== 'real') {
     return NextResponse.json({ error: 'Invalid competition mode' }, { status: 400 })
@@ -56,52 +51,54 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     full_name?: string
   }[] = []
 
-  if (competition_mode === 'real') {
-    // For official competition: reuse mock student usernames and full names with new passwords
-    const { data: mockStudents } = await service
-      .from('students')
-      .select('username, full_name')
-      .eq('class_id', cls.id)
-      .eq('competition_mode', 'mock')
-      .order('username')
+  // Check for existing students in the OTHER mode (for reuse)
+  const otherMode = competition_mode === 'real' ? 'mock' : 'real'
+  const { data: otherModeStudents } = await service
+    .from('students')
+    .select('username, full_name')
+    .eq('class_id', cls.id)
+    .eq('competition_mode', otherMode)
+    .order('username')
 
-    if (!mockStudents || mockStudents.length === 0) {
-      return NextResponse.json({ error: 'No practice students found. Please add practice students first.' }, { status: 400 })
-    }
+  // Check if students already exist in the CURRENT mode
+  const { data: existingStudents } = await service
+    .from('students')
+    .select('id')
+    .eq('class_id', cls.id)
+    .eq('competition_mode', competition_mode)
+    .limit(1)
 
-    // Check if real students already exist
-    const { data: existingRealStudents } = await service
-      .from('students')
-      .select('id')
-      .eq('class_id', cls.id)
-      .eq('competition_mode', 'real')
-      .limit(1)
+  if (existingStudents && existingStudents.length > 0) {
+    return NextResponse.json({ error: `${competition_mode === 'real' ? 'Official' : 'Practice'} competition students already exist for this class.` }, { status: 400 })
+  }
 
-    if (existingRealStudents && existingRealStudents.length > 0) {
-      return NextResponse.json({ error: 'Official competition students already exist for this class.' }, { status: 400 })
-    }
-
-    // Generate new passwords for each mock student
-    for (const mockStudent of mockStudents) {
+  // If students exist in the other mode, reuse their usernames with new passwords
+  if (otherModeStudents && otherModeStudents.length > 0) {
+    for (const student of otherModeStudents) {
       const plainPassword = generateReadablePassword(8)
       const passwordHash = await hashPassword(plainPassword)
 
       credentials.push({
-        username: mockStudent.username,
+        username: student.username,
         password: plainPassword,
-        full_name: mockStudent.full_name || undefined
+        full_name: student.full_name || undefined
       })
       rows.push({
         class_id: cls.id,
-        username: mockStudent.username,
+        username: student.username,
         password_hash: passwordHash,
         plain_password: plainPassword,
-        competition_mode: 'real',
-        full_name: mockStudent.full_name || undefined
+        competition_mode: competition_mode,
+        full_name: student.full_name || undefined
       })
     }
   } else {
-    // Mock mode: generate new usernames
+    // No students in either mode - generate new usernames
+    // Validate count is provided
+    if (count < 1 || count > 200) {
+      return NextResponse.json({ error: 'Count must be between 1 and 200' }, { status: 400 })
+    }
+
     // Efficiently get max numbers for each base username pattern
     const { data: maxNumbers } = await service.rpc('get_username_max_numbers')
 
@@ -128,7 +125,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         username: cred.username,
         password_hash: cred.passwordHash,
         plain_password: cred.plainPassword,
-        competition_mode: 'mock',
+        competition_mode: competition_mode,
         full_name: fullName
       })
     }
