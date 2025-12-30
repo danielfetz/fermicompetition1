@@ -52,6 +52,8 @@ export default function ClassContent({
   const [checkingAccess, setCheckingAccess] = useState(false)
   const [copied, setCopied] = useState(false)
   const [competitionStarted, setCompetitionStarted] = useState(false)
+  const [sortColumn, setSortColumn] = useState<'username' | 'full_name' | 'status' | 'accuracy' | 'points'>('username')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
 
   // Check access client-side on mount using API endpoint for reliability
   useEffect(() => {
@@ -89,6 +91,61 @@ export default function ClassContent({
   // Filter students and scores by current mode
   const filteredStudents = students.filter(s => (s.competition_mode || 'mock') === mode)
   const filteredScores = scores.filter(sc => (sc.competition_mode || 'mock') === mode)
+
+  // Create a map for quick score lookup
+  const scoreMap = new Map(filteredScores.map(sc => [sc.student_id, sc]))
+
+  // Sort students
+  const sortedStudents = [...filteredStudents].sort((a, b) => {
+    const scoreA = scoreMap.get(a.id)
+    const scoreB = scoreMap.get(b.id)
+    let comparison = 0
+
+    switch (sortColumn) {
+      case 'username':
+        comparison = a.username.localeCompare(b.username)
+        break
+      case 'full_name':
+        const nameA = a.full_name || ''
+        const nameB = b.full_name || ''
+        comparison = nameA.localeCompare(nameB)
+        break
+      case 'status':
+        comparison = (a.has_completed_exam ? 1 : 0) - (b.has_completed_exam ? 1 : 0)
+        break
+      case 'accuracy':
+        const accA = scoreA?.total_answered ? scoreA.correct_count / scoreA.total_answered : -1
+        const accB = scoreB?.total_answered ? scoreB.correct_count / scoreB.total_answered : -1
+        comparison = accA - accB
+        break
+      case 'points':
+        const ptsA = scoreA?.confidence_points ?? 250
+        const ptsB = scoreB?.confidence_points ?? 250
+        comparison = ptsA - ptsB
+        break
+    }
+
+    return sortDirection === 'asc' ? comparison : -comparison
+  })
+
+  const handleSort = (column: typeof sortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortColumn(column)
+      setSortDirection('asc')
+    }
+  }
+
+  const SortIcon = ({ column }: { column: typeof sortColumn }) => (
+    <svg className={`w-4 h-4 inline ml-1 ${sortColumn === column ? 'text-duo-blue' : 'text-hare'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      {sortColumn === column && sortDirection === 'desc' ? (
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+      ) : (
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+      )}
+    </svg>
+  )
 
   const studentsGenerated = filteredStudents.length
   const studentsCompleted = filteredStudents.filter(s => s.has_completed_exam).length
@@ -221,18 +278,28 @@ export default function ClassContent({
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-left border-b-2 border-swan">
-                      <th className="py-3 px-6 font-bold text-wolf uppercase tracking-wide text-xs">Username</th>
+                      <th className="py-3 px-6 font-bold text-wolf uppercase tracking-wide text-xs cursor-pointer hover:text-eel select-none" onClick={() => handleSort('username')}>
+                        Username<SortIcon column="username" />
+                      </th>
                       <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Password</th>
-                      <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Full Name</th>
-                      <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Status</th>
-                      <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Accuracy</th>
-                      <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Points</th>
+                      <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs cursor-pointer hover:text-eel select-none" onClick={() => handleSort('full_name')}>
+                        Full Name<SortIcon column="full_name" />
+                      </th>
+                      <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs cursor-pointer hover:text-eel select-none" onClick={() => handleSort('status')}>
+                        Status<SortIcon column="status" />
+                      </th>
+                      <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs cursor-pointer hover:text-eel select-none" onClick={() => handleSort('accuracy')}>
+                        Accuracy<SortIcon column="accuracy" />
+                      </th>
+                      <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs cursor-pointer hover:text-eel select-none" onClick={() => handleSort('points')}>
+                        Points<SortIcon column="points" />
+                      </th>
                       <th className="py-3 px-6 font-bold text-wolf uppercase tracking-wide text-xs">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-swan">
-                    {filteredStudents.map(s => {
-                      const score = filteredScores.find(x => x.student_id === s.id)
+                    {sortedStudents.map(s => {
+                      const score = scoreMap.get(s.id)
                       const correct = score?.correct_count ?? 0
                       const total = score?.total_answered ?? 0
                       const maxQuestions = 25

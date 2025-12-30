@@ -33,7 +33,7 @@ function getStatusDisplay(status: DetailedStatus): { label: string; color: strin
     'very-strong-underconfidence': { label: 'Very strong evidence for underconfidence', color: 'text-duo-blue', bgColor: 'bg-duo-blue/15' },
     'strong-underconfidence': { label: 'Strong evidence for underconfidence', color: 'text-duo-blue', bgColor: 'bg-duo-blue/10' },
     'moderate-underconfidence': { label: 'Substantial evidence for underconfidence', color: 'text-duo-blue-dark', bgColor: 'bg-duo-blue/5' },
-    'good-calibration': { label: 'Evidence for good calibration', color: 'text-duo-green', bgColor: 'bg-duo-green/10' },
+    'good-calibration': { label: 'Substantial evidence for good calibration', color: 'text-duo-green', bgColor: 'bg-duo-green/10' },
     'slight-good-calibration': { label: 'Some evidence for good calibration', color: 'text-duo-green', bgColor: 'bg-duo-green/5' },
     'no-miscalibration-evidence': { label: 'No evidence of miscalibration', color: 'text-wolf', bgColor: 'bg-swan/30' },
     'insufficient-data': { label: 'Insufficient data', color: 'text-hare', bgColor: 'bg-swan/20' }
