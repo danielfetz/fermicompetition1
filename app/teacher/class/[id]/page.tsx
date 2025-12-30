@@ -32,18 +32,21 @@ export default async function ClassDetail({ params, searchParams }: Params) {
   // Check class exists, belongs to current user, and is not the system guest class
   if (!cls || cls.teacher_id !== user.id || cls.name === '__guest_class__') return notFound()
 
-  // Fetch all students (both mock and real) - filtering happens client-side
+  // Fetch students for the current school year (both mock and real modes)
+  const schoolYear = cls.school_year || '2025-26'
   const { data: students } = await service
     .from('students')
     .select('id, username, full_name, has_completed_exam, plain_password, competition_mode')
     .eq('class_id', cls.id)
+    .eq('school_year', schoolYear)
     .order('username')
 
-  // Fetch all scores - filtering happens client-side
+  // Fetch scores for the current school year
   const { data: scores } = await service
     .from('student_scores')
     .select('student_id, correct_count, total_answered, score_percentage, competition_mode, confidence_points')
     .eq('class_id', cls.id)
+    .eq('school_year', schoolYear)
 
   const initialMode = (searchParams.mode === 'real' ? 'real' : 'mock') as 'mock' | 'real'
 

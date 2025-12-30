@@ -89,9 +89,10 @@ CREATE TABLE public.students (
   full_name text,
   has_completed_exam boolean NOT NULL DEFAULT false,
   competition_mode public.competition_mode NOT NULL DEFAULT 'mock',
+  school_year text NOT NULL DEFAULT '2025-26',
   first_login_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT students_class_mode_username_key UNIQUE (class_id, competition_mode, username)
+  CONSTRAINT students_class_mode_username_year_key UNIQUE (class_id, competition_mode, username, school_year)
 );
 
 -- 3.4: class_questions (links class to fermi questions)
@@ -101,9 +102,10 @@ CREATE TABLE public.class_questions (
   fermi_question_id uuid NOT NULL REFERENCES public.fermi_questions(id) ON DELETE CASCADE,
   "order" int NOT NULL,
   competition_mode public.competition_mode NOT NULL DEFAULT 'mock',
+  school_year text NOT NULL DEFAULT '2025-26',
   created_at timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT class_questions_class_mode_order_key UNIQUE (class_id, competition_mode, "order"),
-  CONSTRAINT class_questions_class_mode_question_key UNIQUE (class_id, competition_mode, fermi_question_id)
+  CONSTRAINT class_questions_class_mode_year_order_key UNIQUE (class_id, competition_mode, school_year, "order"),
+  CONSTRAINT class_questions_class_mode_year_question_key UNIQUE (class_id, competition_mode, school_year, fermi_question_id)
 );
 
 -- 3.5: student_exam_sessions table
@@ -192,11 +194,11 @@ RETURNS uuid LANGUAGE sql SECURITY DEFINER STABLE AS $$
 $$;
 
 -- 4.3: Seed class questions function
-CREATE OR REPLACE FUNCTION public.seed_class_questions(p_class_id uuid, p_mode public.competition_mode DEFAULT 'mock')
+CREATE OR REPLACE FUNCTION public.seed_class_questions(p_class_id uuid, p_mode public.competition_mode DEFAULT 'mock', p_school_year text DEFAULT '2025-26')
 RETURNS void LANGUAGE plpgsql AS $$
 BEGIN
-  INSERT INTO public.class_questions (class_id, fermi_question_id, "order", competition_mode)
-  SELECT p_class_id, fq.id, fq."order", p_mode
+  INSERT INTO public.class_questions (class_id, fermi_question_id, "order", competition_mode, school_year)
+  SELECT p_class_id, fq.id, fq."order", p_mode, p_school_year
   FROM public.fermi_questions fq
   WHERE fq.competition_mode = p_mode
   ORDER BY fq."order"
@@ -396,6 +398,7 @@ SELECT
   s.full_name,
   s.has_completed_exam,
   s.competition_mode,
+  s.school_year,
   c.grade_level,
   c.country,
   count(a.id) AS total_answered,
@@ -445,7 +448,7 @@ JOIN public.classes c ON c.id = s.class_id
 LEFT JOIN public.answers a ON a.student_id = s.id
 LEFT JOIN public.class_questions cq ON cq.id = a.class_question_id
 LEFT JOIN public.fermi_questions fq ON fq.id = cq.fermi_question_id
-GROUP BY s.id, s.class_id, s.username, s.full_name, s.has_completed_exam, s.competition_mode, c.grade_level, c.country;
+GROUP BY s.id, s.class_id, s.username, s.full_name, s.has_completed_exam, s.competition_mode, s.school_year, c.grade_level, c.country;
 
 -- 6.2: Coordinator teachers view
 CREATE OR REPLACE VIEW public.coordinator_teachers

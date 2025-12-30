@@ -11,6 +11,7 @@ type LeaderboardEntry = {
   competition_mode: 'mock' | 'real' | 'guest'
   grade_level: string | null
   country: string | null
+  school_year: string | null
 }
 
 export const revalidate = 60 // Revalidate every 60 seconds
@@ -31,22 +32,26 @@ const GRADE_LEVELS = [
   { value: 'university', label: 'University' },
 ]
 
+const SCHOOL_YEARS = ['2024-25', '2025-26', '2026-27', '2027-28']
+
 export default async function LeaderboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ grade?: string; country?: string }>
+  searchParams: Promise<{ grade?: string; country?: string; year?: string }>
 }) {
   const params = await searchParams
   const gradeFilter = params.grade || ''
   const countryFilter = params.country || ''
+  const yearFilter = params.year || '2025-26'
 
   const supabase = createSupabaseServiceRole()
 
   // Build query with filters
   let query = supabase
     .from('student_scores')
-    .select('student_id, username, confidence_points, correct_count, total_answered, competition_mode, grade_level, country')
+    .select('student_id, username, confidence_points, correct_count, total_answered, competition_mode, grade_level, country, school_year')
     .gt('total_answered', 0)
+    .eq('school_year', yearFilter)
     .order('confidence_points', { ascending: false })
     .limit(100)
 
@@ -75,7 +80,7 @@ export default async function LeaderboardPage({
   const realLeaderboard = leaderboard.filter(e => e.competition_mode === 'real')
   const guestLeaderboard = leaderboard.filter(e => e.competition_mode === 'guest')
 
-  const hasFilters = gradeFilter || countryFilter
+  const hasFilters = gradeFilter || countryFilter || (yearFilter && yearFilter !== '2025-26')
 
   return (
     <div className="min-h-screen">
@@ -95,13 +100,18 @@ export default async function LeaderboardPage({
         <LeaderboardFilters
           gradeLevels={GRADE_LEVELS}
           countries={uniqueCountries}
+          schoolYears={SCHOOL_YEARS}
           currentGrade={gradeFilter}
           currentCountry={countryFilter}
+          currentSchoolYear={yearFilter}
         />
 
         {hasFilters && (
           <div className="mb-4 flex items-center gap-2 text-sm text-wolf">
             <span>Filtering by:</span>
+            {yearFilter && yearFilter !== '2025-26' && (
+              <span className="badge badge-purple">{yearFilter}</span>
+            )}
             {gradeFilter && (
               <span className="badge badge-blue">
                 {GRADE_LEVELS.find(g => g.value === gradeFilter)?.label || gradeFilter}

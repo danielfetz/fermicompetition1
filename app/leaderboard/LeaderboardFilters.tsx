@@ -5,11 +5,13 @@ import { useRouter, useSearchParams } from 'next/navigation'
 type Props = {
   gradeLevels: { value: string; label: string }[]
   countries: string[]
+  schoolYears: string[]
   currentGrade: string
   currentCountry: string
+  currentSchoolYear: string
 }
 
-export default function LeaderboardFilters({ gradeLevels, countries, currentGrade, currentCountry }: Props) {
+export default function LeaderboardFilters({ gradeLevels, countries, schoolYears, currentGrade, currentCountry, currentSchoolYear }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -24,14 +26,28 @@ export default function LeaderboardFilters({ gradeLevels, countries, currentGrad
   }
 
   function clearFilters() {
-    router.push('/leaderboard')
+    router.push('/leaderboard?year=2025-26')
   }
 
-  const hasFilters = currentGrade || currentCountry
+  const hasFilters = currentGrade || currentCountry || (currentSchoolYear && currentSchoolYear !== '2025-26')
 
   return (
     <div className="card mb-6">
       <div className="flex flex-wrap items-end gap-4">
+        <div className="flex-1 min-w-[120px]">
+          <label className="label" htmlFor="year-filter">School Year</label>
+          <select
+            id="year-filter"
+            className="input"
+            value={currentSchoolYear}
+            onChange={e => updateFilter('year', e.target.value)}
+          >
+            {schoolYears.map(y => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+        </div>
+
         <div className="flex-1 min-w-[150px]">
           <label className="label" htmlFor="grade-filter">Grade Level</label>
           <select

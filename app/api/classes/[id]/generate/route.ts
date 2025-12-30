@@ -35,11 +35,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   // Check class exists and belongs to teacher
   const { data: cls, error: cErr } = await service
     .from('classes')
-    .select('id, teacher_id, num_students')
+    .select('id, teacher_id, num_students, school_year')
     .eq('id', params.id)
     .single()
   if (cErr || !cls) return NextResponse.json({ error: 'Class not found' }, { status: 404 })
   if (cls.teacher_id !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+  const schoolYear = cls.school_year || '2025-26'
 
   const credentials: { username: string; password: string; full_name?: string }[] = []
   const rows: {
@@ -48,6 +50,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     password_hash: string
     plain_password: string
     competition_mode: string
+    school_year: string
     full_name?: string
   }[] = []
   const otherModeRows: {
@@ -56,6 +59,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     password_hash: string
     plain_password: string
     competition_mode: string
+    school_year: string
     full_name?: string
   }[] = []
 
@@ -93,6 +97,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       password_hash: cred.passwordHash,
       plain_password: cred.plainPassword,
       competition_mode: competition_mode,
+      school_year: schoolYear,
       full_name: fullName
     })
 
@@ -105,6 +110,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       password_hash: otherPasswordHash,
       plain_password: otherPlainPassword,
       competition_mode: otherMode,
+      school_year: schoolYear,
       full_name: fullName
     })
   }
@@ -129,21 +135,22 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     // Don't fail the request, but log it - main mode was successful
   }
 
-  // Update class num_students to reflect unique student count (count only one mode since both have same students)
+  // Update class num_students to reflect unique student count for this school year (count only one mode since both have same students)
   const { count: totalStudents } = await service
     .from('students')
     .select('*', { count: 'exact', head: true })
     .eq('class_id', cls.id)
     .eq('competition_mode', 'mock')
+    .eq('school_year', schoolYear)
 
   await service
     .from('classes')
     .update({ num_students: totalStudents || 0 })
     .eq('id', cls.id)
 
-  // Seed the class with questions for both competition modes
-  await service.rpc('seed_class_questions', { p_class_id: cls.id, p_mode: competition_mode })
-  await service.rpc('seed_class_questions', { p_class_id: cls.id, p_mode: otherMode })
+  // Seed the class with questions for both competition modes and current school year
+  await service.rpc('seed_class_questions', { p_class_id: cls.id, p_mode: competition_mode, p_school_year: schoolYear })
+  await service.rpc('seed_class_questions', { p_class_id: cls.id, p_mode: otherMode, p_school_year: schoolYear })
 
   return NextResponse.json({ credentials, competition_mode })
 }
