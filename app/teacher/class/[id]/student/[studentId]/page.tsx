@@ -1,6 +1,7 @@
 import { createSupabaseServer } from '@/lib/supabaseServer'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import DeleteStudentButton from '@/components/DeleteStudentButton'
 
 type Params = { params: { id: string, studentId: string } }
 
@@ -172,24 +173,11 @@ export default async function EditStudent({ params }: Params) {
         <p className="text-sm text-wolf mb-4">
           Permanently delete this student and all their answers. This action cannot be undone.
         </p>
-        <form action={`/api/teacher/student/${student.id}/delete`} method="post">
-          <input type="hidden" name="class_id" value={params.id} />
-          <input type="hidden" name="mode" value={studentMode} />
-          <button
-            type="submit"
-            className="btn bg-duo-red text-white hover:bg-duo-red-dark"
-            onClick={(e) => {
-              if (!confirm('Are you sure you want to delete this student? This cannot be undone.')) {
-                e.preventDefault()
-              }
-            }}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-            Delete Student
-          </button>
-        </form>
+        <DeleteStudentButton
+          studentId={student.id}
+          classId={params.id}
+          mode={studentMode}
+        />
       </div>
     </div>
   )
