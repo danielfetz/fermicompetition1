@@ -27,6 +27,7 @@ export default async function Dashboard() {
   const { data: classes } = await supabase
     .from('classes')
     .select('id, name, num_students, school_name, created_at')
+    .neq('name', '__guest_class__')  // Exclude the system guest class
     .order('created_at', { ascending: false })
 
   return (
