@@ -29,8 +29,8 @@ export default async function ClassDetail({ params, searchParams }: Params) {
     .eq('id', params.id)
     .maybeSingle()
 
-  // Check class exists and belongs to current user
-  if (!cls || cls.teacher_id !== user.id) return notFound()
+  // Check class exists, belongs to current user, and is not the system guest class
+  if (!cls || cls.teacher_id !== user.id || cls.name === '__guest_class__') return notFound()
 
   // Fetch all students (both mock and real) - filtering happens client-side
   const { data: students } = await service

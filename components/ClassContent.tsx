@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import CompetitionModeToggle from './CompetitionModeToggle'
 import OfficialCompetitionCodeEntry from './OfficialCompetitionCodeEntry'
+import CompetitionCountdown, { isCompetitionStarted } from './CompetitionCountdown'
 
 type CompetitionMode = 'mock' | 'real'
 
@@ -50,6 +51,9 @@ export default function ClassContent({
   const [realUnlocked, setRealUnlocked] = useState(initialRealUnlocked)
   const [checkingAccess, setCheckingAccess] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [competitionStarted, setCompetitionStarted] = useState(false)
+  const [sortColumn, setSortColumn] = useState<'username' | 'full_name' | 'status' | 'accuracy' | 'points'>('username')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
 
   // Check access client-side on mount using API endpoint for reliability
   useEffect(() => {
@@ -74,9 +78,80 @@ export default function ClassContent({
     checkRealAccess()
   }, [realUnlocked])
 
+  // Check if competition has started (client-side only to avoid hydration mismatch)
+  useEffect(() => {
+    setCompetitionStarted(isCompetitionStarted())
+    // Check every minute in case the page is open when competition starts
+    const timer = setInterval(() => {
+      setCompetitionStarted(isCompetitionStarted())
+    }, 60000)
+    return () => clearInterval(timer)
+  }, [])
+
   // Filter students and scores by current mode
   const filteredStudents = students.filter(s => (s.competition_mode || 'mock') === mode)
   const filteredScores = scores.filter(sc => (sc.competition_mode || 'mock') === mode)
+
+  // Create a map for quick score lookup
+  const scoreMap = new Map(filteredScores.map(sc => [sc.student_id, sc]))
+
+  // Sort students
+  const sortedStudents = [...filteredStudents].sort((a, b) => {
+    const scoreA = scoreMap.get(a.id)
+    const scoreB = scoreMap.get(b.id)
+    let comparison = 0
+
+    switch (sortColumn) {
+      case 'username':
+        comparison = a.username.localeCompare(b.username)
+        break
+      case 'full_name':
+        // Put students without names at the end (regardless of sort direction)
+        if (!a.full_name && !b.full_name) return 0
+        if (!a.full_name) return 1  // a goes after b
+        if (!b.full_name) return -1 // b goes after a
+        comparison = a.full_name.localeCompare(b.full_name)
+        break
+      case 'status':
+        comparison = (a.has_completed_exam ? 1 : 0) - (b.has_completed_exam ? 1 : 0)
+        break
+      case 'accuracy':
+        // Put students without answers at the end (regardless of sort direction)
+        const hasAccA = scoreA?.total_answered && scoreA.total_answered > 0
+        const hasAccB = scoreB?.total_answered && scoreB.total_answered > 0
+        if (!hasAccA && !hasAccB) return 0
+        if (!hasAccA) return 1
+        if (!hasAccB) return -1
+        comparison = (scoreA!.correct_count / scoreA!.total_answered) - (scoreB!.correct_count / scoreB!.total_answered)
+        break
+      case 'points':
+        const ptsA = scoreA?.confidence_points ?? 250
+        const ptsB = scoreB?.confidence_points ?? 250
+        comparison = ptsA - ptsB
+        break
+    }
+
+    return sortDirection === 'asc' ? comparison : -comparison
+  })
+
+  const handleSort = (column: typeof sortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortColumn(column)
+      setSortDirection('asc')
+    }
+  }
+
+  const SortIcon = ({ column }: { column: typeof sortColumn }) => (
+    <svg className={`w-4 h-4 inline ml-1 ${sortColumn === column ? 'text-duo-blue' : 'text-hare'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      {sortColumn === column && sortDirection === 'desc' ? (
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+      ) : (
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+      )}
+    </svg>
+  )
 
   const studentsGenerated = filteredStudents.length
   const studentsCompleted = filteredStudents.filter(s => s.has_completed_exam).length
@@ -102,12 +177,12 @@ export default function ClassContent({
             realUnlocked={realUnlocked}
             onModeChange={setMode}
           />
-          {(mode === 'mock' || realUnlocked) && (
+          {(mode === 'mock' || (realUnlocked && competitionStarted)) && (
             <Link className="btn btn-primary" href={`/teacher/class/${classId}/generate?mode=${mode}`}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
               </svg>
-              Generate Credentials
+              Add Students
             </Link>
           )}
         </div>
@@ -121,6 +196,8 @@ export default function ClassContent({
         </div>
       ) : mode === 'real' && !realUnlocked ? (
         <OfficialCompetitionCodeEntry onSuccess={() => setRealUnlocked(true)} />
+      ) : mode === 'real' && !competitionStarted ? (
+        <CompetitionCountdown />
       ) : (
         <>
           {/* Stats */}
@@ -153,7 +230,7 @@ export default function ClassContent({
                     <div className="relative group">
                       <button
                         onClick={() => {
-                          const text = filteredStudents.map(s => `${s.username}\t${s.plain_password || ''}`).join('\n')
+                          const text = filteredStudents.map(s => `${s.username}\t${s.plain_password || ''}\t${s.full_name || ''}`).join('\n')
                           navigator.clipboard.writeText(text)
                           setCopied(true)
                           setTimeout(() => setCopied(false), 2000)
@@ -177,7 +254,7 @@ export default function ClassContent({
                     <div className="relative group">
                       <button
                         onClick={() => {
-                          const csv = 'Username,Password\n' + filteredStudents.map(s => `${s.username},${s.plain_password || ''}`).join('\n')
+                          const csv = 'Username,Password,Name\n' + filteredStudents.map(s => `${s.username},${s.plain_password || ''},${s.full_name || ''}`).join('\n')
                           const blob = new Blob([csv], { type: 'text/csv' })
                           const url = URL.createObjectURL(blob)
                           const a = document.createElement('a')
@@ -207,18 +284,28 @@ export default function ClassContent({
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-left border-b-2 border-swan">
-                      <th className="py-3 px-6 font-bold text-wolf uppercase tracking-wide text-xs">Username</th>
+                      <th className="py-3 px-6 font-bold text-wolf uppercase tracking-wide text-xs cursor-pointer hover:text-eel select-none" onClick={() => handleSort('username')}>
+                        Username<SortIcon column="username" />
+                      </th>
                       <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Password</th>
-                      <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Full Name</th>
-                      <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Status</th>
-                      <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Accuracy</th>
-                      <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Points</th>
+                      <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs cursor-pointer hover:text-eel select-none" onClick={() => handleSort('full_name')}>
+                        Full Name<SortIcon column="full_name" />
+                      </th>
+                      <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs cursor-pointer hover:text-eel select-none" onClick={() => handleSort('status')}>
+                        Status<SortIcon column="status" />
+                      </th>
+                      <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs cursor-pointer hover:text-eel select-none" onClick={() => handleSort('accuracy')}>
+                        Accuracy<SortIcon column="accuracy" />
+                      </th>
+                      <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs cursor-pointer hover:text-eel select-none" onClick={() => handleSort('points')}>
+                        Points<SortIcon column="points" />
+                      </th>
                       <th className="py-3 px-6 font-bold text-wolf uppercase tracking-wide text-xs">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-swan">
-                    {filteredStudents.map(s => {
-                      const score = filteredScores.find(x => x.student_id === s.id)
+                    {sortedStudents.map(s => {
+                      const score = scoreMap.get(s.id)
                       const correct = score?.correct_count ?? 0
                       const total = score?.total_answered ?? 0
                       const maxQuestions = 25
@@ -248,13 +335,13 @@ export default function ClassContent({
                           <td className="py-3 px-4">
                             {total > 0 ? (
                               <div className="flex items-center gap-2">
-                                <span className={`font-bold ${correct >= maxQuestions/2 ? 'text-duo-green' : correct >= maxQuestions/3 ? 'text-duo-yellow-dark' : 'text-duo-red'}`}>
-                                  {correct}/{maxQuestions}
+                                <span className={`font-bold ${correct >= total/2 ? 'text-duo-green' : correct >= total/3 ? 'text-duo-yellow-dark' : 'text-duo-red'}`}>
+                                  {correct}/{total}
                                 </span>
                                 <div className="w-16 h-2 bg-swan rounded-full overflow-hidden">
                                   <div
-                                    className={`h-full rounded-full ${correct >= maxQuestions/2 ? 'bg-duo-green' : correct >= maxQuestions/3 ? 'bg-duo-yellow' : 'bg-duo-red'}`}
-                                    style={{ width: `${(correct / maxQuestions) * 100}%` }}
+                                    className={`h-full rounded-full ${correct >= total/2 ? 'bg-duo-green' : correct >= total/3 ? 'bg-duo-yellow' : 'bg-duo-red'}`}
+                                    style={{ width: `${(correct / total) * 100}%` }}
                                   />
                                 </div>
                               </div>
@@ -300,11 +387,11 @@ export default function ClassContent({
                 </h3>
                 <p className="text-wolf mb-4">
                   {mode === 'real'
-                    ? 'Generate new credentials for the official competition. These are separate from mock credentials.'
-                    : 'Generate credentials for your students to get started.'}
+                    ? 'Add students for the official competition. These are separate from mock mode.'
+                    : 'Add students to get started.'}
                 </p>
                 <Link href={`/teacher/class/${classId}/generate?mode=${mode}`} className="btn btn-primary">
-                  Generate {mode === 'real' ? 'Official ' : ''}Credentials
+                  Add {mode === 'real' ? 'Official ' : ''}Students
                 </Link>
               </div>
             )}

@@ -3,7 +3,7 @@ import { createSupabaseServer, createSupabaseServiceRole } from '@/lib/supabaseS
 import { generateStudentCredentials, parseUsername } from '@/lib/password'
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const { count = 10, competition_mode = 'mock' } = await req.json().catch(() => ({}))
+  const { count = 10, competition_mode = 'mock', names = [] } = await req.json().catch(() => ({}))
 
   // Validate count
   if (count < 1 || count > 200) {
@@ -61,23 +61,30 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   // Generate fun scientist-themed credentials with globally unique usernames
   const generatedCredentials = await generateStudentCredentials(count, existingMaxNumbers)
 
-  const credentials: { username: string; password: string }[] = []
+  const credentials: { username: string; password: string; full_name?: string }[] = []
   const rows: {
     class_id: string
     username: string
     password_hash: string
     plain_password: string
     competition_mode: string
+    full_name?: string
   }[] = []
 
-  for (const cred of generatedCredentials) {
-    credentials.push({ username: cred.username, password: cred.plainPassword })
+  // Parse names array (ensure it's an array of strings)
+  const namesList: string[] = Array.isArray(names) ? names.filter((n: unknown) => typeof n === 'string' && n.trim()) : []
+
+  for (let i = 0; i < generatedCredentials.length; i++) {
+    const cred = generatedCredentials[i]
+    const fullName = namesList[i] || undefined
+    credentials.push({ username: cred.username, password: cred.plainPassword, full_name: fullName })
     rows.push({
       class_id: cls.id,
       username: cred.username,
       password_hash: cred.passwordHash,
       plain_password: cred.plainPassword,
-      competition_mode: competition_mode
+      competition_mode: competition_mode,
+      full_name: fullName
     })
   }
 
