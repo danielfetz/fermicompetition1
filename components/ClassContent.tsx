@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import CompetitionModeToggle from './CompetitionModeToggle'
@@ -100,6 +100,11 @@ export default function ClassContent({
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const [autoGenerating, setAutoGenerating] = useState(false)
   const [autoGenError, setAutoGenError] = useState<string | null>(null)
+
+  // Guard to prevent duplicate auto-generation (e.g., from React StrictMode or race conditions)
+  const autoGenAttemptedRef = useRef(false)
+  // Track school year to reset the guard when it changes
+  const prevSchoolYearRef = useRef(schoolYear)
 
   // Edit class state
   const [showEditModal, setShowEditModal] = useState(false)
@@ -203,7 +208,18 @@ export default function ClassContent({
     setAutoGenerating(false)
   }, [classId, autoGenerating, router])
 
+  // Reset auto-gen guard when school year changes
   useEffect(() => {
+    if (prevSchoolYearRef.current !== schoolYear) {
+      autoGenAttemptedRef.current = false
+      prevSchoolYearRef.current = schoolYear
+    }
+  }, [schoolYear])
+
+  useEffect(() => {
+    // Prevent duplicate auto-generation attempts (e.g., from React StrictMode or race conditions)
+    if (autoGenAttemptedRef.current) return
+
     // Auto-generate from previous year: when no students exist for current year but previous year has students
     if (
       students.length === 0 &&
@@ -211,6 +227,8 @@ export default function ClassContent({
       !autoGenerating &&
       !autoGenError
     ) {
+      // Mark as attempted immediately to prevent race conditions
+      autoGenAttemptedRef.current = true
       // Generate for mock mode - this will reuse usernames/names from previous year
       autoGenerateCredentials('mock')
     }
@@ -224,6 +242,7 @@ export default function ClassContent({
       !autoGenerating &&
       !autoGenError
     ) {
+      autoGenAttemptedRef.current = true
       autoGenerateCredentials('real')
     }
     // Auto-generate for mock mode: when real students exist but no mock
@@ -234,6 +253,7 @@ export default function ClassContent({
       !autoGenerating &&
       !autoGenError
     ) {
+      autoGenAttemptedRef.current = true
       autoGenerateCredentials('mock')
     }
   }, [mode, realUnlocked, competitionStarted, students.length, mockStudents.length, realStudents.length, hasPreviousYearStudents, autoGenerating, autoGenError, autoGenerateCredentials])
@@ -567,7 +587,7 @@ export default function ClassContent({
                   <>
                     <h3 className="text-lg font-bold text-duo-red mb-2">Error Generating Credentials</h3>
                     <p className="text-wolf mb-4">{autoGenError}</p>
-                    <button onClick={() => { setAutoGenError(null); autoGenerateCredentials(mode); }} className="btn btn-primary">
+                    <button onClick={() => { setAutoGenError(null); autoGenAttemptedRef.current = false; autoGenerateCredentials(mode); }} className="btn btn-primary">
                       Try Again
                     </button>
                   </>
