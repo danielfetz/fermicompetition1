@@ -94,7 +94,10 @@ export default function CompetitionCountdown() {
       </div>
 
       <p className="text-sm text-wolf">
-        Competition Date: <span className="font-semibold text-eel">March 5, 2026</span>
+        Provisional Competition Date: <span className="font-semibold text-eel">March 5, 2026</span>
+      </p>
+      <p className="text-xs text-hare mt-1">
+        Date subject to change
       </p>
     </div>
   )

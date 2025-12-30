@@ -12,9 +12,10 @@ export default function GenerateStudents() {
   const mode = (searchParams.get('mode') as 'mock' | 'real') || 'mock'
 
   const [count, setCount] = useState<number>(10)
+  const [names, setNames] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [result, setResult] = useState<{ username: string; password: string }[] | null>(null)
+  const [result, setResult] = useState<{ username: string; password: string; full_name?: string }[] | null>(null)
   const [copied, setCopied] = useState(false)
 
   const isReal = mode === 'real'
@@ -29,10 +30,16 @@ export default function GenerateStudents() {
     setError(null)
     setResult(null)
 
+    // Parse names - split by comma and trim whitespace
+    const parsedNames = names
+      .split(',')
+      .map(n => n.trim())
+      .filter(n => n.length > 0)
+
     const res = await fetch(`/api/classes/${params.id}/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ count, competition_mode: mode })
+      body: JSON.stringify({ count, competition_mode: mode, names: parsedNames })
     })
 
     setLoading(false)
@@ -47,7 +54,7 @@ export default function GenerateStudents() {
 
   function copyToClipboard() {
     if (!result) return
-    const text = result.map(r => `${r.username}\t${r.password}`).join('\n')
+    const text = result.map(r => `${r.username}\t${r.password}\t${r.full_name || ''}`).join('\n')
     navigator.clipboard.writeText(text)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
@@ -55,7 +62,7 @@ export default function GenerateStudents() {
 
   function downloadCSV() {
     if (!result) return
-    const csv = 'Username,Password\n' + result.map(r => `${r.username},${r.password}`).join('\n')
+    const csv = 'Username,Password,Name\n' + result.map(r => `${r.username},${r.password},${r.full_name || ''}`).join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -131,6 +138,7 @@ export default function GenerateStudents() {
                   <th className="py-3 px-6 font-bold text-wolf uppercase tracking-wide text-xs">#</th>
                   <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Username</th>
                   <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Password</th>
+                  <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Name</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-swan">
@@ -139,6 +147,7 @@ export default function GenerateStudents() {
                     <td className="py-3 px-6 text-wolf">{i + 1}</td>
                     <td className="py-3 px-4 font-mono font-semibold text-duo-blue">{r.username}</td>
                     <td className="py-3 px-4 font-mono text-eel">{r.password}</td>
+                    <td className="py-3 px-4 text-eel">{r.full_name || <span className="text-hare italic">—</span>}</td>
                   </tr>
                 ))}
               </tbody>
@@ -227,6 +236,20 @@ export default function GenerateStudents() {
             </p>
           </div>
 
+          <div className="form-group">
+            <label className="label" htmlFor="names">Student names (optional)</label>
+            <textarea
+              id="names"
+              className="input min-h-[80px]"
+              value={names}
+              onChange={e => setNames(e.target.value)}
+              placeholder="Daniel M, Fred T, Michael G"
+            />
+            <p className="text-sm text-wolf mt-1">
+              Enter names separated by commas. Names will be assigned to students in order.
+            </p>
+          </div>
+
           {error && (
             <div className="bg-duo-red/10 border-2 border-duo-red rounded-duo p-3">
               <p className="text-duo-red-dark text-sm font-semibold flex items-center gap-2">
@@ -310,7 +333,7 @@ export default function GenerateStudents() {
                 <svg className="w-5 h-5 text-duo-green flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                Students enter their name on first login
+                Pre-enter names or let students enter on first login
               </li>
               <li className="flex items-start gap-2 text-sm text-wolf">
                 <svg className="w-5 h-5 text-duo-green flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
