@@ -10,14 +10,13 @@ import FermiMascot from '@/components/FermiMascot'
 export default function NewClass() {
   const [name, setName] = useState('')
   const [schoolName, setSchoolName] = useState('')
-  const [num, setNum] = useState<number>(25)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const parsed = createClassSchema.safeParse({ name, num_students: num })
+    const parsed = createClassSchema.safeParse({ name })
     if (!parsed.success) {
       setError('Please check your inputs.')
       return
@@ -34,7 +33,7 @@ export default function NewClass() {
       .from('classes')
       .insert({
         name,
-        num_students: num,
+        num_students: 0,
         teacher_id: user.id,
         school_name: schoolName || null
       })
@@ -85,23 +84,6 @@ export default function NewClass() {
               value={schoolName}
               onChange={e => setSchoolName(e.target.value)}
             />
-          </div>
-
-          <div className="form-group">
-            <label className="label" htmlFor="numStudents">Number of Students *</label>
-            <input
-              id="numStudents"
-              type="number"
-              min={1}
-              max={200}
-              className="input"
-              value={num}
-              onChange={e => setNum(parseInt(e.target.value || '0'))}
-              required
-            />
-            <p className="text-sm text-wolf mt-1">
-              How many students will participate? (1-200)
-            </p>
           </div>
 
           {error && (

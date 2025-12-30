@@ -70,7 +70,7 @@ CREATE TABLE public.classes (
   teacher_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name text NOT NULL,
   school_name text,
-  num_students int NOT NULL CHECK (num_students > 0 AND num_students <= 500),
+  num_students int NOT NULL DEFAULT 0 CHECK (num_students >= 0 AND num_students <= 500),
   competition_date date,
   is_active boolean NOT NULL DEFAULT true,
   created_at timestamptz NOT NULL DEFAULT now()

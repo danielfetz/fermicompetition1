@@ -22,7 +22,8 @@ export default function GenerateStudents() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (count < 1 || count > 200) {
+    // Only validate count for mock mode
+    if (!isReal && (count < 1 || count > 200)) {
       setError('Please enter a number between 1 and 200.')
       return
     }
@@ -30,8 +31,8 @@ export default function GenerateStudents() {
     setError(null)
     setResult(null)
 
-    // Parse names - split by comma and trim whitespace
-    const parsedNames = names
+    // Parse names - split by comma and trim whitespace (only for mock mode)
+    const parsedNames = isReal ? [] : names
       .split(',')
       .map(n => n.trim())
       .filter(n => n.length > 0)
@@ -169,7 +170,7 @@ export default function GenerateStudents() {
               </h3>
               <p className="text-sm text-eel mt-1">
                 {isReal
-                  ? 'These credentials are for the official competition with 25 official questions. Students cannot use mock credentials for the official competition.'
+                  ? 'These credentials use the same usernames as the practice competition, but with new passwords. This allows us to track student performance across both competitions.'
                   : 'Students will enter their full name when they first log in. The fun scientist-themed usernames make credentials easy to distribute!'}
               </p>
             </div>
@@ -178,9 +179,11 @@ export default function GenerateStudents() {
 
         {/* Navigation */}
         <div className="flex gap-3 justify-center">
-          <button onClick={() => setResult(null)} className="btn btn-outline">
-            Generate More
-          </button>
+          {!isReal && (
+            <button onClick={() => setResult(null)} className="btn btn-outline">
+              Generate More
+            </button>
+          )}
           <button onClick={() => {
             router.push(`/teacher/class/${params.id}?mode=${mode}`)
             router.refresh() // Force refetch of server component data
@@ -219,36 +222,54 @@ export default function GenerateStudents() {
       {/* Form */}
       <div className="card">
         <form onSubmit={onSubmit} className="space-y-5">
-          <div className="form-group">
-            <label className="label" htmlFor="count">How many students?</label>
-            <input
-              id="count"
-              type="number"
-              min={1}
-              max={200}
-              className="input"
-              value={count}
-              onChange={e => setCount(parseInt(e.target.value || '0'))}
-              required
-            />
-            <p className="text-sm text-wolf mt-1">
-              Enter a number between 1 and 200
-            </p>
-          </div>
+          {isReal ? (
+            <div className="text-center py-4">
+              <div className="w-16 h-16 mx-auto mb-4 bg-duo-blue/20 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-duo-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <p className="text-wolf">
+                This will generate official competition credentials for all your practice students using the <strong>same usernames</strong> but <strong>new passwords</strong>.
+              </p>
+              <p className="text-sm text-hare mt-2">
+                This allows us to associate practice and competition results with the same student.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="form-group">
+                <label className="label" htmlFor="count">How many students?</label>
+                <input
+                  id="count"
+                  type="number"
+                  min={1}
+                  max={200}
+                  className="input"
+                  value={count}
+                  onChange={e => setCount(parseInt(e.target.value || '0'))}
+                  required
+                />
+                <p className="text-sm text-wolf mt-1">
+                  Enter a number between 1 and 200
+                </p>
+              </div>
 
-          <div className="form-group">
-            <label className="label" htmlFor="names">Student names (optional)</label>
-            <textarea
-              id="names"
-              className="input min-h-[80px]"
-              value={names}
-              onChange={e => setNames(e.target.value)}
-              placeholder="Daniel M, Fred T, Michael G"
-            />
-            <p className="text-sm text-wolf mt-1">
-              Enter names separated by commas. Names will be assigned to students in order.
-            </p>
-          </div>
+              <div className="form-group">
+                <label className="label" htmlFor="names">Student names (optional)</label>
+                <textarea
+                  id="names"
+                  className="input min-h-[80px]"
+                  value={names}
+                  onChange={e => setNames(e.target.value)}
+                  placeholder="Daniel M, Fred T, Michael G"
+                />
+                <p className="text-sm text-wolf mt-1">
+                  Enter names separated by commas. Names will be assigned to students in order.
+                </p>
+              </div>
+            </>
+          )}
 
           {error && (
             <div className="bg-duo-red/10 border-2 border-duo-red rounded-duo p-3">
@@ -270,12 +291,19 @@ export default function GenerateStudents() {
                 </svg>
                 Generating...
               </span>
+            ) : isReal ? (
+              <>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                Generate Official Credentials
+              </>
             ) : (
               <>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                Add {count} {isReal ? 'Official ' : ''}Students
+                Add {count} Students
               </>
             )}
           </button>
@@ -294,19 +322,19 @@ export default function GenerateStudents() {
                 <svg className="w-5 h-5 text-duo-blue flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
+                Same usernames as practice (for data association)
+              </li>
+              <li className="flex items-start gap-2 text-sm text-wolf">
+                <svg className="w-5 h-5 text-duo-blue flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                New passwords for security
+              </li>
+              <li className="flex items-start gap-2 text-sm text-wolf">
+                <svg className="w-5 h-5 text-duo-blue flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
                 25 official Fermi estimation questions
-              </li>
-              <li className="flex items-start gap-2 text-sm text-wolf">
-                <svg className="w-5 h-5 text-duo-blue flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Separate credentials from mock competition
-              </li>
-              <li className="flex items-start gap-2 text-sm text-wolf">
-                <svg className="w-5 h-5 text-duo-blue flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Results tracked separately for ranking
               </li>
               <li className="flex items-start gap-2 text-sm text-wolf">
                 <svg className="w-5 h-5 text-duo-blue flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
