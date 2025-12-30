@@ -192,12 +192,12 @@ export default function GenerateStudents() {
         </div>
         <div>
           <h1 className="text-2xl font-extrabold text-eel">
-            Generate {isReal ? 'Official Competition ' : ''}Credentials
+            Add {isReal ? 'Official Competition ' : ''}Students
           </h1>
           <p className="text-wolf">
             {isReal
-              ? 'Create credentials for the official Fermi Competition with 25 official questions.'
-              : 'Create unique login credentials for your students with fun scientist-themed usernames!'}
+              ? 'Add students for the official Fermi Competition with 25 official questions.'
+              : 'Add students with unique login credentials and fun scientist-themed usernames!'}
           </p>
         </div>
         {isReal && (
@@ -252,7 +252,7 @@ export default function GenerateStudents() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                Generate {count} {isReal ? 'Official ' : ''}Credentials
+                Add {count} {isReal ? 'Official ' : ''}Students
               </>
             )}
           </button>

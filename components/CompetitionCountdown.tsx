@@ -65,30 +65,30 @@ export default function CompetitionCountdown() {
 
   return (
     <div className="card text-center py-12">
-      <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-duo-blue to-duo-purple rounded-full flex items-center justify-center">
+      <div className="w-20 h-20 mx-auto mb-6 bg-duo-blue rounded-full flex items-center justify-center">
         <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       </div>
 
       <h2 className="text-2xl font-extrabold text-eel mb-2">Official Competition Coming Soon</h2>
-      <p className="text-wolf mb-8">Results will be available after the competition begins</p>
+      <p className="text-wolf mb-8">Competition questions will be available to view once the countdown ends</p>
 
-      <div className="flex justify-center gap-4 mb-8">
-        <div className="bg-snow rounded-xl p-4 min-w-[80px]">
-          <div className="text-3xl font-extrabold text-duo-blue">{timeLeft.days}</div>
+      <div className="flex flex-wrap justify-center gap-3 sm:gap-4 mb-8 max-w-sm sm:max-w-none mx-auto">
+        <div className="bg-snow rounded-xl p-3 sm:p-4 min-w-[70px] sm:min-w-[80px]">
+          <div className="text-2xl sm:text-3xl font-extrabold text-duo-blue">{timeLeft.days}</div>
           <div className="text-xs font-semibold text-wolf uppercase tracking-wide">Days</div>
         </div>
-        <div className="bg-snow rounded-xl p-4 min-w-[80px]">
-          <div className="text-3xl font-extrabold text-duo-blue">{String(timeLeft.hours).padStart(2, '0')}</div>
+        <div className="bg-snow rounded-xl p-3 sm:p-4 min-w-[70px] sm:min-w-[80px]">
+          <div className="text-2xl sm:text-3xl font-extrabold text-duo-blue">{String(timeLeft.hours).padStart(2, '0')}</div>
           <div className="text-xs font-semibold text-wolf uppercase tracking-wide">Hours</div>
         </div>
-        <div className="bg-snow rounded-xl p-4 min-w-[80px]">
-          <div className="text-3xl font-extrabold text-duo-blue">{String(timeLeft.minutes).padStart(2, '0')}</div>
+        <div className="bg-snow rounded-xl p-3 sm:p-4 min-w-[70px] sm:min-w-[80px]">
+          <div className="text-2xl sm:text-3xl font-extrabold text-duo-blue">{String(timeLeft.minutes).padStart(2, '0')}</div>
           <div className="text-xs font-semibold text-wolf uppercase tracking-wide">Minutes</div>
         </div>
-        <div className="bg-snow rounded-xl p-4 min-w-[80px]">
-          <div className="text-3xl font-extrabold text-duo-blue">{String(timeLeft.seconds).padStart(2, '0')}</div>
+        <div className="bg-snow rounded-xl p-3 sm:p-4 min-w-[70px] sm:min-w-[80px]">
+          <div className="text-2xl sm:text-3xl font-extrabold text-duo-blue">{String(timeLeft.seconds).padStart(2, '0')}</div>
           <div className="text-xs font-semibold text-wolf uppercase tracking-wide">Seconds</div>
         </div>
       </div>
