@@ -39,6 +39,7 @@ type Props = {
   scores: Score[]
   realUnlocked: boolean
   initialMode?: CompetitionMode
+  hasPreviousYearStudents?: boolean
 }
 
 const GRADE_LEVELS = [
@@ -86,7 +87,8 @@ export default function ClassContent({
   students,
   scores,
   realUnlocked: initialRealUnlocked,
-  initialMode = 'mock'
+  initialMode = 'mock',
+  hasPreviousYearStudents = false
 }: Props) {
   const router = useRouter()
   const [mode, setMode] = useState<CompetitionMode>(initialMode)
@@ -202,8 +204,18 @@ export default function ClassContent({
   }, [classId, autoGenerating, router])
 
   useEffect(() => {
-    // Auto-generate for real mode: when real is unlocked, competition started, mock students exist but no real
+    // Auto-generate from previous year: when no students exist for current year but previous year has students
     if (
+      students.length === 0 &&
+      hasPreviousYearStudents &&
+      !autoGenerating &&
+      !autoGenError
+    ) {
+      // Generate for mock mode - this will reuse usernames/names from previous year
+      autoGenerateCredentials('mock')
+    }
+    // Auto-generate for real mode: when real is unlocked, competition started, mock students exist but no real
+    else if (
       mode === 'real' &&
       realUnlocked &&
       competitionStarted &&
@@ -224,7 +236,7 @@ export default function ClassContent({
     ) {
       autoGenerateCredentials('mock')
     }
-  }, [mode, realUnlocked, competitionStarted, mockStudents.length, realStudents.length, autoGenerating, autoGenError, autoGenerateCredentials])
+  }, [mode, realUnlocked, competitionStarted, students.length, mockStudents.length, realStudents.length, hasPreviousYearStudents, autoGenerating, autoGenError, autoGenerateCredentials])
 
   // Create a map for quick score lookup
   const scoreMap = new Map(filteredScores.map(sc => [sc.student_id, sc]))
@@ -354,8 +366,18 @@ export default function ClassContent({
       ) : autoGenerating ? (
         <div className="card text-center py-12">
           <div className="animate-spin w-8 h-8 border-4 border-duo-blue border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-wolf">Generating {mode === 'real' ? 'official' : 'practice'} competition credentials...</p>
-          <p className="text-sm text-hare mt-2">Using same usernames with new passwords</p>
+          <p className="text-wolf">
+            {students.length === 0 && hasPreviousYearStudents
+              ? `Generating credentials for ${schoolYear || 'new school year'}...`
+              : `Generating ${mode === 'real' ? 'official' : 'practice'} competition credentials...`
+            }
+          </p>
+          <p className="text-sm text-hare mt-2">
+            {students.length === 0 && hasPreviousYearStudents
+              ? 'Reusing usernames and names from previous year with new passwords'
+              : 'Using same usernames with new passwords'
+            }
+          </p>
         </div>
       ) : (
         <>

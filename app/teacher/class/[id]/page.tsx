@@ -41,6 +41,16 @@ export default async function ClassDetail({ params, searchParams }: Params) {
     .eq('school_year', schoolYear)
     .order('username')
 
+  // Check if students exist from previous school years (for auto-generation)
+  const { count: previousYearStudentCount } = await service
+    .from('students')
+    .select('*', { count: 'exact', head: true })
+    .eq('class_id', cls.id)
+    .eq('competition_mode', 'mock')
+    .neq('school_year', schoolYear)
+
+  const hasPreviousYearStudents = (previousYearStudentCount || 0) > 0
+
   // Fetch scores for the current school year
   const { data: scores } = await service
     .from('student_scores')
@@ -63,6 +73,7 @@ export default async function ClassDetail({ params, searchParams }: Params) {
       scores={scores || []}
       realUnlocked={realUnlocked}
       initialMode={initialMode}
+      hasPreviousYearStudents={hasPreviousYearStudents}
     />
   )
 }
