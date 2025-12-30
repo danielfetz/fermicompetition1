@@ -41,15 +41,17 @@ export default async function ClassDetail({ params, searchParams }: Params) {
     .eq('school_year', schoolYear)
     .order('username')
 
-  // Check if students exist from previous school years (for auto-generation)
-  const { count: previousYearStudentCount } = await service
+  // Check if students exist from the most recent previous school year (for auto-generation)
+  const { data: mostRecentPrevYear } = await service
     .from('students')
-    .select('*', { count: 'exact', head: true })
+    .select('school_year')
     .eq('class_id', cls.id)
     .eq('competition_mode', 'mock')
     .neq('school_year', schoolYear)
+    .order('school_year', { ascending: false })
+    .limit(1)
 
-  const hasPreviousYearStudents = (previousYearStudentCount || 0) > 0
+  const hasPreviousYearStudents = (mostRecentPrevYear?.length || 0) > 0
 
   // Fetch scores for the current school year
   const { data: scores } = await service

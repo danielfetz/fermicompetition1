@@ -72,21 +72,34 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     .eq('class_id', cls.id)
     .eq('school_year', schoolYear)
 
-  // Check if students exist from previous school years (to reuse usernames/names)
-  const { data: previousYearStudents } = await service
+  // Find the most recent previous school year that has students
+  const { data: previousYearData } = await service
     .from('students')
-    .select('username, full_name')
+    .select('school_year')
     .eq('class_id', cls.id)
-    .eq('competition_mode', 'mock') // Only get one mode to avoid duplicates
+    .eq('competition_mode', 'mock')
     .neq('school_year', schoolYear)
-    .order('username')
+    .order('school_year', { ascending: false })
+    .limit(1)
 
-  // Get unique students from previous years (by username)
-  const previousStudentsMap = new Map<string, string | null>()
-  if (previousYearStudents) {
-    for (const s of previousYearStudents) {
-      if (!previousStudentsMap.has(s.username)) {
-        previousStudentsMap.set(s.username, s.full_name)
+  const mostRecentPreviousYear = previousYearData?.[0]?.school_year
+
+  // Get students from the most recent previous year only (to reuse usernames/names)
+  let previousStudentsMap = new Map<string, string | null>()
+  if (mostRecentPreviousYear) {
+    const { data: previousYearStudents } = await service
+      .from('students')
+      .select('username, full_name')
+      .eq('class_id', cls.id)
+      .eq('competition_mode', 'mock')
+      .eq('school_year', mostRecentPreviousYear)
+      .order('username')
+
+    if (previousYearStudents) {
+      for (const s of previousYearStudents) {
+        if (!previousStudentsMap.has(s.username)) {
+          previousStudentsMap.set(s.username, s.full_name)
+        }
       }
     }
   }
