@@ -52,71 +52,162 @@ function isCorrect(answer: number | null | undefined, correct: number | null | u
   return answer >= correct * 0.5 && answer <= correct * 2.0
 }
 
-// Calculate calibration status
+// Confidence bucket ranges
+const CONFIDENCE_RANGES: Record<number, { lower: number; upper: number }> = {
+  10: { lower: 0, upper: 20 },
+  30: { lower: 20, upper: 40 },
+  50: { lower: 40, upper: 60 },
+  70: { lower: 60, upper: 80 },
+  90: { lower: 80, upper: 100 }
+}
+
+// Bucket-specific minimum sample sizes
+const BUCKET_MIN_SAMPLES: Record<number, number> = {
+  10: 2, 30: 3, 50: 4, 70: 3, 90: 2
+}
+
+// Detailed calibration status
+type DetailedStatus =
+  | 'decisive-overconfidence' | 'very-strong-overconfidence' | 'strong-overconfidence' | 'moderate-overconfidence'
+  | 'decisive-underconfidence' | 'very-strong-underconfidence' | 'strong-underconfidence' | 'moderate-underconfidence'
+  | 'good-calibration' | 'slight-good-calibration' | 'no-miscalibration-evidence' | 'insufficient-data'
+
+type SimpleStatus = 'well-calibrated' | 'overconfident' | 'underconfident' | 'insufficient-data'
+
+type BucketAssessment = {
+  confidence: number
+  status: SimpleStatus
+  detailedStatus: DetailedStatus
+  correct: number
+  total: number
+  actualPct: number | null
+}
+
+// Stirling's approximation for log-gamma
+function logGamma(x: number): number {
+  if (x <= 0) return Infinity
+  if (x < 0.5) return Math.log(Math.PI / Math.sin(Math.PI * x)) - logGamma(1 - x)
+  x -= 1
+  const coefficients = [76.18009172947146, -86.50532032941677, 24.01409824083091, -1.231739572450155, 0.001208650973866179, -0.000005395239384953]
+  let sum = 1.000000000190015
+  for (let i = 0; i < 6; i++) sum += coefficients[i] / (x + i + 1)
+  const t = x + 5.5
+  return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(sum)
+}
+
+// Regularized incomplete beta function
+function betaIncomplete(a: number, b: number, x: number): number {
+  if (x === 0) return 0
+  if (x === 1) return 1
+  if (x > (a + 1) / (a + b + 2)) return 1 - betaIncomplete(b, a, 1 - x)
+  const maxIterations = 200, epsilon = 1e-10
+  const lnBeta = logGamma(a) + logGamma(b) - logGamma(a + b)
+  const front = Math.exp(a * Math.log(x) + b * Math.log(1 - x) - lnBeta) / a
+  let f = 1, c = 1, d = 0
+  for (let m = 0; m <= maxIterations; m++) {
+    let numerator: number
+    if (m === 0) numerator = 1
+    else if (m % 2 === 0) { const k = m / 2; numerator = (k * (b - k) * x) / ((a + 2 * k - 1) * (a + 2 * k)) }
+    else { const k = (m - 1) / 2; numerator = -((a + k) * (a + b + k) * x) / ((a + 2 * k) * (a + 2 * k + 1)) }
+    d = 1 + numerator * d; if (Math.abs(d) < epsilon) d = epsilon; d = 1 / d
+    c = 1 + numerator / c; if (Math.abs(c) < epsilon) c = epsilon
+    const delta = c * d; f *= delta
+    if (Math.abs(delta - 1) < epsilon) break
+  }
+  return front * (f - 1)
+}
+
+function betaCDF(a: number, b: number, x: number): number {
+  if (x <= 0) return 0; if (x >= 1) return 1
+  return betaIncomplete(a, b, x)
+}
+
+// Bayesian calibration assessment for a single bucket
+function assessBucket(successes: number, total: number, confidenceLevel: number): { status: SimpleStatus; detailedStatus: DetailedStatus } {
+  const range = CONFIDENCE_RANGES[confidenceLevel]
+  const minSamples = BUCKET_MIN_SAMPLES[confidenceLevel] || 3
+  if (total < minSamples || !range) return { status: 'insufficient-data', detailedStatus: 'insufficient-data' }
+
+  const alpha = 1 + successes, beta = 1 + (total - successes)
+  const lower = range.lower / 100, upper = range.upper / 100
+  const probBelow = betaCDF(alpha, beta, lower)
+  const probBelowUpper = betaCDF(alpha, beta, upper)
+  const probInRange = probBelowUpper - probBelow
+  const probAbove = 1 - probBelowUpper
+
+  // Overconfidence check
+  if (probBelow > 0.99) return { status: 'overconfident', detailedStatus: 'decisive-overconfidence' }
+  if (probBelow > 0.97) return { status: 'overconfident', detailedStatus: 'very-strong-overconfidence' }
+  if (probBelow > 0.91) return { status: 'overconfident', detailedStatus: 'strong-overconfidence' }
+  if (probBelow > 0.75) return { status: 'overconfident', detailedStatus: 'moderate-overconfidence' }
+
+  // Underconfidence check
+  if (probAbove > 0.99) return { status: 'underconfident', detailedStatus: 'decisive-underconfidence' }
+  if (probAbove > 0.97) return { status: 'underconfident', detailedStatus: 'very-strong-underconfidence' }
+  if (probAbove > 0.91) return { status: 'underconfident', detailedStatus: 'strong-underconfidence' }
+  if (probAbove > 0.75) return { status: 'underconfident', detailedStatus: 'moderate-underconfidence' }
+
+  // Well-calibrated check
+  if (probInRange > 0.75) return { status: 'well-calibrated', detailedStatus: 'good-calibration' }
+  if (probInRange > 0.50) return { status: 'well-calibrated', detailedStatus: 'slight-good-calibration' }
+  return { status: 'well-calibrated', detailedStatus: 'no-miscalibration-evidence' }
+}
+
+// Calculate calibration with per-bucket Bayesian assessment
 function calculateCalibration(
   questions: ClassQuestion[],
   answerMap: Map<string, { value: number | null; confidence_pct: number }>
-): { status: 'well-calibrated' | 'overconfident' | 'underconfident' | 'insufficient-data'; correctCount: number; totalAnswered: number } {
+): { correctCount: number; totalAnswered: number; buckets: BucketAssessment[] } {
   const buckets: Record<number, { correct: number; total: number }> = {
-    10: { correct: 0, total: 0 },
-    30: { correct: 0, total: 0 },
-    50: { correct: 0, total: 0 },
-    70: { correct: 0, total: 0 },
-    90: { correct: 0, total: 0 }
+    10: { correct: 0, total: 0 }, 30: { correct: 0, total: 0 }, 50: { correct: 0, total: 0 },
+    70: { correct: 0, total: 0 }, 90: { correct: 0, total: 0 }
   }
-
-  let correctCount = 0
-  let totalAnswered = 0
+  let correctCount = 0, totalAnswered = 0
 
   for (const cq of questions) {
     const fq = getFermiQuestion(cq.fermi_questions)
     const a = answerMap.get(cq.id)
     if (!a || a.value == null || !fq) continue
-
     totalAnswered++
     const conf = a.confidence_pct as 10 | 30 | 50 | 70 | 90
     const correct = isCorrect(a.value, fq.correct_value)
     if (correct) correctCount++
+    if (buckets[conf]) { buckets[conf].total++; if (correct) buckets[conf].correct++ }
+  }
 
-    if (buckets[conf]) {
-      buckets[conf].total++
-      if (correct) buckets[conf].correct++
+  const bucketAssessments: BucketAssessment[] = [10, 30, 50, 70, 90].map(conf => {
+    const data = buckets[conf]
+    const assessment = assessBucket(data.correct, data.total, conf)
+    return {
+      confidence: conf,
+      status: assessment.status,
+      detailedStatus: assessment.detailedStatus,
+      correct: data.correct,
+      total: data.total,
+      actualPct: data.total > 0 ? Math.round((data.correct / data.total) * 100) : null
     }
+  })
+
+  return { correctCount, totalAnswered, buckets: bucketAssessments }
+}
+
+// Get display info for detailed status
+function getStatusDisplay(status: DetailedStatus): { label: string; color: string; bgColor: string } {
+  const displays: Record<DetailedStatus, { label: string; color: string; bgColor: string }> = {
+    'decisive-overconfidence': { label: 'Decisive overconfidence', color: 'text-duo-red', bgColor: 'bg-duo-red/20' },
+    'very-strong-overconfidence': { label: 'Very strong overconfidence', color: 'text-duo-red', bgColor: 'bg-duo-red/15' },
+    'strong-overconfidence': { label: 'Strong overconfidence', color: 'text-duo-red', bgColor: 'bg-duo-red/10' },
+    'moderate-overconfidence': { label: 'Moderate overconfidence', color: 'text-duo-orange', bgColor: 'bg-duo-orange/10' },
+    'decisive-underconfidence': { label: 'Decisive underconfidence', color: 'text-duo-blue', bgColor: 'bg-duo-blue/20' },
+    'very-strong-underconfidence': { label: 'Very strong underconfidence', color: 'text-duo-blue', bgColor: 'bg-duo-blue/15' },
+    'strong-underconfidence': { label: 'Strong underconfidence', color: 'text-duo-blue', bgColor: 'bg-duo-blue/10' },
+    'moderate-underconfidence': { label: 'Moderate underconfidence', color: 'text-duo-blue-dark', bgColor: 'bg-duo-blue/5' },
+    'good-calibration': { label: 'Good calibration', color: 'text-duo-green', bgColor: 'bg-duo-green/10' },
+    'slight-good-calibration': { label: 'Slight good calibration', color: 'text-duo-green', bgColor: 'bg-duo-green/5' },
+    'no-miscalibration-evidence': { label: 'No strong evidence', color: 'text-wolf', bgColor: 'bg-swan/30' },
+    'insufficient-data': { label: 'Insufficient data', color: 'text-hare', bgColor: 'bg-swan/20' }
   }
-
-  if (totalAnswered < 3) {
-    return { status: 'insufficient-data', correctCount, totalAnswered }
-  }
-
-  // Simple heuristic: compare expected vs actual accuracy across buckets
-  let overconfidentScore = 0
-  let underconfidentScore = 0
-  let totalWeight = 0
-
-  const expectedAccuracy: Record<number, number> = { 10: 0.1, 30: 0.3, 50: 0.5, 70: 0.7, 90: 0.9 }
-
-  for (const [conf, data] of Object.entries(buckets)) {
-    if (data.total === 0) continue
-    const expected = expectedAccuracy[Number(conf)]
-    const actual = data.correct / data.total
-    const diff = expected - actual // positive = overconfident
-
-    totalWeight += data.total
-    if (diff > 0.15) overconfidentScore += data.total * diff
-    else if (diff < -0.15) underconfidentScore += data.total * Math.abs(diff)
-  }
-
-  if (totalWeight === 0) return { status: 'insufficient-data', correctCount, totalAnswered }
-
-  const normalizedOver = overconfidentScore / totalWeight
-  const normalizedUnder = underconfidentScore / totalWeight
-
-  if (normalizedOver > 0.1 && normalizedOver > normalizedUnder) {
-    return { status: 'overconfident', correctCount, totalAnswered }
-  } else if (normalizedUnder > 0.1 && normalizedUnder > normalizedOver) {
-    return { status: 'underconfident', correctCount, totalAnswered }
-  }
-  return { status: 'well-calibrated', correctCount, totalAnswered }
+  return displays[status]
 }
 
 // Map confidence values to display ranges
@@ -148,8 +239,8 @@ export default async function EditStudent({ params }: Params) {
   // Get the student's competition mode (default to mock)
   const studentMode = student.competition_mode || 'mock'
 
-  // Now fetch questions filtered by the student's mode, and their answers
-  const [{ data: classQuestions }, { data: answers }] = await Promise.all([
+  // Fetch questions, answers, and student score in parallel
+  const [{ data: classQuestions }, { data: answers }, { data: scoreData }] = await Promise.all([
     supabase.from('class_questions').select(`
       id,
       order,
@@ -159,47 +250,20 @@ export default async function EditStudent({ params }: Params) {
         correct_value
       )
     `).eq('class_id', params.id).eq('competition_mode', studentMode).order('order'),
-    supabase.from('answers').select('class_question_id, value, confidence_pct').eq('student_id', params.studentId)
+    supabase.from('answers').select('class_question_id, value, confidence_pct').eq('student_id', params.studentId),
+    supabase.from('student_scores').select('confidence_points').eq('student_id', params.studentId).maybeSingle()
   ])
 
   // Cast to proper type
   const questions = (classQuestions || []) as ClassQuestion[]
   const answerMap = new Map(answers?.map(a => [a.class_question_id, a]))
+  const points = scoreData?.confidence_points ?? 250
 
-  // Calculate calibration
+  // Calculate calibration with per-bucket Bayesian assessment
   const calibration = calculateCalibration(questions, answerMap as Map<string, { value: number | null; confidence_pct: number }>)
 
-  // Get calibration display info
-  const calibrationInfo = {
-    'well-calibrated': {
-      label: 'Well-Calibrated',
-      color: 'text-duo-green',
-      bgColor: 'bg-duo-green/10 border-duo-green/30',
-      icon: '✓',
-      description: 'Confidence levels match accuracy well'
-    },
-    'overconfident': {
-      label: 'Overconfident',
-      color: 'text-duo-red',
-      bgColor: 'bg-duo-red/10 border-duo-red/30',
-      icon: '↑',
-      description: 'Confidence tends to be higher than actual accuracy'
-    },
-    'underconfident': {
-      label: 'Underconfident',
-      color: 'text-duo-blue',
-      bgColor: 'bg-duo-blue/10 border-duo-blue/30',
-      icon: '↓',
-      description: 'Confidence tends to be lower than actual accuracy'
-    },
-    'insufficient-data': {
-      label: 'Insufficient Data',
-      color: 'text-wolf',
-      bgColor: 'bg-swan/50 border-swan',
-      icon: '?',
-      description: 'Not enough answers to determine calibration'
-    }
-  }[calibration.status]
+  // Filter buckets that have data
+  const bucketsWithData = calibration.buckets.filter(b => b.total > 0)
 
   return (
     <div className="space-y-6">
@@ -215,28 +279,42 @@ export default async function EditStudent({ params }: Params) {
 
       {/* Calibration Summary Card */}
       {calibration.totalAnswered > 0 && (
-        <div className={`card ${calibrationInfo.bgColor}`}>
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold ${calibrationInfo.color} bg-white`}>
-                {calibrationInfo.icon}
-              </div>
-              <div>
-                <h3 className={`font-bold ${calibrationInfo.color}`}>{calibrationInfo.label}</h3>
-                <p className="text-sm text-wolf">{calibrationInfo.description}</p>
-              </div>
-            </div>
+        <div className="card">
+          <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
+            <h2 className="font-bold text-eel">Calibration Assessment</h2>
             <div className="flex gap-4 text-center">
               <div>
                 <div className="text-2xl font-bold text-eel">{calibration.correctCount}/{calibration.totalAnswered}</div>
                 <div className="text-xs text-wolf">Correct</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-eel">{Math.round((calibration.correctCount / calibration.totalAnswered) * 100)}%</div>
-                <div className="text-xs text-wolf">Accuracy</div>
+                <div className="text-2xl font-bold text-duo-green">{points}</div>
+                <div className="text-xs text-wolf">Points</div>
               </div>
             </div>
           </div>
+
+          {/* Per-bucket assessment */}
+          {bucketsWithData.length > 0 ? (
+            <div className="space-y-2">
+              {bucketsWithData.map(bucket => {
+                const display = getStatusDisplay(bucket.detailedStatus)
+                return (
+                  <div key={bucket.confidence} className={`flex items-center justify-between p-3 rounded-lg ${display.bgColor}`}>
+                    <div className="flex items-center gap-3">
+                      <div className="text-sm font-semibold text-eel w-16">{getConfidenceLabel(bucket.confidence)}</div>
+                      <div className={`text-sm font-medium ${display.color}`}>{display.label}</div>
+                    </div>
+                    <div className="text-sm text-wolf">
+                      {bucket.correct}/{bucket.total} correct ({bucket.actualPct}%)
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-wolf">No answers yet to assess calibration.</p>
+          )}
         </div>
       )}
 
