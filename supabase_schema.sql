@@ -584,6 +584,7 @@ CREATE POLICY "update_own_profile" ON public.teacher_profiles
 
 GRANT EXECUTE ON FUNCTION public.get_current_user_master_code_id() TO authenticated;
 GRANT EXECUTE ON FUNCTION get_username_max_numbers() TO service_role;
+REVOKE ALL ON public.coordinator_teachers FROM anon;
 GRANT SELECT ON public.coordinator_teachers TO authenticated;
 REVOKE ALL ON public.student_scores FROM anon;
 GRANT SELECT ON public.student_scores TO authenticated;
