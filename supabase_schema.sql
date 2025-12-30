@@ -59,9 +59,11 @@ CREATE TABLE public.fermi_questions (
   hint text,
   difficulty int NOT NULL DEFAULT 1 CHECK (difficulty BETWEEN 1 AND 5),
   category text NOT NULL DEFAULT 'general',
-  "order" int NOT NULL UNIQUE,
+  "order" int NOT NULL,
   competition_mode public.competition_mode NOT NULL DEFAULT 'mock',
-  created_at timestamptz NOT NULL DEFAULT now()
+  school_year text NOT NULL DEFAULT '2025-26',
+  created_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT fermi_questions_order_year_key UNIQUE ("order", school_year)
 );
 
 -- 3.2: classes table
@@ -200,7 +202,7 @@ BEGIN
   INSERT INTO public.class_questions (class_id, fermi_question_id, "order", competition_mode, school_year)
   SELECT p_class_id, fq.id, fq."order", p_mode, p_school_year
   FROM public.fermi_questions fq
-  WHERE fq.competition_mode = p_mode
+  WHERE fq.competition_mode = p_mode AND fq.school_year = p_school_year
   ORDER BY fq."order"
   ON CONFLICT DO NOTHING;
 END$$;
@@ -602,98 +604,156 @@ GRANT SELECT ON public.student_scores TO authenticated;
 -- SECTION 10: INSERT QUESTIONS
 -- =====================================================
 
--- 10.1: Mock/Practice Questions (orders 1-25)
-INSERT INTO public.fermi_questions (prompt, correct_value, hint, difficulty, category, "order", competition_mode) VALUES
+-- 10.1: Mock/Practice Questions for 2025-26 (orders 1-25)
+INSERT INTO public.fermi_questions (prompt, correct_value, hint, difficulty, category, "order", competition_mode, school_year) VALUES
   -- Original 10 questions
-  ('How many heartbeats does a person have in one day?', 100000, 'Think about beats per minute and hours in a day', 2, 'biology', 1, 'mock'),
-  ('How many kilometers of blood vessels are in the human body?', 100000, 'Consider all arteries, veins, and capillaries', 4, 'biology', 2, 'mock'),
-  ('How many piano tuners are there in Chicago?', 225, 'Think about population, pianos per household, tunings per year', 3, 'estimation', 3, 'mock'),
-  ('How many golf balls can fit in a school bus?', 500000, 'Estimate bus volume and golf ball diameter', 3, 'geometry', 4, 'mock'),
-  ('How many liters of water does a person drink in a lifetime?', 60000, 'Consider average daily intake and lifespan', 2, 'biology', 5, 'mock'),
-  ('How many atoms are in a grain of sand?', 50000000000000000000, 'Think about the mass of silicon and oxygen atoms', 5, 'physics', 6, 'mock'),
-  ('How many hairs are on an average human head?', 100000, 'Consider hair density and scalp area', 2, 'biology', 7, 'mock'),
-  ('How many words does the average person speak in a day?', 16000, 'Think about waking hours and speaking rate', 2, 'daily-life', 8, 'mock'),
-  ('How many leaves are on a mature oak tree?', 250000, 'Estimate branches and leaves per branch', 3, 'nature', 9, 'mock'),
-  ('How many pizzas are consumed in the United States each year?', 3000000000, 'Consider population and frequency of pizza eating', 3, 'daily-life', 10, 'mock'),
+  ('How many heartbeats does a person have in one day?', 100000, 'Think about beats per minute and hours in a day', 2, 'biology', 1, 'mock', '2025-26'),
+  ('How many kilometers of blood vessels are in the human body?', 100000, 'Consider all arteries, veins, and capillaries', 4, 'biology', 2, 'mock', '2025-26'),
+  ('How many piano tuners are there in Chicago?', 225, 'Think about population, pianos per household, tunings per year', 3, 'estimation', 3, 'mock', '2025-26'),
+  ('How many golf balls can fit in a school bus?', 500000, 'Estimate bus volume and golf ball diameter', 3, 'geometry', 4, 'mock', '2025-26'),
+  ('How many liters of water does a person drink in a lifetime?', 60000, 'Consider average daily intake and lifespan', 2, 'biology', 5, 'mock', '2025-26'),
+  ('How many atoms are in a grain of sand?', 50000000000000000000, 'Think about the mass of silicon and oxygen atoms', 5, 'physics', 6, 'mock', '2025-26'),
+  ('How many hairs are on an average human head?', 100000, 'Consider hair density and scalp area', 2, 'biology', 7, 'mock', '2025-26'),
+  ('How many words does the average person speak in a day?', 16000, 'Think about waking hours and speaking rate', 2, 'daily-life', 8, 'mock', '2025-26'),
+  ('How many leaves are on a mature oak tree?', 250000, 'Estimate branches and leaves per branch', 3, 'nature', 9, 'mock', '2025-26'),
+  ('How many pizzas are consumed in the United States each year?', 3000000000, 'Consider population and frequency of pizza eating', 3, 'daily-life', 10, 'mock', '2025-26'),
   -- Additional mock questions (11-25)
-  ('How many steps does the average person take in a year?', 2000000, 'Think about daily steps and multiply by days in a year', 2, 'daily-life', 11, 'mock'),
-  ('How many bricks are in the Empire State Building?', 10000000, 'Consider the building dimensions and typical brick sizes', 4, 'architecture', 12, 'mock'),
-  ('How many drops of water are in an Olympic swimming pool?', 2000000000000, 'Calculate pool volume in liters, then drops per liter', 3, 'physics', 13, 'mock'),
-  ('How many books are in the Library of Congress?', 17000000, 'It is the largest library in the world', 2, 'knowledge', 14, 'mock'),
-  ('How many blades of grass are on a football field?', 400000000, 'Estimate field area and grass blade density per square inch', 3, 'nature', 15, 'mock'),
-  ('How many hours does the average person spend sleeping in their lifetime?', 230000, 'Consider average sleep per night and average lifespan', 2, 'daily-life', 16, 'mock'),
-  ('How many commercial flights take off worldwide each day?', 100000, 'Think about major airports and their daily departures', 3, 'transportation', 17, 'mock'),
-  ('How many hot dogs are eaten at baseball games in the US each season?', 20000000, 'Consider MLB attendance and hot dogs per fan', 3, 'sports', 18, 'mock'),
-  ('How many emails are sent worldwide every second?', 3500000, 'Think about global email users and their activity', 3, 'technology', 19, 'mock'),
-  ('How many neurons are in the human brain?', 86000000000, 'The brain is the most complex organ', 3, 'biology', 20, 'mock'),
-  ('How many people are eating at McDonalds right now worldwide?', 2000000, 'Consider restaurants worldwide, customers per restaurant, and time zones', 3, 'daily-life', 21, 'mock'),
-  ('How many teeth do all the people in your country have combined?', 2000000000, 'Average teeth per person times population (assuming ~70 million people)', 2, 'biology', 22, 'mock'),
-  ('How many cups of coffee are consumed worldwide each day?', 2250000000, 'Consider coffee drinking nations and cups per person', 3, 'daily-life', 23, 'mock'),
-  ('How many kilometers does the Earth travel around the Sun in one year?', 940000000, 'Think about orbital circumference using the distance to the Sun', 3, 'astronomy', 24, 'mock'),
-  ('How many cells are in the human body?', 37000000000000, 'The body is made of trillions of cells of different types', 4, 'biology', 25, 'mock')
-ON CONFLICT ("order") DO NOTHING;
+  ('How many steps does the average person take in a year?', 2000000, 'Think about daily steps and multiply by days in a year', 2, 'daily-life', 11, 'mock', '2025-26'),
+  ('How many bricks are in the Empire State Building?', 10000000, 'Consider the building dimensions and typical brick sizes', 4, 'architecture', 12, 'mock', '2025-26'),
+  ('How many drops of water are in an Olympic swimming pool?', 2000000000000, 'Calculate pool volume in liters, then drops per liter', 3, 'physics', 13, 'mock', '2025-26'),
+  ('How many books are in the Library of Congress?', 17000000, 'It is the largest library in the world', 2, 'knowledge', 14, 'mock', '2025-26'),
+  ('How many blades of grass are on a football field?', 400000000, 'Estimate field area and grass blade density per square inch', 3, 'nature', 15, 'mock', '2025-26'),
+  ('How many hours does the average person spend sleeping in their lifetime?', 230000, 'Consider average sleep per night and average lifespan', 2, 'daily-life', 16, 'mock', '2025-26'),
+  ('How many commercial flights take off worldwide each day?', 100000, 'Think about major airports and their daily departures', 3, 'transportation', 17, 'mock', '2025-26'),
+  ('How many hot dogs are eaten at baseball games in the US each season?', 20000000, 'Consider MLB attendance and hot dogs per fan', 3, 'sports', 18, 'mock', '2025-26'),
+  ('How many emails are sent worldwide every second?', 3500000, 'Think about global email users and their activity', 3, 'technology', 19, 'mock', '2025-26'),
+  ('How many neurons are in the human brain?', 86000000000, 'The brain is the most complex organ', 3, 'biology', 20, 'mock', '2025-26'),
+  ('How many people are eating at McDonalds right now worldwide?', 2000000, 'Consider restaurants worldwide, customers per restaurant, and time zones', 3, 'daily-life', 21, 'mock', '2025-26'),
+  ('How many teeth do all the people in your country have combined?', 2000000000, 'Average teeth per person times population (assuming ~70 million people)', 2, 'biology', 22, 'mock', '2025-26'),
+  ('How many cups of coffee are consumed worldwide each day?', 2250000000, 'Consider coffee drinking nations and cups per person', 3, 'daily-life', 23, 'mock', '2025-26'),
+  ('How many kilometers does the Earth travel around the Sun in one year?', 940000000, 'Think about orbital circumference using the distance to the Sun', 3, 'astronomy', 24, 'mock', '2025-26'),
+  ('How many cells are in the human body?', 37000000000000, 'The body is made of trillions of cells of different types', 4, 'biology', 25, 'mock', '2025-26')
+ON CONFLICT ("order", school_year) DO NOTHING;
 
--- 10.2: Real Competition Questions (orders 101-125)
-INSERT INTO public.fermi_questions (prompt, correct_value, hint, difficulty, category, "order", competition_mode) VALUES
+-- 10.1b: Mock/Practice Questions for 2024-25 (orders 1-25) - Different questions for testing multi-year
+INSERT INTO public.fermi_questions (prompt, correct_value, hint, difficulty, category, "order", competition_mode, school_year) VALUES
+  ('How many tennis balls can fit in this classroom?', 250000, 'Estimate classroom volume and tennis ball diameter', 2, 'geometry', 1, 'mock', '2024-25'),
+  ('How many jelly beans fill a one-gallon jar?', 930, 'Think about jelly bean size and packing efficiency', 2, 'geometry', 2, 'mock', '2024-25'),
+  ('How many words are in the average novel?', 80000, 'Consider pages in a typical novel and words per page', 2, 'literature', 3, 'mock', '2024-25'),
+  ('How many songs does the average person listen to in a year?', 25000, 'Think about hours of music per day and song length', 2, 'daily-life', 4, 'mock', '2024-25'),
+  ('How many heartbeats does a hummingbird have in one hour?', 72000, 'Hummingbirds have very fast heart rates', 3, 'biology', 5, 'mock', '2024-25'),
+  ('How many gallons of paint would it take to paint a Boeing 747?', 120, 'Consider the surface area of the plane', 3, 'estimation', 6, 'mock', '2024-25'),
+  ('How many rubber bands would it take to stretch from NYC to LA?', 30000000, 'Think about distance and rubber band length', 3, 'geography', 7, 'mock', '2024-25'),
+  ('How many sheets of paper are used in your school each year?', 500000, 'Think about students, teachers, and daily usage', 2, 'daily-life', 8, 'mock', '2024-25'),
+  ('How many grains of rice are in a 5 lb bag?', 100000, 'Consider the weight of a single grain', 2, 'daily-life', 9, 'mock', '2024-25'),
+  ('How many Earths would fit inside the Sun?', 1300000, 'Compare the volumes of Earth and Sun', 3, 'astronomy', 10, 'mock', '2024-25'),
+  ('How many breaths do you take while sleeping?', 3000, 'Think about breathing rate during sleep and hours slept', 2, 'biology', 11, 'mock', '2024-25'),
+  ('How many chicken nuggets does McDonalds sell in a day?', 15000000, 'Consider number of restaurants and orders per day', 3, 'daily-life', 12, 'mock', '2024-25'),
+  ('How many times does your heart beat during a marathon?', 40000, 'Consider marathon time and elevated heart rate', 3, 'sports', 13, 'mock', '2024-25'),
+  ('How many pages of text could fit on a 1TB hard drive?', 500000000, 'Think about characters per page and bytes per character', 4, 'technology', 14, 'mock', '2024-25'),
+  ('How many ants are in the world?', 20000000000000000, 'Ants are everywhere and very numerous', 4, 'nature', 15, 'mock', '2024-25'),
+  ('How many seconds old are you?', 500000000, 'Calculate based on your age in years', 2, 'math', 16, 'mock', '2024-25'),
+  ('How many pens and pencils are in your school right now?', 15000, 'Think about students, teachers, and supplies per person', 2, 'daily-life', 17, 'mock', '2024-25'),
+  ('How many hamburgers are eaten in the US each day?', 50000000, 'Consider population and hamburger consumption', 2, 'daily-life', 18, 'mock', '2024-25'),
+  ('How far does light travel in one second?', 300000, 'Speed of light in kilometers', 2, 'physics', 19, 'mock', '2024-25'),
+  ('How many YouTube videos are uploaded every minute?', 500, 'YouTube is one of the largest platforms', 3, 'technology', 20, 'mock', '2024-25'),
+  ('How many trees are cut down each day worldwide?', 15000000000, 'Deforestation is a significant global issue', 4, 'nature', 21, 'mock', '2024-25'),
+  ('How many different combinations can a Rubiks Cube have?', 43000000000000000000, 'There are many possible configurations', 4, 'math', 22, 'mock', '2024-25'),
+  ('How many Post-it notes would cover your classroom wall?', 2000, 'Estimate wall area and Post-it size', 2, 'geometry', 23, 'mock', '2024-25'),
+  ('How many baseballs are used in a Major League season?', 900000, 'Think about games played and balls per game', 3, 'sports', 24, 'mock', '2024-25'),
+  ('How many people are born each day worldwide?', 385000, 'Global birth rates are quite high', 2, 'demographics', 25, 'mock', '2024-25')
+ON CONFLICT ("order", school_year) DO NOTHING;
+
+-- 10.2: Real Competition Questions for 2025-26 (orders 101-125)
+INSERT INTO public.fermi_questions (prompt, correct_value, hint, difficulty, category, "order", competition_mode, school_year) VALUES
   -- Questions 101-115
-  ('How many people in the world are currently airborne in commercial flights at any given moment?', 1000000, 'Consider the number of flights operating globally and average passengers per flight', 3, 'transportation', 101, 'real'),
-  ('How many times does a human heart beat in an average lifetime?', 2500000000, 'Think about beats per minute, hours awake vs asleep, and average lifespan', 2, 'biology', 102, 'real'),
-  ('How many trees are there on Earth?', 3000000000000, 'Consider different biomes, forest density, and global forest coverage', 4, 'nature', 103, 'real'),
-  ('How many slices of bread are consumed in the United States each day?', 320000000, 'Think about population, percentage who eat bread, and slices per person', 2, 'daily-life', 104, 'real'),
-  ('How many Google searches are performed worldwide in one day?', 8500000000, 'Consider global internet users, percentage using Google, and searches per user', 3, 'technology', 105, 'real'),
-  ('How many atoms are in the human body?', 7000000000000000000000000000, 'Consider body mass, composition (mostly oxygen, carbon, hydrogen), and atomic masses', 5, 'physics', 106, 'real'),
-  ('How many credit card transactions occur in the United States per second?', 10000, 'Think about annual transaction volume and divide appropriately', 3, 'economics', 107, 'real'),
-  ('How many golf balls are lost each year in the United States?', 300000000, 'Consider number of golfers, rounds played per year, and balls lost per round', 3, 'sports', 108, 'real'),
-  ('How many stars are visible to the naked eye on a clear night?', 5000, 'Consider the magnitude limit of human vision and star catalogs', 2, 'astronomy', 109, 'real'),
-  ('How many new cars are manufactured worldwide each day?', 200000, 'Think about annual global car production and divide by days', 2, 'industry', 110, 'real'),
-  ('How many neurons fire in your brain when you read this sentence?', 100000000, 'Consider areas involved in reading: visual, language, comprehension', 4, 'biology', 111, 'real'),
-  ('How many songs have been recorded and released in human history?', 100000000, 'Consider recorded music era (~100 years), global artists, and output rates', 4, 'entertainment', 112, 'real'),
-  ('How many chickens are alive on Earth right now?', 25000000000, 'Consider poultry farming scale and consumption rates globally', 3, 'agriculture', 113, 'real'),
-  ('How many grains of sand are on all the beaches of Earth?', 7500000000000000000, 'Estimate total beach area, depth of sand, and grains per cubic centimeter', 5, 'geography', 114, 'real'),
-  ('How many text messages are sent worldwide in one hour?', 2500000000, 'Consider global smartphone users, messaging app usage, and activity patterns', 3, 'technology', 115, 'real'),
+  ('How many people in the world are currently airborne in commercial flights at any given moment?', 1000000, 'Consider the number of flights operating globally and average passengers per flight', 3, 'transportation', 101, 'real', '2025-26'),
+  ('How many times does a human heart beat in an average lifetime?', 2500000000, 'Think about beats per minute, hours awake vs asleep, and average lifespan', 2, 'biology', 102, 'real', '2025-26'),
+  ('How many trees are there on Earth?', 3000000000000, 'Consider different biomes, forest density, and global forest coverage', 4, 'nature', 103, 'real', '2025-26'),
+  ('How many slices of bread are consumed in the United States each day?', 320000000, 'Think about population, percentage who eat bread, and slices per person', 2, 'daily-life', 104, 'real', '2025-26'),
+  ('How many Google searches are performed worldwide in one day?', 8500000000, 'Consider global internet users, percentage using Google, and searches per user', 3, 'technology', 105, 'real', '2025-26'),
+  ('How many atoms are in the human body?', 7000000000000000000000000000, 'Consider body mass, composition (mostly oxygen, carbon, hydrogen), and atomic masses', 5, 'physics', 106, 'real', '2025-26'),
+  ('How many credit card transactions occur in the United States per second?', 10000, 'Think about annual transaction volume and divide appropriately', 3, 'economics', 107, 'real', '2025-26'),
+  ('How many golf balls are lost each year in the United States?', 300000000, 'Consider number of golfers, rounds played per year, and balls lost per round', 3, 'sports', 108, 'real', '2025-26'),
+  ('How many stars are visible to the naked eye on a clear night?', 5000, 'Consider the magnitude limit of human vision and star catalogs', 2, 'astronomy', 109, 'real', '2025-26'),
+  ('How many new cars are manufactured worldwide each day?', 200000, 'Think about annual global car production and divide by days', 2, 'industry', 110, 'real', '2025-26'),
+  ('How many neurons fire in your brain when you read this sentence?', 100000000, 'Consider areas involved in reading: visual, language, comprehension', 4, 'biology', 111, 'real', '2025-26'),
+  ('How many songs have been recorded and released in human history?', 100000000, 'Consider recorded music era (~100 years), global artists, and output rates', 4, 'entertainment', 112, 'real', '2025-26'),
+  ('How many chickens are alive on Earth right now?', 25000000000, 'Consider poultry farming scale and consumption rates globally', 3, 'agriculture', 113, 'real', '2025-26'),
+  ('How many grains of sand are on all the beaches of Earth?', 7500000000000000000, 'Estimate total beach area, depth of sand, and grains per cubic centimeter', 5, 'geography', 114, 'real', '2025-26'),
+  ('How many text messages are sent worldwide in one hour?', 2500000000, 'Consider global smartphone users, messaging app usage, and activity patterns', 3, 'technology', 115, 'real', '2025-26'),
   -- Questions 116-125
-  ('How many breaths does a human take in their lifetime?', 700000000, 'Consider breaths per minute, and remember we breathe slower when sleeping', 3, 'biology', 116, 'real'),
-  ('How many dominos would you need to span the Great Wall of China?', 100000000, 'Consider the length of the Great Wall and the width of a domino', 4, 'geography', 117, 'real'),
-  ('How many lightning strikes occur on Earth per year?', 1400000000, 'Lightning is more common than you think, especially in tropical regions', 3, 'nature', 118, 'real'),
-  ('How many soccer balls could fit inside a Boeing 747?', 15000000, 'Estimate the cargo hold volume and soccer ball diameter', 3, 'geometry', 119, 'real'),
-  ('How many words has the average 50-year-old person read in their lifetime?', 500000000, 'Consider reading habits from childhood through adulthood', 3, 'daily-life', 120, 'real'),
-  ('How many photos are taken worldwide every day?', 4700000000, 'Think about smartphone users and average photos per day', 3, 'technology', 121, 'real'),
-  ('How many seconds are in a century?', 3155760000, 'Calculate: seconds per minute x minutes per hour x hours per day x days per year x 100', 2, 'math', 122, 'real'),
-  ('How many pencils would it take to draw a line to the Moon?', 1200000000, 'Consider the distance to the Moon and how far one pencil can draw', 4, 'astronomy', 123, 'real'),
-  ('How many balloons would it take to lift a person?', 4000, 'Consider the lifting force of helium and average human weight', 3, 'physics', 124, 'real'),
-  ('How many times does a bee flap its wings per minute?', 12000, 'Bees have very rapid wing movement to stay airborne', 2, 'biology', 125, 'real')
-ON CONFLICT ("order") DO NOTHING;
+  ('How many breaths does a human take in their lifetime?', 700000000, 'Consider breaths per minute, and remember we breathe slower when sleeping', 3, 'biology', 116, 'real', '2025-26'),
+  ('How many dominos would you need to span the Great Wall of China?', 100000000, 'Consider the length of the Great Wall and the width of a domino', 4, 'geography', 117, 'real', '2025-26'),
+  ('How many lightning strikes occur on Earth per year?', 1400000000, 'Lightning is more common than you think, especially in tropical regions', 3, 'nature', 118, 'real', '2025-26'),
+  ('How many soccer balls could fit inside a Boeing 747?', 15000000, 'Estimate the cargo hold volume and soccer ball diameter', 3, 'geometry', 119, 'real', '2025-26'),
+  ('How many words has the average 50-year-old person read in their lifetime?', 500000000, 'Consider reading habits from childhood through adulthood', 3, 'daily-life', 120, 'real', '2025-26'),
+  ('How many photos are taken worldwide every day?', 4700000000, 'Think about smartphone users and average photos per day', 3, 'technology', 121, 'real', '2025-26'),
+  ('How many seconds are in a century?', 3155760000, 'Calculate: seconds per minute x minutes per hour x hours per day x days per year x 100', 2, 'math', 122, 'real', '2025-26'),
+  ('How many pencils would it take to draw a line to the Moon?', 1200000000, 'Consider the distance to the Moon and how far one pencil can draw', 4, 'astronomy', 123, 'real', '2025-26'),
+  ('How many balloons would it take to lift a person?', 4000, 'Consider the lifting force of helium and average human weight', 3, 'physics', 124, 'real', '2025-26'),
+  ('How many times does a bee flap its wings per minute?', 12000, 'Bees have very rapid wing movement to stay airborne', 2, 'biology', 125, 'real', '2025-26')
+ON CONFLICT ("order", school_year) DO NOTHING;
 
--- 10.3: Guest Test Questions (orders 201-225)
-INSERT INTO public.fermi_questions (prompt, correct_value, hint, difficulty, category, "order", competition_mode) VALUES
+-- 10.2b: Real Competition Questions for 2024-25 (orders 101-125)
+INSERT INTO public.fermi_questions (prompt, correct_value, hint, difficulty, category, "order", competition_mode, school_year) VALUES
+  ('How many passengers travel through all airports worldwide each day?', 12000000, 'Consider global air traffic and daily flights', 3, 'transportation', 101, 'real', '2024-25'),
+  ('How many synapses are in the human brain?', 100000000000000, 'Each neuron connects to thousands of others', 4, 'biology', 102, 'real', '2024-25'),
+  ('How many leaves fall in Central Park during autumn?', 25000000, 'Consider number of trees and leaves per tree', 3, 'nature', 103, 'real', '2024-25'),
+  ('How many cups of tea are consumed in the UK each day?', 165000000, 'The British love their tea', 2, 'daily-life', 104, 'real', '2024-25'),
+  ('How many websites exist on the internet?', 2000000000, 'The internet has grown enormously', 3, 'technology', 105, 'real', '2024-25'),
+  ('How many water molecules are in a drop of water?', 1700000000000000000000, 'A drop is about 0.05 mL', 5, 'physics', 106, 'real', '2024-25'),
+  ('How many banknotes are in circulation worldwide?', 500000000000, 'Think about all currencies combined', 4, 'economics', 107, 'real', '2024-25'),
+  ('How many soccer matches are played worldwide each week?', 1000000, 'Consider amateur and professional games', 3, 'sports', 108, 'real', '2024-25'),
+  ('How many galaxies are in the observable universe?', 200000000000, 'The universe is vast beyond imagination', 4, 'astronomy', 109, 'real', '2024-25'),
+  ('How many smartphones are sold worldwide each minute?', 1400, 'Mobile phone sales are enormous', 3, 'industry', 110, 'real', '2024-25'),
+  ('How many words does the average person know?', 50000, 'Consider vocabulary size', 2, 'biology', 111, 'real', '2024-25'),
+  ('How many movies have been made in history?', 5000000, 'Consider all countries and time periods', 3, 'entertainment', 112, 'real', '2024-25'),
+  ('How many eggs are produced worldwide each day?', 4000000000, 'Eggs are a major food source globally', 3, 'agriculture', 113, 'real', '2024-25'),
+  ('How many miles of roads exist in the United States?', 4000000, 'America has an extensive road network', 3, 'geography', 114, 'real', '2024-25'),
+  ('How many apps are downloaded from app stores each day?', 500000000, 'Mobile apps are very popular', 3, 'technology', 115, 'real', '2024-25'),
+  ('How many red blood cells are in one drop of blood?', 250000000, 'Blood is packed with cells', 3, 'biology', 116, 'real', '2024-25'),
+  ('How many Subway restaurants are there worldwide?', 37000, 'Subway is one of the largest restaurant chains', 2, 'economics', 117, 'real', '2024-25'),
+  ('How many earthquakes occur on Earth each year?', 500000, 'Most are too small to feel', 3, 'nature', 118, 'real', '2024-25'),
+  ('How many tennis balls fit in a Boeing 787?', 20000000, 'Consider the fuselage volume', 3, 'geometry', 119, 'real', '2024-25'),
+  ('How many words does Shakespeare use in all his works?', 900000, 'Shakespeare wrote many plays and sonnets', 3, 'literature', 120, 'real', '2024-25'),
+  ('How many selfies are taken worldwide each day?', 90000000, 'Selfies are incredibly popular', 3, 'technology', 121, 'real', '2024-25'),
+  ('How many minutes are in a year?', 525600, 'Think systematically', 2, 'math', 122, 'real', '2024-25'),
+  ('How many grains of sugar are in a pound?', 2000000, 'Sugar grains are quite small', 3, 'physics', 123, 'real', '2024-25'),
+  ('How many muscles does a caterpillar have?', 4000, 'Caterpillars are surprisingly complex', 3, 'biology', 124, 'real', '2024-25'),
+  ('How many bird species exist in the world?', 10000, 'Birds are found everywhere', 2, 'nature', 125, 'real', '2024-25')
+ON CONFLICT ("order", school_year) DO NOTHING;
+
+-- 10.3: Guest Test Questions (orders 201-225) - year-agnostic
+INSERT INTO public.fermi_questions (prompt, correct_value, hint, difficulty, category, "order", competition_mode, school_year) VALUES
   -- Questions 201-215
-  ('How many licks does it take to get to the center of a Tootsie Pop?', 364, 'Scientists have actually studied this! Think about lick rate and candy thickness', 2, 'fun', 201, 'guest'),
-  ('How many words are in all seven Harry Potter books combined?', 1084000, 'The series has over 4000 pages total - estimate words per page', 3, 'entertainment', 202, 'guest'),
-  ('How many spots does a typical ladybug have?', 7, 'Most common ladybugs have a specific pattern', 1, 'nature', 203, 'guest'),
-  ('How many dimples are on a regulation golf ball?', 336, 'Dimples help the ball fly straighter - they cover most of the surface', 2, 'sports', 204, 'guest'),
-  ('How many windows are in the White House?', 147, 'Consider the building has 6 floors and is quite large', 3, 'architecture', 205, 'guest'),
-  ('How many bones are in an adult human body?', 206, 'Babies have more bones that fuse together as they grow', 2, 'biology', 206, 'guest'),
-  ('How many countries are there in the world today?', 195, 'Think about continents and how many countries each has', 2, 'geography', 207, 'guest'),
-  ('How many M&Ms fit in a regular fun-size bag?', 17, 'Fun-size bags are pretty small - maybe a handful', 1, 'daily-life', 208, 'guest'),
-  ('How many keys are on a standard full-size piano?', 88, 'Think about the range of musical notes from very low to very high', 1, 'music', 209, 'guest'),
-  ('How many different species of butterflies exist in the world?', 17500, 'Butterflies are found on every continent except Antarctica', 3, 'nature', 210, 'guest'),
-  ('How many apps are available in the Apple App Store?', 1800000, 'The App Store has been around since 2008 with millions of developers', 3, 'technology', 211, 'guest'),
-  ('How many squares are on a standard chess board?', 64, 'The board is a perfect square grid', 1, 'games', 212, 'guest'),
-  ('How many seeds are typically in a watermelon?', 500, 'Think about the size of the watermelon and how seeds are distributed', 2, 'nature', 213, 'guest'),
-  ('How many moons does Jupiter have?', 95, 'Jupiter is the largest planet and has many small moons', 3, 'astronomy', 214, 'guest'),
-  ('How many steps are in the Eiffel Tower (to the top floor)?', 1665, 'The tower is about 300 meters tall with multiple observation decks', 3, 'architecture', 215, 'guest'),
+  ('How many licks does it take to get to the center of a Tootsie Pop?', 364, 'Scientists have actually studied this! Think about lick rate and candy thickness', 2, 'fun', 201, 'guest', '2025-26'),
+  ('How many words are in all seven Harry Potter books combined?', 1084000, 'The series has over 4000 pages total - estimate words per page', 3, 'entertainment', 202, 'guest', '2025-26'),
+  ('How many spots does a typical ladybug have?', 7, 'Most common ladybugs have a specific pattern', 1, 'nature', 203, 'guest', '2025-26'),
+  ('How many dimples are on a regulation golf ball?', 336, 'Dimples help the ball fly straighter - they cover most of the surface', 2, 'sports', 204, 'guest', '2025-26'),
+  ('How many windows are in the White House?', 147, 'Consider the building has 6 floors and is quite large', 3, 'architecture', 205, 'guest', '2025-26'),
+  ('How many bones are in an adult human body?', 206, 'Babies have more bones that fuse together as they grow', 2, 'biology', 206, 'guest', '2025-26'),
+  ('How many countries are there in the world today?', 195, 'Think about continents and how many countries each has', 2, 'geography', 207, 'guest', '2025-26'),
+  ('How many M&Ms fit in a regular fun-size bag?', 17, 'Fun-size bags are pretty small - maybe a handful', 1, 'daily-life', 208, 'guest', '2025-26'),
+  ('How many keys are on a standard full-size piano?', 88, 'Think about the range of musical notes from very low to very high', 1, 'music', 209, 'guest', '2025-26'),
+  ('How many different species of butterflies exist in the world?', 17500, 'Butterflies are found on every continent except Antarctica', 3, 'nature', 210, 'guest', '2025-26'),
+  ('How many apps are available in the Apple App Store?', 1800000, 'The App Store has been around since 2008 with millions of developers', 3, 'technology', 211, 'guest', '2025-26'),
+  ('How many squares are on a standard chess board?', 64, 'The board is a perfect square grid', 1, 'games', 212, 'guest', '2025-26'),
+  ('How many seeds are typically in a watermelon?', 500, 'Think about the size of the watermelon and how seeds are distributed', 2, 'nature', 213, 'guest', '2025-26'),
+  ('How many moons does Jupiter have?', 95, 'Jupiter is the largest planet and has many small moons', 3, 'astronomy', 214, 'guest', '2025-26'),
+  ('How many steps are in the Eiffel Tower (to the top floor)?', 1665, 'The tower is about 300 meters tall with multiple observation decks', 3, 'architecture', 215, 'guest', '2025-26'),
   -- Questions 216-225
-  ('How many taste buds does a human tongue have?', 10000, 'Taste buds regenerate every 2 weeks and cover the tongue surface', 2, 'biology', 216, 'guest'),
-  ('How many petals does a typical sunflower have?', 34, 'Sunflowers follow a mathematical pattern called the Fibonacci sequence', 2, 'nature', 217, 'guest'),
-  ('How many LEGO bricks are sold worldwide each year?', 75000000000, 'LEGO is one of the largest toy manufacturers - think billions', 4, 'entertainment', 218, 'guest'),
-  ('How many muscles are in the human body?', 600, 'Muscles come in three types: skeletal, smooth, and cardiac', 2, 'biology', 219, 'guest'),
-  ('How many species of sharks exist?', 500, 'Sharks have been around for 400 million years and come in many sizes', 2, 'nature', 220, 'guest'),
-  ('How many different pasta shapes exist in Italy?', 350, 'Each region of Italy has its own traditional pasta shapes', 3, 'food', 221, 'guest'),
-  ('How many islands make up the Philippines?', 7641, 'It is one of the largest archipelagos in the world', 3, 'geography', 222, 'guest'),
-  ('How many emojis exist in the Unicode standard?', 3600, 'Emojis have grown significantly since the first set in 1999', 3, 'technology', 223, 'guest'),
-  ('How many stitches are on a regulation baseball?', 108, 'Each ball is hand-stitched with red thread', 2, 'sports', 224, 'guest'),
-  ('How many different languages are spoken in the world today?', 7000, 'Many languages have very few speakers remaining', 3, 'language', 225, 'guest')
-ON CONFLICT ("order") DO NOTHING;
+  ('How many taste buds does a human tongue have?', 10000, 'Taste buds regenerate every 2 weeks and cover the tongue surface', 2, 'biology', 216, 'guest', '2025-26'),
+  ('How many petals does a typical sunflower have?', 34, 'Sunflowers follow a mathematical pattern called the Fibonacci sequence', 2, 'nature', 217, 'guest', '2025-26'),
+  ('How many LEGO bricks are sold worldwide each year?', 75000000000, 'LEGO is one of the largest toy manufacturers - think billions', 4, 'entertainment', 218, 'guest', '2025-26'),
+  ('How many muscles are in the human body?', 600, 'Muscles come in three types: skeletal, smooth, and cardiac', 2, 'biology', 219, 'guest', '2025-26'),
+  ('How many species of sharks exist?', 500, 'Sharks have been around for 400 million years and come in many sizes', 2, 'nature', 220, 'guest', '2025-26'),
+  ('How many different pasta shapes exist in Italy?', 350, 'Each region of Italy has its own traditional pasta shapes', 3, 'food', 221, 'guest', '2025-26'),
+  ('How many islands make up the Philippines?', 7641, 'It is one of the largest archipelagos in the world', 3, 'geography', 222, 'guest', '2025-26'),
+  ('How many emojis exist in the Unicode standard?', 3600, 'Emojis have grown significantly since the first set in 1999', 3, 'technology', 223, 'guest', '2025-26'),
+  ('How many stitches are on a regulation baseball?', 108, 'Each ball is hand-stitched with red thread', 2, 'sports', 224, 'guest', '2025-26'),
+  ('How many different languages are spoken in the world today?', 7000, 'Many languages have very few speakers remaining', 3, 'language', 225, 'guest', '2025-26')
+ON CONFLICT ("order", school_year) DO NOTHING;
 
 -- =====================================================
 -- SECTION 11: INSERT SAMPLE CODES
