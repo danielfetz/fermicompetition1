@@ -106,9 +106,11 @@ export default function ClassContent({
         comparison = a.username.localeCompare(b.username)
         break
       case 'full_name':
-        const nameA = a.full_name || ''
-        const nameB = b.full_name || ''
-        comparison = nameA.localeCompare(nameB)
+        // Put students without names at the end (regardless of sort direction)
+        if (!a.full_name && !b.full_name) return 0
+        if (!a.full_name) return 1  // a goes after b
+        if (!b.full_name) return -1 // b goes after a
+        comparison = a.full_name.localeCompare(b.full_name)
         break
       case 'status':
         comparison = (a.has_completed_exam ? 1 : 0) - (b.has_completed_exam ? 1 : 0)
