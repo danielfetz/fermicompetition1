@@ -116,9 +116,13 @@ export default function ClassContent({
         comparison = (a.has_completed_exam ? 1 : 0) - (b.has_completed_exam ? 1 : 0)
         break
       case 'accuracy':
-        const accA = scoreA?.total_answered ? scoreA.correct_count / scoreA.total_answered : -1
-        const accB = scoreB?.total_answered ? scoreB.correct_count / scoreB.total_answered : -1
-        comparison = accA - accB
+        // Put students without answers at the end (regardless of sort direction)
+        const hasAccA = scoreA?.total_answered && scoreA.total_answered > 0
+        const hasAccB = scoreB?.total_answered && scoreB.total_answered > 0
+        if (!hasAccA && !hasAccB) return 0
+        if (!hasAccA) return 1
+        if (!hasAccB) return -1
+        comparison = (scoreA!.correct_count / scoreA!.total_answered) - (scoreB!.correct_count / scoreB!.total_answered)
         break
       case 'points':
         const ptsA = scoreA?.confidence_points ?? 250
