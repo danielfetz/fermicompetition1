@@ -28,11 +28,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid username or password' }, { status: 401 })
   }
 
-  // Check if student has already completed the exam
-  if (student.has_completed_exam) {
-    return NextResponse.json({ error: 'You have already completed the challenge' }, { status: 400 })
-  }
-
   // Update first_login_at if this is the first login
   if (!student.first_login_at) {
     await supa
@@ -51,6 +46,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     token,
     classId: student.class_id,
-    needsName: !student.full_name
+    needsName: !student.full_name,
+    hasCompleted: student.has_completed_exam
   })
 }
