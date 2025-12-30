@@ -28,9 +28,10 @@ export default function StudentLogin() {
       setError(body.error || 'Login failed')
       return
     }
-    const { token, classId, needsName } = await res.json()
+    const { token, classId, needsName, hasCompleted } = await res.json()
     localStorage.setItem('studentToken', token)
-    if (needsName) router.push(`/student/profile?classId=${classId}`)
+    if (hasCompleted) router.push('/student/done')
+    else if (needsName) router.push(`/student/profile?classId=${classId}`)
     else router.push(`/student/exam/${classId}`)
   }
 
