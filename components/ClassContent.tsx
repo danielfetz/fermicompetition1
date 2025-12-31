@@ -6,26 +6,9 @@ import { useRouter } from 'next/navigation'
 import CompetitionModeToggle from './CompetitionModeToggle'
 import OfficialCompetitionCodeEntry from './OfficialCompetitionCodeEntry'
 import CompetitionCountdown, { isCompetitionStarted } from './CompetitionCountdown'
-
-type CompetitionMode = 'mock' | 'real'
-
-type Student = {
-  id: string
-  username: string
-  full_name: string | null
-  has_completed_exam: boolean
-  plain_password: string | null
-  competition_mode?: string
-}
-
-type Score = {
-  student_id: string
-  correct_count: number
-  total_answered: number
-  score_percentage: number
-  competition_mode?: string
-  confidence_points?: number
-}
+import { ClassStats, StudentTable, EditClassModal, AddStudentsModal } from './class'
+import { getGradeLabel } from '@/lib/constants'
+import type { Student, Score, CompetitionMode } from '@/types/class'
 
 type Props = {
   classId: string
@@ -41,40 +24,6 @@ type Props = {
   initialMode?: CompetitionMode
   hasPreviousYearStudents?: boolean
 }
-
-const GRADE_LEVELS = [
-  { value: '1', label: '1st Grade' },
-  { value: '2', label: '2nd Grade' },
-  { value: '3', label: '3rd Grade' },
-  { value: '4', label: '4th Grade' },
-  { value: '5', label: '5th Grade' },
-  { value: '6', label: '6th Grade' },
-  { value: '7', label: '7th Grade' },
-  { value: '8', label: '8th Grade' },
-  { value: '9', label: '9th Grade' },
-  { value: '10', label: '10th Grade' },
-  { value: '11', label: '11th Grade' },
-  { value: '12-13', label: '12th/13th Grade' },
-  { value: 'university', label: 'University' },
-]
-
-const COUNTRIES = [
-  'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France',
-  'Netherlands', 'Belgium', 'Austria', 'Switzerland', 'Ireland', 'New Zealand',
-  'India', 'Singapore', 'Hong Kong', 'Japan', 'South Korea', 'China', 'Taiwan',
-  'Brazil', 'Mexico', 'Argentina', 'Spain', 'Italy', 'Portugal', 'Poland',
-  'Sweden', 'Norway', 'Denmark', 'Finland', 'Czech Republic', 'Hungary',
-  'South Africa', 'Nigeria', 'Kenya', 'Israel', 'United Arab Emirates',
-  'Saudi Arabia', 'Turkey', 'Russia', 'Ukraine', 'Indonesia', 'Malaysia',
-  'Thailand', 'Vietnam', 'Philippines', 'Pakistan', 'Bangladesh', 'Other'
-]
-
-const SCHOOL_YEARS = [
-  '2024-25',
-  '2025-26',
-  '2026-27',
-  '2027-28',
-]
 
 export default function ClassContent({
   classId,
@@ -94,129 +43,31 @@ export default function ClassContent({
   const [mode, setMode] = useState<CompetitionMode>(initialMode)
   const [realUnlocked, setRealUnlocked] = useState(initialRealUnlocked)
   const [checkingAccess, setCheckingAccess] = useState(false)
-  const [copied, setCopied] = useState(false)
   const [competitionStarted, setCompetitionStarted] = useState(false)
-  const [sortColumn, setSortColumn] = useState<'username' | 'full_name' | 'status' | 'accuracy' | 'points'>('username')
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const [autoGenerating, setAutoGenerating] = useState(false)
   const [autoGenError, setAutoGenError] = useState<string | null>(null)
 
-  // Guard to prevent duplicate auto-generation (e.g., from React StrictMode or race conditions)
+  // Modal states
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showAddStudentsModal, setShowAddStudentsModal] = useState(false)
+
+  // Guard to prevent duplicate auto-generation
   const autoGenAttemptedRef = useRef(false)
-  // Track school year to reset the guard when it changes
   const prevSchoolYearRef = useRef(schoolYear)
 
-  // Edit class state
-  const [showEditModal, setShowEditModal] = useState(false)
-  const [editName, setEditName] = useState(className)
-  const [editSchool, setEditSchool] = useState(schoolName || '')
-  const [editGrade, setEditGrade] = useState(gradeLevel || '')
-  const [editCountry, setEditCountry] = useState(country || '')
-  const [editSchoolYear, setEditSchoolYear] = useState(schoolYear || '2025-26')
-  const [editLoading, setEditLoading] = useState(false)
-  const [editError, setEditError] = useState<string | null>(null)
+  // Filter students by mode
+  const mockStudents = students.filter(s => (s.competition_mode || 'mock') === 'mock')
+  const realStudents = students.filter(s => (s.competition_mode || 'mock') === 'real')
+  const filteredStudents = mode === 'real' ? realStudents : mockStudents
+  const filteredScores = scores.filter(sc => (sc.competition_mode || 'mock') === mode)
 
-  // Add students modal state
-  const [showAddStudentsModal, setShowAddStudentsModal] = useState(false)
-  const [addCount, setAddCount] = useState(10)
-  const [addNames, setAddNames] = useState('')
-  const [addLoading, setAddLoading] = useState(false)
-  const [addError, setAddError] = useState<string | null>(null)
-  const [addResult, setAddResult] = useState<{ username: string; password: string; full_name?: string }[] | null>(null)
-  const [addCopied, setAddCopied] = useState(false)
+  const studentsGenerated = filteredStudents.length
+  const studentsCompleted = filteredStudents.filter(s => s.has_completed_exam).length
 
-  async function saveClassEdits() {
-    setEditLoading(true)
-    setEditError(null)
-    const res = await fetch(`/api/classes/${classId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: editName,
-        school_name: editSchool,
-        grade_level: editGrade,
-        country: editCountry,
-        school_year: editSchoolYear
-      })
-    })
-    setEditLoading(false)
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({ error: 'Error' }))
-      setEditError(body.error || 'Failed to update class')
-      return
-    }
-    setShowEditModal(false)
-    router.refresh()
-  }
-
-  function resetAddStudentsForm() {
-    setAddCount(10)
-    setAddNames('')
-    setAddError(null)
-    setAddResult(null)
-  }
-
-  async function handleAddStudents(e: React.FormEvent) {
-    e.preventDefault()
-    if (addCount < 1 || addCount > 200) {
-      setAddError('Please enter a number between 1 and 200.')
-      return
-    }
-    setAddLoading(true)
-    setAddError(null)
-
-    const parsedNames = addNames
-      .split(',')
-      .map(n => n.trim())
-      .filter(n => n.length > 0)
-
-    const res = await fetch(`/api/classes/${classId}/generate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ count: addCount, competition_mode: mode, names: parsedNames })
-    })
-
-    setAddLoading(false)
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({ error: 'Error' }))
-      setAddError(body.error || 'Failed to generate credentials.')
-      return
-    }
-    const data = await res.json()
-    setAddResult(data.credentials)
-    // Refresh the page in the background so the student list updates
-    router.refresh()
-  }
-
-  function copyAddedCredentials() {
-    if (!addResult) return
-    const text = addResult.map(r => `${r.username}\t${r.password}\t${r.full_name || ''}`).join('\n')
-    navigator.clipboard.writeText(text)
-    setAddCopied(true)
-    setTimeout(() => setAddCopied(false), 2000)
-  }
-
-  function downloadAddedCredentials() {
-    if (!addResult) return
-    const csv = 'Username,Password,Name\n' + addResult.map(r => `${r.username},${r.password},${r.full_name || ''}`).join('\n')
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `student-credentials-${mode}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
-  function closeAddStudentsModal() {
-    setShowAddStudentsModal(false)
-    resetAddStudentsForm()
-  }
-
-  // Check access client-side on mount using API endpoint for reliability
+  // Check access client-side on mount
   useEffect(() => {
     async function checkRealAccess() {
-      if (realUnlocked) return // Already unlocked
+      if (realUnlocked) return
 
       setCheckingAccess(true)
       try {
@@ -236,25 +87,17 @@ export default function ClassContent({
     checkRealAccess()
   }, [realUnlocked])
 
-  // Check if competition has started (client-side only to avoid hydration mismatch)
+  // Check if competition has started
   useEffect(() => {
     setCompetitionStarted(isCompetitionStarted())
-    // Check every minute in case the page is open when competition starts
     const timer = setInterval(() => {
       setCompetitionStarted(isCompetitionStarted())
     }, 60000)
     return () => clearInterval(timer)
   }, [])
 
-  // Filter students by mode
-  const mockStudents = students.filter(s => (s.competition_mode || 'mock') === 'mock')
-  const realStudents = students.filter(s => (s.competition_mode || 'mock') === 'real')
-  const filteredStudents = mode === 'real' ? realStudents : mockStudents
-  const filteredScores = scores.filter(sc => (sc.competition_mode || 'mock') === mode)
-
-  // Auto-generate credentials when viewing a mode that has no students
-  // but the OTHER mode has students (bidirectional)
-  const autoGenerateCredentials = useCallback(async (targetMode: 'mock' | 'real') => {
+  // Auto-generate credentials
+  const autoGenerateCredentials = useCallback(async (targetMode: CompetitionMode) => {
     if (autoGenerating) return
 
     setAutoGenerating(true)
@@ -271,10 +114,9 @@ export default function ClassContent({
         const body = await res.json().catch(() => ({ error: 'Error' }))
         setAutoGenError(body.error || 'Failed to generate credentials.')
       } else {
-        // Refresh the page to get new students
         router.refresh()
       }
-    } catch (err) {
+    } catch {
       setAutoGenError('Failed to generate credentials.')
     }
 
@@ -289,12 +131,10 @@ export default function ClassContent({
     }
   }, [schoolYear])
 
+  // Auto-generate for mode switching
   useEffect(() => {
-    // Prevent duplicate auto-generation attempts (e.g., from React StrictMode or race conditions)
     if (autoGenAttemptedRef.current) return
 
-    // NOTE: We no longer auto-generate for previous year students - user must confirm first
-    // Auto-generate for real mode: when real is unlocked, competition started, mock students exist but no real
     if (
       mode === 'real' &&
       realUnlocked &&
@@ -306,9 +146,7 @@ export default function ClassContent({
     ) {
       autoGenAttemptedRef.current = true
       autoGenerateCredentials('real')
-    }
-    // Auto-generate for mock mode: when real students exist but no mock
-    else if (
+    } else if (
       mode === 'mock' &&
       realStudents.length > 0 &&
       mockStudents.length === 0 &&
@@ -320,69 +158,16 @@ export default function ClassContent({
     }
   }, [mode, realUnlocked, competitionStarted, mockStudents.length, realStudents.length, autoGenerating, autoGenError, autoGenerateCredentials])
 
-  // Create a map for quick score lookup
-  const scoreMap = new Map(filteredScores.map(sc => [sc.student_id, sc]))
-
-  // Sort students
-  const sortedStudents = [...filteredStudents].sort((a, b) => {
-    const scoreA = scoreMap.get(a.id)
-    const scoreB = scoreMap.get(b.id)
-    let comparison = 0
-
-    switch (sortColumn) {
-      case 'username':
-        comparison = a.username.localeCompare(b.username)
-        break
-      case 'full_name':
-        // Put students without names at the end (regardless of sort direction)
-        if (!a.full_name && !b.full_name) return 0
-        if (!a.full_name) return 1  // a goes after b
-        if (!b.full_name) return -1 // b goes after a
-        comparison = a.full_name.localeCompare(b.full_name)
-        break
-      case 'status':
-        comparison = (a.has_completed_exam ? 1 : 0) - (b.has_completed_exam ? 1 : 0)
-        break
-      case 'accuracy':
-        // Put students without answers at the end (regardless of sort direction)
-        const hasAccA = scoreA?.total_answered && scoreA.total_answered > 0
-        const hasAccB = scoreB?.total_answered && scoreB.total_answered > 0
-        if (!hasAccA && !hasAccB) return 0
-        if (!hasAccA) return 1
-        if (!hasAccB) return -1
-        comparison = (scoreA!.correct_count / scoreA!.total_answered) - (scoreB!.correct_count / scoreB!.total_answered)
-        break
-      case 'points':
-        const ptsA = scoreA?.confidence_points ?? 250
-        const ptsB = scoreB?.confidence_points ?? 250
-        comparison = ptsA - ptsB
-        break
-    }
-
-    return sortDirection === 'asc' ? comparison : -comparison
-  })
-
-  const handleSort = (column: typeof sortColumn) => {
-    if (sortColumn === column) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')
-    } else {
-      setSortColumn(column)
-      setSortDirection('asc')
-    }
+  const handleGenerateFromPreviousYear = () => {
+    autoGenAttemptedRef.current = true
+    autoGenerateCredentials('mock')
   }
 
-  const SortIcon = ({ column }: { column: typeof sortColumn }) => (
-    <svg className={`w-4 h-4 inline ml-1 ${sortColumn === column ? 'text-duo-blue' : 'text-hare'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      {sortColumn === column && sortDirection === 'desc' ? (
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-      ) : (
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-      )}
-    </svg>
-  )
-
-  const studentsGenerated = filteredStudents.length
-  const studentsCompleted = filteredStudents.filter(s => s.has_completed_exam).length
+  const handleRetryGenerate = () => {
+    setAutoGenError(null)
+    autoGenAttemptedRef.current = false
+    autoGenerateCredentials(mode)
+  }
 
   return (
     <div className="space-y-6">
@@ -410,7 +195,7 @@ export default function ClassContent({
           <div className="flex flex-wrap items-center gap-2 text-sm text-wolf mt-1">
             {schoolName && <span>{schoolName}</span>}
             {schoolName && (gradeLevel || country || schoolYear) && <span>•</span>}
-            {gradeLevel && <span>{GRADE_LEVELS.find(g => g.value === gradeLevel)?.label || gradeLevel}</span>}
+            {gradeLevel && <span>{getGradeLabel(gradeLevel)}</span>}
             {gradeLevel && (country || schoolYear) && <span>•</span>}
             {country && <span>{country}</span>}
             {country && schoolYear && <span>•</span>}
@@ -435,7 +220,7 @@ export default function ClassContent({
         </div>
       </div>
 
-      {/* Show loading state while checking access */}
+      {/* Content based on state */}
       {mode === 'real' && !realUnlocked && checkingAccess ? (
         <div className="card text-center py-12">
           <div className="animate-spin w-8 h-8 border-4 border-duo-blue border-t-transparent rounded-full mx-auto mb-4"></div>
@@ -463,515 +248,44 @@ export default function ClassContent({
         </div>
       ) : (
         <>
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="stat-card">
-              <div className="stat-value text-duo-blue">{studentsGenerated}</div>
-              <div className="stat-label">Generated</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-value text-duo-green">{studentsCompleted}</div>
-              <div className="stat-label">Completed</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-value text-duo-yellow-dark">{studentsGenerated - studentsCompleted}</div>
-              <div className="stat-label">Pending</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-value text-duo-purple">25</div>
-              <div className="stat-label">Questions</div>
-            </div>
-          </div>
+          <ClassStats generated={studentsGenerated} completed={studentsCompleted} />
 
-          {/* Students Table */}
           <div className="card">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-eel">Students</h2>
-              <div className="flex items-center gap-2">
-                {filteredStudents.length > 0 && (
-                  <>
-                    <div className="relative group">
-                      <button
-                        onClick={() => {
-                          const text = filteredStudents.map(s => `${s.username}\t${s.plain_password || ''}\t${s.full_name || ''}`).join('\n')
-                          navigator.clipboard.writeText(text)
-                          setCopied(true)
-                          setTimeout(() => setCopied(false), 2000)
-                        }}
-                        className="icon-btn"
-                      >
-                        {copied ? (
-                          <svg className="w-5 h-5 text-duo-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        ) : (
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                          </svg>
-                        )}
-                      </button>
-                      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs font-semibold text-white bg-eel rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                        {copied ? 'Copied!' : 'Copy all credentials'}
-                      </span>
-                    </div>
-                    <div className="relative group">
-                      <button
-                        onClick={() => {
-                          const csv = 'Username,Password,Name\n' + filteredStudents.map(s => `${s.username},${s.plain_password || ''},${s.full_name || ''}`).join('\n')
-                          const blob = new Blob([csv], { type: 'text/csv' })
-                          const url = URL.createObjectURL(blob)
-                          const a = document.createElement('a')
-                          a.href = url
-                          a.download = `student-credentials-${mode}.csv`
-                          a.click()
-                          URL.revokeObjectURL(url)
-                        }}
-                        className="icon-btn"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                        </svg>
-                      </button>
-                      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs font-semibold text-white bg-eel rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                        Download as CSV
-                      </span>
-                    </div>
-                  </>
-                )}
-                <span className="badge badge-blue">{studentsGenerated} generated</span>
-              </div>
-            </div>
-
-            {filteredStudents.length > 0 ? (
-              <div className="overflow-x-auto -mx-6">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-left border-b-2 border-swan">
-                      <th className="py-3 px-6 font-bold text-wolf uppercase tracking-wide text-xs cursor-pointer hover:text-eel select-none" onClick={() => handleSort('username')}>
-                        Username<SortIcon column="username" />
-                      </th>
-                      <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs">Password</th>
-                      <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs cursor-pointer hover:text-eel select-none" onClick={() => handleSort('full_name')}>
-                        Full Name<SortIcon column="full_name" />
-                      </th>
-                      <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs cursor-pointer hover:text-eel select-none" onClick={() => handleSort('status')}>
-                        Status<SortIcon column="status" />
-                      </th>
-                      <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs cursor-pointer hover:text-eel select-none" onClick={() => handleSort('accuracy')}>
-                        Accuracy<SortIcon column="accuracy" />
-                      </th>
-                      <th className="py-3 px-4 font-bold text-wolf uppercase tracking-wide text-xs cursor-pointer hover:text-eel select-none" onClick={() => handleSort('points')}>
-                        Points<SortIcon column="points" />
-                      </th>
-                      <th className="py-3 px-6 font-bold text-wolf uppercase tracking-wide text-xs">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-swan">
-                    {sortedStudents.map(s => {
-                      const score = scoreMap.get(s.id)
-                      const correct = score?.correct_count ?? 0
-                      const total = score?.total_answered ?? 0
-                      const maxQuestions = 25
-
-                      return (
-                        <tr key={s.id} className="hover:bg-snow transition-colors">
-                          <td className="py-3 px-6">
-                            <span className="font-mono font-semibold text-eel">{s.username}</span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="font-mono text-wolf">{s.plain_password || '••••••••'}</span>
-                          </td>
-                          <td className="py-3 px-4">
-                            {s.full_name ? (
-                              <span className="text-eel">{s.full_name}</span>
-                            ) : (
-                              <span className="text-hare italic">Not set</span>
-                            )}
-                          </td>
-                          <td className="py-3 px-4">
-                            {s.has_completed_exam ? (
-                              <span className="badge badge-green">Completed</span>
-                            ) : (
-                              <span className="badge badge-yellow">Pending</span>
-                            )}
-                          </td>
-                          <td className="py-3 px-4">
-                            {total > 0 ? (
-                              <div className="flex items-center gap-2">
-                                <span className={`font-bold ${correct >= total/2 ? 'text-duo-green' : correct >= total/3 ? 'text-duo-yellow-dark' : 'text-duo-red'}`}>
-                                  {correct}/{total}
-                                </span>
-                                <div className="w-16 h-2 bg-swan rounded-full overflow-hidden">
-                                  <div
-                                    className={`h-full rounded-full ${correct >= total/2 ? 'bg-duo-green' : correct >= total/3 ? 'bg-duo-yellow' : 'bg-duo-red'}`}
-                                    style={{ width: `${(correct / total) * 100}%` }}
-                                  />
-                                </div>
-                              </div>
-                            ) : (
-                              <span className="text-hare">—</span>
-                            )}
-                          </td>
-                          <td className="py-3 px-4">
-                            {total > 0 ? (
-                              <span className={`font-bold ${(score?.confidence_points ?? 250) >= 250 ? 'text-duo-green' : (score?.confidence_points ?? 250) >= 200 ? 'text-duo-yellow-dark' : 'text-duo-red'}`}>
-                                {score?.confidence_points ?? 250}
-                              </span>
-                            ) : (
-                              <span className="text-hare">250</span>
-                            )}
-                          </td>
-                          <td className="py-3 px-6">
-                            <Link
-                              href={`/teacher/class/${classId}/student/${s.id}?mode=${mode}`}
-                              className="text-duo-blue font-semibold hover:underline inline-flex items-center gap-1"
-                            >
-                              View/Edit
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                              </svg>
-                            </Link>
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            ) : hasPreviousYearStudents ? (
-              // Show prompt to import students from previous years
-              <div className="text-center py-8">
-                <div className="w-16 h-16 mx-auto mb-4 bg-duo-blue/10 rounded-full flex items-center justify-center">
-                  <svg className="w-8 h-8 text-duo-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                </div>
-                {autoGenError ? (
-                  <>
-                    <h3 className="text-lg font-bold text-duo-red mb-2">Error Generating Credentials</h3>
-                    <p className="text-wolf mb-4">{autoGenError}</p>
-                    <button onClick={() => { setAutoGenError(null); autoGenerateCredentials('mock'); }} className="btn btn-primary">
-                      Try Again
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <h3 className="text-lg font-bold text-eel mb-2">New School Year</h3>
-                    <p className="text-wolf mb-2">
-                      This class has students from previous school years.
-                    </p>
-                    <p className="text-sm text-hare mb-6 max-w-md mx-auto">
-                      You can generate credentials for <strong>{schoolYear}</strong> using the same usernames and names from previous years. Each student will get a new password.
-                    </p>
-                    <button
-                      onClick={() => {
-                        autoGenAttemptedRef.current = true
-                        autoGenerateCredentials('mock')
-                      }}
-                      className="btn btn-primary"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      Generate from Previous Years
-                    </button>
-                  </>
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <div className="w-16 h-16 mx-auto mb-4 bg-swan rounded-full flex items-center justify-center">
-                  <svg className="w-8 h-8 text-wolf" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </div>
-                {autoGenError ? (
-                  <>
-                    <h3 className="text-lg font-bold text-duo-red mb-2">Error Generating Credentials</h3>
-                    <p className="text-wolf mb-4">{autoGenError}</p>
-                    <button onClick={() => { setAutoGenError(null); autoGenAttemptedRef.current = false; autoGenerateCredentials(mode); }} className="btn btn-primary">
-                      Try Again
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <h3 className="text-lg font-bold text-eel mb-2">No Students Yet</h3>
-                    <p className="text-wolf mb-4">
-                      Add students to get started. Credentials will auto-generate for the other mode using the same usernames.
-                    </p>
-                    <button onClick={() => setShowAddStudentsModal(true)} className="btn btn-primary">
-                      Add Students
-                    </button>
-                  </>
-                )}
-              </div>
-            )}
+            <StudentTable
+              classId={classId}
+              students={filteredStudents}
+              scores={filteredScores}
+              mode={mode}
+              onAddStudents={() => setShowAddStudentsModal(true)}
+              hasPreviousYearStudents={hasPreviousYearStudents}
+              schoolYear={schoolYear}
+              onGenerateFromPreviousYear={handleGenerateFromPreviousYear}
+              autoGenError={autoGenError}
+              onRetryGenerate={handleRetryGenerate}
+            />
           </div>
         </>
       )}
 
-      {/* Edit Class Modal */}
+      {/* Modals */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 !mt-0">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-eel">Edit Class</h2>
-                <button
-                  onClick={() => setShowEditModal(false)}
-                  className="p-2 text-wolf hover:text-eel hover:bg-snow rounded-lg transition-colors"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div className="form-group">
-                  <label className="label" htmlFor="edit-name">Class Name *</label>
-                  <input
-                    id="edit-name"
-                    className="input"
-                    value={editName}
-                    onChange={e => setEditName(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="label" htmlFor="edit-school">School Name</label>
-                  <input
-                    id="edit-school"
-                    className="input"
-                    value={editSchool}
-                    onChange={e => setEditSchool(e.target.value)}
-                    placeholder="e.g., Lincoln High School"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="label" htmlFor="edit-grade">Grade Level</label>
-                  <select
-                    id="edit-grade"
-                    className="input"
-                    value={editGrade}
-                    onChange={e => setEditGrade(e.target.value)}
-                  >
-                    <option value="">Select grade level...</option>
-                    {GRADE_LEVELS.map(g => (
-                      <option key={g.value} value={g.value}>{g.label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="label" htmlFor="edit-country">Country</label>
-                  <select
-                    id="edit-country"
-                    className="input"
-                    value={editCountry}
-                    onChange={e => setEditCountry(e.target.value)}
-                  >
-                    <option value="">Select country...</option>
-                    {COUNTRIES.map(c => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="label" htmlFor="edit-school-year">School Year</label>
-                  <select
-                    id="edit-school-year"
-                    className="input"
-                    value={editSchoolYear}
-                    onChange={e => setEditSchoolYear(e.target.value)}
-                  >
-                    {SCHOOL_YEARS.map(y => (
-                      <option key={y} value={y}>{y}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {editError && (
-                  <div className="bg-duo-red/10 border-2 border-duo-red rounded-duo p-3">
-                    <p className="text-duo-red-dark text-sm font-semibold">{editError}</p>
-                  </div>
-                )}
-
-                <div className="flex gap-3 pt-2">
-                  <button
-                    onClick={() => setShowEditModal(false)}
-                    className="btn btn-outline flex-1"
-                    disabled={editLoading}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={saveClassEdits}
-                    className="btn btn-primary flex-1"
-                    disabled={editLoading || !editName.trim()}
-                  >
-                    {editLoading ? 'Saving...' : 'Save Changes'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <EditClassModal
+          classId={classId}
+          initialName={className}
+          initialSchool={schoolName}
+          initialGrade={gradeLevel}
+          initialCountry={country}
+          initialSchoolYear={schoolYear}
+          onClose={() => setShowEditModal(false)}
+        />
       )}
 
-      {/* Add Students Modal */}
       {showAddStudentsModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 !mt-0">
-          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-eel">
-                  {addResult ? 'Credentials Generated!' : 'Add Students'}
-                </h2>
-                <button
-                  onClick={closeAddStudentsModal}
-                  className="p-2 text-wolf hover:text-eel hover:bg-snow rounded-lg transition-colors"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              {addResult ? (
-                // Results view
-                <div className="space-y-4">
-                  <p className="text-wolf text-center">
-                    {addResult.length} student accounts are ready.
-                  </p>
-
-                  {/* Action buttons */}
-                  <div className="flex gap-3 justify-center">
-                    <button onClick={copyAddedCredentials} className="btn btn-secondary btn-sm">
-                      {addCopied ? (
-                        <>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          Copied!
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                          </svg>
-                          Copy All
-                        </>
-                      )}
-                    </button>
-                    <button onClick={downloadAddedCredentials} className="btn btn-outline btn-sm">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                      </svg>
-                      Download CSV
-                    </button>
-                  </div>
-
-                  {/* Credentials table */}
-                  <div className="max-h-64 overflow-y-auto border rounded-lg">
-                    <table className="w-full text-sm">
-                      <thead className="bg-snow sticky top-0">
-                        <tr className="text-left">
-                          <th className="py-2 px-3 font-bold text-wolf text-xs">#</th>
-                          <th className="py-2 px-3 font-bold text-wolf text-xs">Username</th>
-                          <th className="py-2 px-3 font-bold text-wolf text-xs">Password</th>
-                          <th className="py-2 px-3 font-bold text-wolf text-xs">Name</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-swan">
-                        {addResult.map((r, i) => (
-                          <tr key={i} className="hover:bg-snow">
-                            <td className="py-2 px-3 text-wolf">{i + 1}</td>
-                            <td className="py-2 px-3 font-mono font-semibold text-duo-blue text-xs">{r.username}</td>
-                            <td className="py-2 px-3 font-mono text-eel text-xs">{r.password}</td>
-                            <td className="py-2 px-3 text-eel text-xs">{r.full_name || <span className="text-hare">—</span>}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  <div className="flex gap-3 pt-2">
-                    <button
-                      onClick={() => { resetAddStudentsForm() }}
-                      className="btn btn-outline flex-1"
-                    >
-                      Add More
-                    </button>
-                    <button
-                      onClick={closeAddStudentsModal}
-                      className="btn btn-primary flex-1"
-                    >
-                      Done
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                // Form view
-                <form onSubmit={handleAddStudents} className="space-y-4">
-                  <div className="form-group">
-                    <label className="label" htmlFor="add-count">How many students?</label>
-                    <input
-                      id="add-count"
-                      type="number"
-                      min={1}
-                      max={200}
-                      className="input"
-                      value={addCount}
-                      onChange={e => setAddCount(parseInt(e.target.value || '0'))}
-                      required
-                    />
-                    <p className="text-sm text-wolf mt-1">Enter a number between 1 and 200</p>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="label" htmlFor="add-names">Student names (optional)</label>
-                    <textarea
-                      id="add-names"
-                      className="input min-h-[80px]"
-                      value={addNames}
-                      onChange={e => setAddNames(e.target.value)}
-                      placeholder="Daniel M, Fred T, Michael G"
-                    />
-                    <p className="text-sm text-wolf mt-1">Enter names separated by commas</p>
-                  </div>
-
-                  {addError && (
-                    <div className="bg-duo-red/10 border-2 border-duo-red rounded-duo p-3">
-                      <p className="text-duo-red-dark text-sm font-semibold">{addError}</p>
-                    </div>
-                  )}
-
-                  <div className="flex gap-3 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => { setShowAddStudentsModal(false); resetAddStudentsForm() }}
-                      className="btn btn-outline flex-1"
-                      disabled={addLoading}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="btn btn-primary flex-1"
-                      disabled={addLoading || addCount < 1}
-                    >
-                      {addLoading ? 'Generating...' : `Add ${addCount} Students`}
-                    </button>
-                  </div>
-                </form>
-              )}
-            </div>
-          </div>
-        </div>
+        <AddStudentsModal
+          classId={classId}
+          mode={mode}
+          onClose={() => setShowAddStudentsModal(false)}
+        />
       )}
     </div>
   )
