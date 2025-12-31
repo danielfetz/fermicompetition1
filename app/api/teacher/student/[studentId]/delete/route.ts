@@ -38,5 +38,22 @@ export async function POST(req: NextRequest, { params }: { params: { studentId: 
   const { error } = await service.from('students').delete().in('id', studentIds)
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
 
+  // Get the class's school year to update the correct count
+  const { data: classData } = await service.from('classes').select('school_year').eq('id', class_id).single()
+  const schoolYear = classData?.school_year || '2025-26'
+
+  // Update class num_students to reflect current student count (count only mock mode since both have same students)
+  const { count: totalStudents } = await service
+    .from('students')
+    .select('*', { count: 'exact', head: true })
+    .eq('class_id', class_id)
+    .eq('competition_mode', 'mock')
+    .eq('school_year', schoolYear)
+
+  await service
+    .from('classes')
+    .update({ num_students: totalStudents || 0 })
+    .eq('id', class_id)
+
   return NextResponse.redirect(new URL(`/teacher/class/${class_id}?mode=${mode}`, req.url))
 }

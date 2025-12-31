@@ -105,6 +105,13 @@ export default function AddStudentsModal({ classId, mode, onClose }: Props) {
                 {result.length} student accounts are ready.
               </p>
 
+              <div className="bg-duo-yellow/10 border border-duo-yellow rounded-lg p-3">
+                <p className="text-sm text-eel">
+                  <strong>Note:</strong> These passwords are for <strong>{mode === 'real' ? 'Official Competition' : 'Practice'}</strong> mode only.
+                  Passwords for the other mode are different — use the mode toggle to view them.
+                </p>
+              </div>
+
               <div className="flex gap-3 justify-center">
                 <button onClick={copyCredentials} className="btn btn-secondary btn-sm">
                   {copied ? (

@@ -343,7 +343,7 @@ export default async function EditStudent({ params }: Params) {
       <div className="card border-duo-red/30 bg-duo-red/5">
         <h3 className="font-bold text-eel mb-2">Danger Zone</h3>
         <p className="text-sm text-wolf mb-4">
-          Permanently delete this student and all their answers for the current school year and competition mode. If this student exists in other school years or modes, you will need to delete them there separately. This action cannot be undone.
+          Permanently delete this student and all their answers across all competition modes and school years. This action cannot be undone.
         </p>
         <DeleteStudentButton
           studentId={student.id}
