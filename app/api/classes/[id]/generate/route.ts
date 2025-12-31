@@ -254,12 +254,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     }
   }
 
-  // Update class num_students (all modes/years have same students, so just count mock)
+  // Update class num_students (count for class's school year, one mode since both have same students)
   const { count: totalStudents } = await service
     .from('students')
     .select('*', { count: 'exact', head: true })
     .eq('class_id', cls.id)
     .eq('competition_mode', 'mock')
+    .eq('school_year', schoolYear)
 
   await service
     .from('classes')
