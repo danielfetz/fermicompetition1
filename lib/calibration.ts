@@ -232,78 +232,27 @@ export interface BucketStatusEntry {
 }
 
 /**
- * Aggregate multiple bucket assessments into an overall calibration status.
- *
- * Uses weighted voting where each bucket's vote is proportional to:
- * - Number of answers in that bucket
- * - Strength of evidence (probability)
+ * Assess calibration for each bucket that has data.
  *
  * @param buckets Array of calibration data points
- * @returns Overall status and per-bucket assessments
+ * @returns Per-bucket assessments with probabilities as percentages (0-100)
  */
-export function assessOverallCalibration(
-  buckets: CalibrationDataPoint[]
-): {
-  status: SimpleCalibrationStatus
-  bucketStatuses: BucketStatusEntry[]
-} {
+export function assessAllBuckets(buckets: CalibrationDataPoint[]): BucketStatusEntry[] {
   const bucketsWithData = buckets.filter(d => d.count >= 1)
-  const totalAnswersInBuckets = bucketsWithData.reduce((sum, d) => sum + d.count, 0)
-  const bucketStatuses: BucketStatusEntry[] = []
 
-  if (bucketsWithData.length < 1 || totalAnswersInBuckets < 3) {
-    return { status: 'insufficient-data', bucketStatuses }
-  }
-
-  // Assess each bucket independently
-  const bucketAssessments = bucketsWithData.map(bucket => {
+  return bucketsWithData.map(bucket => {
     const assessment = assessBucketCalibration(
       bucket.correctCount,
       bucket.count,
       bucket.confidence
     )
-    bucketStatuses.push({
+    return {
       confidence: bucket.confidence,
       status: assessment.status,
       detailedStatus: assessment.detailedStatus,
       probBelow: Math.round(assessment.probBelow * 100),
       probAbove: Math.round(assessment.probAbove * 100),
       probInRange: Math.round(assessment.probInRange * 100)
-    })
-    return {
-      ...assessment,
-      confidence: bucket.confidence,
-      weight: bucket.count
     }
   })
-
-  // Aggregate using weighted voting
-  let overconfidentWeight = 0
-  let underconfidentWeight = 0
-  let totalWeight = 0
-
-  for (const assessment of bucketAssessments) {
-    totalWeight += assessment.weight
-    if (assessment.status === 'overconfident') {
-      overconfidentWeight += assessment.weight * assessment.probBelow
-    } else if (assessment.status === 'underconfident') {
-      underconfidentWeight += assessment.weight * assessment.probAbove
-    }
-  }
-
-  // Normalize and determine overall status
-  const normalizedOverconfident = overconfidentWeight / totalWeight
-  const normalizedUnderconfident = underconfidentWeight / totalWeight
-  const threshold = 0.40
-
-  let status: SimpleCalibrationStatus
-  if (normalizedOverconfident > threshold && normalizedOverconfident > normalizedUnderconfident) {
-    status = 'overconfident'
-  } else if (normalizedUnderconfident > threshold && normalizedUnderconfident > normalizedOverconfident) {
-    status = 'underconfident'
-  } else {
-    status = 'well-calibrated'
-  }
-
-  return { status, bucketStatuses }
 }

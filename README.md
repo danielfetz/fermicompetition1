@@ -6,7 +6,7 @@ A web application for running Fermi estimation competitions in educational setti
 
 - **Teacher Dashboard**: Create classes, generate student credentials, track results in real-time
 - **Student Exam Interface**: Timed 70-minute exams with 25 Fermi questions
-- **Confidence Calibration**: Students rate confidence (10%-90%) on each answer
+- **Confidence Calibration**: Students select confidence buckets (0-20%, 20-40%, 40-60%, 60-80%, 80-100%)
 - **Bayesian Scoring**: Calibration assessment using Beta distribution statistics
 - **Multi-Mode Support**: Practice (mock) and official (real) competition modes
 - **Guest Mode**: Anonymous practice without registration
@@ -88,12 +88,19 @@ lib/                  # Utilities
 
 ## Calibration Scoring
 
-The app uses Bayesian statistics to assess student calibration:
+Students select confidence buckets for each answer:
+- **0-20%** (displayed as 10%): "I'm guessing"
+- **20-40%** (displayed as 30%): "Unlikely correct"
+- **40-60%** (displayed as 50%): "Could go either way"
+- **60-80%** (displayed as 70%): "Probably correct"
+- **80-100%** (displayed as 90%): "Very confident"
 
-1. For each confidence level (10%, 30%, 50%, 70%, 90%), track correct/total answers
+The app uses Bayesian statistics to assess calibration per bucket:
+
+1. Track correct/total answers at each confidence level
 2. Model uncertainty with Beta(1 + correct, 1 + incorrect) posterior
 3. Calculate probability that true accuracy falls within expected range
-4. Aggregate across buckets using weighted voting
+4. Provide per-bucket feedback (e.g., "At 80-100%, there is strong evidence for overconfidence")
 
 See `lib/calibration.ts` for implementation.
 

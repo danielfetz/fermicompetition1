@@ -152,7 +152,6 @@ export default function Done() {
             </p>
             <CalibrationCurve
               data={results.calibration.data}
-              status={results.calibration.status}
               bucketStatuses={results.calibration.bucketStatuses}
             />
           </div>

@@ -4,7 +4,7 @@ import {
   betaIncomplete,
   betaCDF,
   assessBucketCalibration,
-  assessOverallCalibration,
+  assessAllBuckets,
   CONFIDENCE_RANGES,
   BUCKET_MIN_SAMPLES,
   type CalibrationDataPoint,
@@ -236,7 +236,7 @@ describe('assessBucketCalibration', () => {
   })
 })
 
-describe('assessOverallCalibration', () => {
+describe('assessAllBuckets', () => {
   const makeDataPoint = (
     confidence: number,
     count: number,
@@ -249,116 +249,77 @@ describe('assessOverallCalibration', () => {
     correctCount,
   })
 
-  describe('insufficient data', () => {
-    it('returns insufficient-data when no buckets have data', () => {
-      const data = [
-        makeDataPoint(10, 0, 0),
-        makeDataPoint(50, 0, 0),
-        makeDataPoint(90, 0, 0),
-      ]
-      const result = assessOverallCalibration(data)
-      expect(result.status).toBe('insufficient-data')
-      expect(result.bucketStatuses).toHaveLength(0)
-    })
-
-    it('returns insufficient-data when total answers < 3', () => {
-      const data = [
-        makeDataPoint(50, 2, 1),
-      ]
-      const result = assessOverallCalibration(data)
-      expect(result.status).toBe('insufficient-data')
-    })
+  it('returns empty array when no buckets have data', () => {
+    const data = [
+      makeDataPoint(10, 0, 0),
+      makeDataPoint(50, 0, 0),
+      makeDataPoint(90, 0, 0),
+    ]
+    const result = assessAllBuckets(data)
+    expect(result).toHaveLength(0)
   })
 
-  describe('overall status aggregation', () => {
-    it('returns overconfident when multiple buckets show overconfidence', () => {
-      // Student claims high confidence but performs poorly
-      const data = [
-        makeDataPoint(70, 10, 2),  // Claims 70%, gets 20% - overconfident
-        makeDataPoint(90, 10, 1),  // Claims 90%, gets 10% - very overconfident
-      ]
-      const result = assessOverallCalibration(data)
-      expect(result.status).toBe('overconfident')
-    })
+  it('returns per-bucket assessment details', () => {
+    const data = [
+      makeDataPoint(50, 10, 5),
+      makeDataPoint(90, 10, 2),
+    ]
+    const result = assessAllBuckets(data)
 
-    it('returns underconfident when buckets show underconfidence', () => {
-      // Student claims low confidence but performs well
-      const data = [
-        makeDataPoint(10, 10, 9),  // Claims 10%, gets 90% - underconfident
-        makeDataPoint(30, 10, 8),  // Claims 30%, gets 80% - underconfident
-      ]
-      const result = assessOverallCalibration(data)
-      expect(result.status).toBe('underconfident')
-    })
+    expect(result).toHaveLength(2)
+    expect(result[0].confidence).toBe(50)
+    expect(result[1].confidence).toBe(90)
 
-    it('returns well-calibrated when accuracy matches confidence', () => {
-      const data = [
-        makeDataPoint(30, 10, 3),   // 30% claimed, 30% actual
-        makeDataPoint(50, 10, 5),   // 50% claimed, 50% actual
-        makeDataPoint(70, 10, 7),   // 70% claimed, 70% actual
-      ]
-      const result = assessOverallCalibration(data)
-      expect(result.status).toBe('well-calibrated')
-    })
-
-    it('returns well-calibrated when evidence is mixed', () => {
-      // Some overconfidence, some underconfidence - cancels out
-      const data = [
-        makeDataPoint(30, 5, 4),   // Slightly underconfident at 30%
-        makeDataPoint(70, 5, 2),   // Slightly overconfident at 70%
-        makeDataPoint(50, 5, 3),   // About right at 50%
-      ]
-      const result = assessOverallCalibration(data)
-      expect(result.status).toBe('well-calibrated')
-    })
+    // Check that probabilities are percentages (0-100)
+    for (const bucket of result) {
+      expect(bucket.probBelow).toBeGreaterThanOrEqual(0)
+      expect(bucket.probBelow).toBeLessThanOrEqual(100)
+      expect(bucket.probAbove).toBeGreaterThanOrEqual(0)
+      expect(bucket.probAbove).toBeLessThanOrEqual(100)
+      expect(bucket.probInRange).toBeGreaterThanOrEqual(0)
+      expect(bucket.probInRange).toBeLessThanOrEqual(100)
+    }
   })
 
-  describe('bucket statuses', () => {
-    it('includes per-bucket assessment details', () => {
-      const data = [
-        makeDataPoint(50, 10, 5),
-        makeDataPoint(90, 10, 2),
-      ]
-      const result = assessOverallCalibration(data)
+  it('skips buckets with no data', () => {
+    const data = [
+      makeDataPoint(30, 0, 0),   // No data
+      makeDataPoint(50, 10, 5),  // Has data
+      makeDataPoint(70, 0, 0),   // No data
+    ]
+    const result = assessAllBuckets(data)
 
-      expect(result.bucketStatuses).toHaveLength(2)
-      expect(result.bucketStatuses[0].confidence).toBe(50)
-      expect(result.bucketStatuses[1].confidence).toBe(90)
-
-      // Check that probabilities are percentages (0-100)
-      for (const bucket of result.bucketStatuses) {
-        expect(bucket.probBelow).toBeGreaterThanOrEqual(0)
-        expect(bucket.probBelow).toBeLessThanOrEqual(100)
-        expect(bucket.probAbove).toBeGreaterThanOrEqual(0)
-        expect(bucket.probAbove).toBeLessThanOrEqual(100)
-        expect(bucket.probInRange).toBeGreaterThanOrEqual(0)
-        expect(bucket.probInRange).toBeLessThanOrEqual(100)
-      }
-    })
-
-    it('skips buckets with no data', () => {
-      const data = [
-        makeDataPoint(30, 0, 0),   // No data
-        makeDataPoint(50, 10, 5),  // Has data
-        makeDataPoint(70, 0, 0),   // No data
-      ]
-      const result = assessOverallCalibration(data)
-
-      // Only the 50% bucket should be assessed
-      expect(result.bucketStatuses).toHaveLength(1)
-      expect(result.bucketStatuses[0].confidence).toBe(50)
-    })
+    expect(result).toHaveLength(1)
+    expect(result[0].confidence).toBe(50)
   })
 
-  describe('weighting by sample size', () => {
-    it('weights larger buckets more heavily', () => {
-      // Large overconfident bucket should dominate small well-calibrated bucket
-      const data = [
-        makeDataPoint(50, 5, 3),    // Small, well-calibrated
-        makeDataPoint(90, 50, 5),   // Large, very overconfident (10% accuracy at 90% confidence)
-      ]
-      const result = assessOverallCalibration(data)
-      expect(result.status).toBe('overconfident')
-    })
+  it('correctly identifies overconfident bucket', () => {
+    const data = [
+      makeDataPoint(90, 10, 1),  // Claims 90%, gets 10% - overconfident
+    ]
+    const result = assessAllBuckets(data)
+
+    expect(result).toHaveLength(1)
+    expect(result[0].status).toBe('overconfident')
+  })
+
+  it('correctly identifies underconfident bucket', () => {
+    const data = [
+      makeDataPoint(10, 10, 9),  // Claims 10%, gets 90% - underconfident
+    ]
+    const result = assessAllBuckets(data)
+
+    expect(result).toHaveLength(1)
+    expect(result[0].status).toBe('underconfident')
+  })
+
+  it('correctly identifies well-calibrated bucket', () => {
+    const data = [
+      makeDataPoint(50, 10, 5),  // Claims 50%, gets 50% - well calibrated
+    ]
+    const result = assessAllBuckets(data)
+
+    expect(result).toHaveLength(1)
+    expect(result[0].status).toBe('well-calibrated')
   })
 })

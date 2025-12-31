@@ -2,9 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyStudentToken } from '@/lib/jwt'
 import { createSupabaseServiceRole } from '@/lib/supabaseServer'
 import {
-  assessOverallCalibration,
+  assessAllBuckets,
   type CalibrationDataPoint,
-  type SimpleCalibrationStatus,
 } from '@/lib/calibration'
 
 export async function GET(req: NextRequest) {
@@ -84,10 +83,8 @@ export async function GET(req: NextRequest) {
     }
   })
 
-  // Determine overall calibration status using Bayesian Beta Distribution per bucket
-  const { status: calibrationStatus, bucketStatuses } = assessOverallCalibration(
-    calibrationData as CalibrationDataPoint[]
-  )
+  // Assess calibration per bucket using Bayesian Beta Distribution
+  const bucketStatuses = assessAllBuckets(calibrationData as CalibrationDataPoint[])
 
   return NextResponse.json({
     score: {
@@ -98,8 +95,7 @@ export async function GET(req: NextRequest) {
     },
     calibration: {
       data: calibrationData,
-      status: calibrationStatus,
-      bucketStatuses // Per-bucket calibration assessment
+      bucketStatuses
     }
   })
 }
