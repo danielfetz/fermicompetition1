@@ -220,20 +220,9 @@ export default function ClassContent({
     // Prevent duplicate auto-generation attempts (e.g., from React StrictMode or race conditions)
     if (autoGenAttemptedRef.current) return
 
-    // Auto-generate from previous year: when no students exist for current year but previous year has students
-    if (
-      students.length === 0 &&
-      hasPreviousYearStudents &&
-      !autoGenerating &&
-      !autoGenError
-    ) {
-      // Mark as attempted immediately to prevent race conditions
-      autoGenAttemptedRef.current = true
-      // Generate for mock mode - this will reuse usernames/names from previous year
-      autoGenerateCredentials('mock')
-    }
+    // NOTE: We no longer auto-generate for previous year students - user must confirm first
     // Auto-generate for real mode: when real is unlocked, competition started, mock students exist but no real
-    else if (
+    if (
       mode === 'real' &&
       realUnlocked &&
       competitionStarted &&
@@ -256,7 +245,7 @@ export default function ClassContent({
       autoGenAttemptedRef.current = true
       autoGenerateCredentials('mock')
     }
-  }, [mode, realUnlocked, competitionStarted, students.length, mockStudents.length, realStudents.length, hasPreviousYearStudents, autoGenerating, autoGenError, autoGenerateCredentials])
+  }, [mode, realUnlocked, competitionStarted, mockStudents.length, realStudents.length, autoGenerating, autoGenError, autoGenerateCredentials])
 
   // Create a map for quick score lookup
   const scoreMap = new Map(filteredScores.map(sc => [sc.student_id, sc]))
@@ -575,6 +564,54 @@ export default function ClassContent({
                     })}
                   </tbody>
                 </table>
+              </div>
+            ) : hasPreviousYearStudents ? (
+              // Show prompt to import students from previous years
+              <div className="text-center py-8">
+                <div className="w-16 h-16 mx-auto mb-4 bg-duo-blue/10 rounded-full flex items-center justify-center">
+                  <svg className="w-8 h-8 text-duo-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </div>
+                {autoGenError ? (
+                  <>
+                    <h3 className="text-lg font-bold text-duo-red mb-2">Error Generating Credentials</h3>
+                    <p className="text-wolf mb-4">{autoGenError}</p>
+                    <button onClick={() => { setAutoGenError(null); autoGenerateCredentials('mock'); }} className="btn btn-primary">
+                      Try Again
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="text-lg font-bold text-eel mb-2">New School Year</h3>
+                    <p className="text-wolf mb-2">
+                      This class has students from previous school years.
+                    </p>
+                    <p className="text-sm text-hare mb-6 max-w-md mx-auto">
+                      You can generate credentials for <strong>{schoolYear}</strong> using the same usernames and names from previous years. Each student will get a new password.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <button
+                        onClick={() => {
+                          autoGenAttemptedRef.current = true
+                          autoGenerateCredentials('mock')
+                        }}
+                        className="btn btn-primary"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Generate from Previous Years
+                      </button>
+                      <Link href={`/teacher/class/${classId}/generate?mode=${mode}`} className="btn btn-outline">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                        </svg>
+                        Add New Students Instead
+                      </Link>
+                    </div>
+                  </>
+                )}
               </div>
             ) : (
               <div className="text-center py-8">
