@@ -65,6 +65,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   const otherMode = competition_mode === 'real' ? 'mock' : 'real'
 
+  // Track truly new students (not reused from previous years) to add to other school years
+  const newStudentUsernames: Array<{ username: string; full_name?: string }> = []
+
   // Check if students already exist for current school year
   const { count: currentYearCount } = await service
     .from('students')
@@ -75,9 +78,17 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   // Get all students from previous years (full_name syncs across modes, so just need one query)
   const { data: previousStudents } = await service
     .from('students')
-    .select('username, full_name')
+    .select('username, full_name, school_year')
     .eq('class_id', cls.id)
     .neq('school_year', schoolYear)
+
+  // Get distinct school years that have students (for adding new students to all years)
+  const otherSchoolYears = new Set<string>()
+  if (previousStudents) {
+    for (const s of previousStudents) {
+      otherSchoolYears.add(s.school_year)
+    }
+  }
 
   // Build a map of unique usernames to full_name (pick non-null if available)
   const previousStudentsMap = new Map<string, string | null>()
@@ -232,6 +243,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
           full_name: fullName
         })
 
+        // Track new students to add to other school years
+        newStudentUsernames.push({ username: cred.username, full_name: fullName })
+
         nameIndex++
       }
     }
@@ -255,6 +269,51 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   if (otherInsertErr) {
     console.error('Other mode insert error:', otherInsertErr)
     // Don't fail the request, but log it - main mode was successful
+  }
+
+  // Add new students to other school years (so all years have the same students)
+  if (newStudentUsernames.length > 0 && otherSchoolYears.size > 0) {
+    const otherYearRows: typeof rows = []
+
+    for (const year of otherSchoolYears) {
+      for (const { username, full_name } of newStudentUsernames) {
+        // Create for both modes in each other year
+        const mockPassword = generateReadablePassword(8)
+        const mockHash = await hashPassword(mockPassword)
+        const realPassword = generateReadablePassword(8)
+        const realHash = await hashPassword(realPassword)
+
+        otherYearRows.push({
+          class_id: cls.id,
+          username,
+          password_hash: mockHash,
+          plain_password: mockPassword,
+          competition_mode: 'mock',
+          school_year: year,
+          full_name
+        })
+        otherYearRows.push({
+          class_id: cls.id,
+          username,
+          password_hash: realHash,
+          plain_password: realPassword,
+          competition_mode: 'real',
+          school_year: year,
+          full_name
+        })
+      }
+    }
+
+    if (otherYearRows.length > 0) {
+      const { error: otherYearErr } = await service
+        .from('students')
+        .insert(otherYearRows)
+
+      if (otherYearErr) {
+        console.error('Other year insert error:', otherYearErr)
+        // Don't fail - main insertions were successful
+      }
+    }
   }
 
   // Update class num_students to reflect unique student count for this school year (count only one mode since both have same students)
