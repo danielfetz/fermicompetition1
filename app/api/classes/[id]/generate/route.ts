@@ -72,43 +72,18 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     .eq('class_id', cls.id)
     .eq('school_year', schoolYear)
 
-  // Get ALL students from ALL previous years (to reuse all usernames/names)
-  // First get official mode students (preferred for full_name)
-  const { data: realPreviousStudents } = await service
+  // Get all students from previous years (full_name syncs across modes, so just need one query)
+  const { data: previousStudents } = await service
     .from('students')
-    .select('username, full_name, school_year')
+    .select('username, full_name')
     .eq('class_id', cls.id)
-    .eq('competition_mode', 'real')
     .neq('school_year', schoolYear)
-    .order('school_year', { ascending: false })
 
-  // Then get mock mode students
-  const { data: mockPreviousStudents } = await service
-    .from('students')
-    .select('username, full_name, school_year')
-    .eq('class_id', cls.id)
-    .eq('competition_mode', 'mock')
-    .neq('school_year', schoolYear)
-    .order('school_year', { ascending: false })
-
-  // Build a map of all unique usernames from all previous years
-  // Official mode (real) full_name takes precedence, then mock mode
-  // Within each mode, more recent school_year takes precedence
-  let previousStudentsMap = new Map<string, string | null>()
-
-  // First add mock students (these will be overwritten by real if available)
-  if (mockPreviousStudents) {
-    for (const s of mockPreviousStudents) {
-      if (!previousStudentsMap.has(s.username)) {
-        previousStudentsMap.set(s.username, s.full_name)
-      }
-    }
-  }
-
-  // Then add/overwrite with real students (official mode takes precedence)
-  if (realPreviousStudents) {
-    for (const s of realPreviousStudents) {
-      // Only overwrite if real mode has a non-null full_name, or if username doesn't exist yet
+  // Build a map of unique usernames to full_name (pick non-null if available)
+  const previousStudentsMap = new Map<string, string | null>()
+  if (previousStudents) {
+    for (const s of previousStudents) {
+      // Keep a non-null full_name if we have one
       if (!previousStudentsMap.has(s.username) || s.full_name) {
         previousStudentsMap.set(s.username, s.full_name)
       }
