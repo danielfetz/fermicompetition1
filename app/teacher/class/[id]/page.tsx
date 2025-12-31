@@ -25,25 +25,49 @@ export default async function ClassDetail({ params, searchParams }: Params) {
 
   const { data: cls } = await service
     .from('classes')
-    .select('id, name, num_students, school_name, grade_level, country, teacher_id')
+    .select('id, name, num_students, school_name, grade_level, country, school_year, teacher_id')
     .eq('id', params.id)
     .maybeSingle()
 
   // Check class exists, belongs to current user, and is not the system guest class
   if (!cls || cls.teacher_id !== user.id || cls.name === '__guest_class__') return notFound()
 
-  // Fetch all students (both mock and real) - filtering happens client-side
-  const { data: students } = await service
+  // Fetch students for the current school year
+  // Only include real mode students if teacher has access
+  const schoolYear = cls.school_year || '2025-26'
+  const { data: allStudents } = await service
     .from('students')
     .select('id, username, full_name, has_completed_exam, plain_password, competition_mode')
     .eq('class_id', cls.id)
+    .eq('school_year', schoolYear)
     .order('username')
 
-  // Fetch all scores - filtering happens client-side
+  // Filter out real mode credentials if teacher doesn't have access
+  const students = (allStudents || []).map(s => {
+    if (s.competition_mode === 'real' && !realUnlocked) {
+      return { ...s, plain_password: null }
+    }
+    return s
+  })
+
+  // Check if students exist from the most recent previous school year (for auto-generation)
+  const { data: mostRecentPrevYear } = await service
+    .from('students')
+    .select('school_year')
+    .eq('class_id', cls.id)
+    .eq('competition_mode', 'mock')
+    .neq('school_year', schoolYear)
+    .order('school_year', { ascending: false })
+    .limit(1)
+
+  const hasPreviousYearStudents = (mostRecentPrevYear?.length || 0) > 0
+
+  // Fetch scores for the current school year
   const { data: scores } = await service
     .from('student_scores')
     .select('student_id, correct_count, total_answered, score_percentage, competition_mode, confidence_points')
     .eq('class_id', cls.id)
+    .eq('school_year', schoolYear)
 
   const initialMode = (searchParams.mode === 'real' ? 'real' : 'mock') as 'mock' | 'real'
 
@@ -54,11 +78,13 @@ export default async function ClassDetail({ params, searchParams }: Params) {
       schoolName={cls.school_name}
       gradeLevel={cls.grade_level}
       country={cls.country}
+      schoolYear={cls.school_year}
       numStudents={cls.num_students}
       students={students || []}
       scores={scores || []}
       realUnlocked={realUnlocked}
       initialMode={initialMode}
+      hasPreviousYearStudents={hasPreviousYearStudents}
     />
   )
 }

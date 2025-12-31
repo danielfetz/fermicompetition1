@@ -34,11 +34,29 @@ export async function POST(req: NextRequest, { params }: { params: { studentId: 
     is_teacher_override: true,
   }))
 
-  // Update full name if provided
-  const full_name = String(form.get('full_name') || '')
-  if (full_name) {
-    const { error: nameErr } = await service.from('students').update({ full_name }).eq('id', params.studentId)
-    if (nameErr) return NextResponse.json({ error: nameErr.message }, { status: 400 })
+  // Update full name - allow clearing (set to null if empty)
+  const full_name_raw = form.get('full_name')
+  if (full_name_raw !== null) {
+    const full_name = String(full_name_raw).trim() || null
+
+    // First get the student's username to sync across all modes/years
+    const { data: student } = await service
+      .from('students')
+      .select('username, class_id')
+      .eq('id', params.studentId)
+      .single()
+
+    if (student) {
+      // Update full_name for ALL students with the same username in this class
+      // (across all school years and competition modes)
+      const { error: nameErr } = await service
+        .from('students')
+        .update({ full_name })
+        .eq('class_id', student.class_id)
+        .eq('username', student.username)
+
+      if (nameErr) return NextResponse.json({ error: nameErr.message }, { status: 400 })
+    }
   }
 
   // Upsert answers using correct conflict key

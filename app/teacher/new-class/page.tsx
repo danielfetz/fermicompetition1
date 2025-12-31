@@ -34,11 +34,19 @@ const COUNTRIES = [
   'Thailand', 'Vietnam', 'Philippines', 'Pakistan', 'Bangladesh', 'Other'
 ]
 
+const SCHOOL_YEARS = [
+  '2024-25',
+  '2025-26',
+  '2026-27',
+  '2027-28',
+]
+
 export default function NewClass() {
   const [name, setName] = useState('')
   const [schoolName, setSchoolName] = useState('')
   const [gradeLevel, setGradeLevel] = useState('')
   const [country, setCountry] = useState('')
+  const [schoolYear, setSchoolYear] = useState('2025-26')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
@@ -66,7 +74,8 @@ export default function NewClass() {
         teacher_id: user.id,
         school_name: schoolName || null,
         grade_level: gradeLevel || null,
-        country: country || null
+        country: country || null,
+        school_year: schoolYear
       })
       .select('id')
       .single()
@@ -145,6 +154,21 @@ export default function NewClass() {
               <option value="">Select country...</option>
               {COUNTRIES.map(c => (
                 <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label className="label" htmlFor="school-year">School Year *</label>
+            <select
+              id="school-year"
+              className="input"
+              value={schoolYear}
+              onChange={e => setSchoolYear(e.target.value)}
+              required
+            >
+              {SCHOOL_YEARS.map(y => (
+                <option key={y} value={y}>{y}</option>
               ))}
             </select>
           </div>

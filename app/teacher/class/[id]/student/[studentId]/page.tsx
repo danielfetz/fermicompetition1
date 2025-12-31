@@ -222,6 +222,15 @@ export default async function EditStudent({ params }: Params) {
   // Get the student's competition mode (default to mock)
   const studentMode = student.competition_mode || 'mock'
 
+  // Get the class's school_year
+  const { data: classData } = await supabase
+    .from('classes')
+    .select('school_year')
+    .eq('id', params.id)
+    .single()
+
+  const schoolYear = classData?.school_year || '2025-26'
+
   // Fetch questions, answers, and student score in parallel
   const [{ data: classQuestions }, { data: answers }, { data: scoreData }] = await Promise.all([
     supabase.from('class_questions').select(`
@@ -232,7 +241,7 @@ export default async function EditStudent({ params }: Params) {
         prompt,
         correct_value
       )
-    `).eq('class_id', params.id).eq('competition_mode', studentMode).order('order'),
+    `).eq('class_id', params.id).eq('competition_mode', studentMode).eq('school_year', schoolYear).order('order'),
     supabase.from('answers').select('class_question_id, value, confidence_pct').eq('student_id', params.studentId),
     supabase.from('student_scores').select('confidence_points').eq('student_id', params.studentId).maybeSingle()
   ])
@@ -301,7 +310,7 @@ export default async function EditStudent({ params }: Params) {
                       />
                     </td>
                     <td className="py-2 pr-4">
-                      <select name={`conf_${cq.id}`} defaultValue={a?.confidence_pct ?? 50} className="select py-2 px-3 w-full min-w-[110px] sm:w-32">
+                      <select name={`conf_${cq.id}`} defaultValue={a?.confidence_pct ?? 50} className="input select py-2 px-3 w-full min-w-[110px] sm:w-32">
                         {[10,30,50,70,90].map(c => <option key={c} value={c}>{getConfidenceLabel(c)}</option>)}
                       </select>
                     </td>
@@ -334,7 +343,7 @@ export default async function EditStudent({ params }: Params) {
       <div className="card border-duo-red/30 bg-duo-red/5">
         <h3 className="font-bold text-eel mb-2">Danger Zone</h3>
         <p className="text-sm text-wolf mb-4">
-          Permanently delete this student and all their answers. This action cannot be undone.
+          Permanently delete this student and all their answers for the current school year and competition mode. If this student exists in other school years or modes, you will need to delete them there separately. This action cannot be undone.
         </p>
         <DeleteStudentButton
           studentId={student.id}
