@@ -663,26 +663,18 @@ export default function ClassContent({
                     <p className="text-sm text-hare mb-6 max-w-md mx-auto">
                       You can generate credentials for <strong>{schoolYear}</strong> using the same usernames and names from previous years. Each student will get a new password.
                     </p>
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                      <button
-                        onClick={() => {
-                          autoGenAttemptedRef.current = true
-                          autoGenerateCredentials('mock')
-                        }}
-                        className="btn btn-primary"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        Generate from Previous Years
-                      </button>
-                      <button onClick={() => setShowAddStudentsModal(true)} className="btn btn-outline">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                        </svg>
-                        Add New Students Instead
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => {
+                        autoGenAttemptedRef.current = true
+                        autoGenerateCredentials('mock')
+                      }}
+                      className="btn btn-primary"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Generate from Previous Years
+                    </button>
                   </>
                 )}
               </div>
