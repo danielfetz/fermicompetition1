@@ -116,6 +116,15 @@ export default function ClassContent({
   const [editLoading, setEditLoading] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
 
+  // Add students modal state
+  const [showAddStudentsModal, setShowAddStudentsModal] = useState(false)
+  const [addCount, setAddCount] = useState(10)
+  const [addNames, setAddNames] = useState('')
+  const [addLoading, setAddLoading] = useState(false)
+  const [addError, setAddError] = useState<string | null>(null)
+  const [addResult, setAddResult] = useState<{ username: string; password: string; full_name?: string }[] | null>(null)
+  const [addCopied, setAddCopied] = useState(false)
+
   async function saveClassEdits() {
     setEditLoading(true)
     setEditError(null)
@@ -138,6 +147,71 @@ export default function ClassContent({
     }
     setShowEditModal(false)
     router.refresh()
+  }
+
+  function resetAddStudentsForm() {
+    setAddCount(10)
+    setAddNames('')
+    setAddError(null)
+    setAddResult(null)
+  }
+
+  async function handleAddStudents(e: React.FormEvent) {
+    e.preventDefault()
+    if (addCount < 1 || addCount > 200) {
+      setAddError('Please enter a number between 1 and 200.')
+      return
+    }
+    setAddLoading(true)
+    setAddError(null)
+
+    const parsedNames = addNames
+      .split(',')
+      .map(n => n.trim())
+      .filter(n => n.length > 0)
+
+    const res = await fetch(`/api/classes/${classId}/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ count: addCount, competition_mode: mode, names: parsedNames })
+    })
+
+    setAddLoading(false)
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: 'Error' }))
+      setAddError(body.error || 'Failed to generate credentials.')
+      return
+    }
+    const data = await res.json()
+    setAddResult(data.credentials)
+  }
+
+  function copyAddedCredentials() {
+    if (!addResult) return
+    const text = addResult.map(r => `${r.username}\t${r.password}\t${r.full_name || ''}`).join('\n')
+    navigator.clipboard.writeText(text)
+    setAddCopied(true)
+    setTimeout(() => setAddCopied(false), 2000)
+  }
+
+  function downloadAddedCredentials() {
+    if (!addResult) return
+    const csv = 'Username,Password,Name\n' + addResult.map(r => `${r.username},${r.password},${r.full_name || ''}`).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `student-credentials-${mode}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  function closeAddStudentsModal() {
+    setShowAddStudentsModal(false)
+    if (addResult) {
+      resetAddStudentsForm()
+      router.refresh()
+    }
   }
 
   // Check access client-side on mount using API endpoint for reliability
@@ -352,12 +426,12 @@ export default function ClassContent({
             onModeChange={setMode}
           />
           {(mode === 'mock' || (mode === 'real' && realUnlocked && competitionStarted)) && (
-            <Link className="btn btn-primary" href={`/teacher/class/${classId}/generate?mode=${mode}`}>
+            <button className="btn btn-primary" onClick={() => setShowAddStudentsModal(true)}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
               </svg>
               Add Students
-            </Link>
+            </button>
           )}
         </div>
       </div>
@@ -603,12 +677,12 @@ export default function ClassContent({
                         </svg>
                         Generate from Previous Years
                       </button>
-                      <Link href={`/teacher/class/${classId}/generate?mode=${mode}`} className="btn btn-outline">
+                      <button onClick={() => setShowAddStudentsModal(true)} className="btn btn-outline">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                         </svg>
                         Add New Students Instead
-                      </Link>
+                      </button>
                     </div>
                   </>
                 )}
@@ -634,9 +708,9 @@ export default function ClassContent({
                     <p className="text-wolf mb-4">
                       Add students to get started. Credentials will auto-generate for the other mode using the same usernames.
                     </p>
-                    <Link href={`/teacher/class/${classId}/generate?mode=${mode}`} className="btn btn-primary">
+                    <button onClick={() => setShowAddStudentsModal(true)} className="btn btn-primary">
                       Add Students
-                    </Link>
+                    </button>
                   </>
                 )}
               </div>
@@ -752,6 +826,158 @@ export default function ClassContent({
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Students Modal */}
+      {showAddStudentsModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 !mt-0">
+          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-eel">
+                  {addResult ? 'Credentials Generated!' : 'Add Students'}
+                </h2>
+                <button
+                  onClick={closeAddStudentsModal}
+                  className="p-2 text-wolf hover:text-eel hover:bg-snow rounded-lg transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {addResult ? (
+                // Results view
+                <div className="space-y-4">
+                  <p className="text-wolf text-center">
+                    {addResult.length} student accounts are ready.
+                  </p>
+
+                  {/* Action buttons */}
+                  <div className="flex gap-3 justify-center">
+                    <button onClick={copyAddedCredentials} className="btn btn-secondary btn-sm">
+                      {addCopied ? (
+                        <>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          Copy All
+                        </>
+                      )}
+                    </button>
+                    <button onClick={downloadAddedCredentials} className="btn btn-outline btn-sm">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                      Download CSV
+                    </button>
+                  </div>
+
+                  {/* Credentials table */}
+                  <div className="max-h-64 overflow-y-auto border rounded-lg">
+                    <table className="w-full text-sm">
+                      <thead className="bg-snow sticky top-0">
+                        <tr className="text-left">
+                          <th className="py-2 px-3 font-bold text-wolf text-xs">#</th>
+                          <th className="py-2 px-3 font-bold text-wolf text-xs">Username</th>
+                          <th className="py-2 px-3 font-bold text-wolf text-xs">Password</th>
+                          <th className="py-2 px-3 font-bold text-wolf text-xs">Name</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-swan">
+                        {addResult.map((r, i) => (
+                          <tr key={i} className="hover:bg-snow">
+                            <td className="py-2 px-3 text-wolf">{i + 1}</td>
+                            <td className="py-2 px-3 font-mono font-semibold text-duo-blue text-xs">{r.username}</td>
+                            <td className="py-2 px-3 font-mono text-eel text-xs">{r.password}</td>
+                            <td className="py-2 px-3 text-eel text-xs">{r.full_name || <span className="text-hare">—</span>}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      onClick={() => { resetAddStudentsForm() }}
+                      className="btn btn-outline flex-1"
+                    >
+                      Add More
+                    </button>
+                    <button
+                      onClick={closeAddStudentsModal}
+                      className="btn btn-primary flex-1"
+                    >
+                      Done
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                // Form view
+                <form onSubmit={handleAddStudents} className="space-y-4">
+                  <div className="form-group">
+                    <label className="label" htmlFor="add-count">How many students?</label>
+                    <input
+                      id="add-count"
+                      type="number"
+                      min={1}
+                      max={200}
+                      className="input"
+                      value={addCount}
+                      onChange={e => setAddCount(parseInt(e.target.value || '0'))}
+                      required
+                    />
+                    <p className="text-sm text-wolf mt-1">Enter a number between 1 and 200</p>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="label" htmlFor="add-names">Student names (optional)</label>
+                    <textarea
+                      id="add-names"
+                      className="input min-h-[80px]"
+                      value={addNames}
+                      onChange={e => setAddNames(e.target.value)}
+                      placeholder="Daniel M, Fred T, Michael G"
+                    />
+                    <p className="text-sm text-wolf mt-1">Enter names separated by commas</p>
+                  </div>
+
+                  {addError && (
+                    <div className="bg-duo-red/10 border-2 border-duo-red rounded-duo p-3">
+                      <p className="text-duo-red-dark text-sm font-semibold">{addError}</p>
+                    </div>
+                  )}
+
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => { setShowAddStudentsModal(false); resetAddStudentsForm() }}
+                      className="btn btn-outline flex-1"
+                      disabled={addLoading}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary flex-1"
+                      disabled={addLoading || addCount < 1}
+                    >
+                      {addLoading ? 'Generating...' : `Add ${addCount} Students`}
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         </div>

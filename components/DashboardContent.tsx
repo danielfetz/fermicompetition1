@@ -34,13 +34,6 @@ const COUNTRIES = [
   'Thailand', 'Vietnam', 'Philippines', 'Pakistan', 'Bangladesh', 'Other'
 ]
 
-const SCHOOL_YEARS = [
-  '2024-25',
-  '2025-26',
-  '2026-27',
-  '2027-28',
-]
-
 type ClassData = {
   id: string
   name: string
@@ -74,7 +67,6 @@ export default function DashboardContent({
   const [schoolName, setSchoolName] = useState('')
   const [gradeLevel, setGradeLevel] = useState('')
   const [country, setCountry] = useState('')
-  const [schoolYear, setSchoolYear] = useState('2025-26')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -83,7 +75,6 @@ export default function DashboardContent({
     setSchoolName('')
     setGradeLevel('')
     setCountry('')
-    setSchoolYear('2025-26')
     setError(null)
   }
 
@@ -105,7 +96,7 @@ export default function DashboardContent({
         school_name: schoolName || null,
         grade_level: gradeLevel || null,
         country: country || null,
-        school_year: schoolYear
+        school_year: '2025-26'
       })
       .select('id')
       .single()
@@ -315,20 +306,6 @@ export default function DashboardContent({
                     <option value="">Select country...</option>
                     {COUNTRIES.map(c => (
                       <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="label" htmlFor="new-class-year">School Year</label>
-                  <select
-                    id="new-class-year"
-                    className="input"
-                    value={schoolYear}
-                    onChange={e => setSchoolYear(e.target.value)}
-                  >
-                    {SCHOOL_YEARS.map(y => (
-                      <option key={y} value={y}>{y}</option>
                     ))}
                   </select>
                 </div>
