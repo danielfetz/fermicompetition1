@@ -16,15 +16,26 @@ export async function POST(req: NextRequest, { params }: { params: { studentId: 
   const { data: cls } = await service.from('classes').select('id, teacher_id').eq('id', class_id).single()
   if (!cls || cls.teacher_id !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  // Verify the student belongs to this class
-  const { data: student } = await service.from('students').select('id, class_id').eq('id', params.studentId).single()
+  // Get the student's username to find all instances across modes/years
+  const { data: student } = await service.from('students')
+    .select('id, class_id, username')
+    .eq('id', params.studentId)
+    .single()
   if (!student || student.class_id !== class_id) return NextResponse.json({ error: 'Student not found' }, { status: 404 })
 
-  // Delete all answers for this student first (due to foreign key constraints)
-  await service.from('answers').delete().eq('student_id', params.studentId)
+  // Find all student records with same username in this class (across all modes and school years)
+  const { data: allInstances } = await service.from('students')
+    .select('id')
+    .eq('class_id', class_id)
+    .eq('username', student.username)
 
-  // Delete the student
-  const { error } = await service.from('students').delete().eq('id', params.studentId)
+  const studentIds = allInstances?.map(s => s.id) || [params.studentId]
+
+  // Delete all answers for all instances first (due to foreign key constraints)
+  await service.from('answers').delete().in('student_id', studentIds)
+
+  // Delete all student instances with this username
+  const { error } = await service.from('students').delete().in('id', studentIds)
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
 
   return NextResponse.redirect(new URL(`/teacher/class/${class_id}?mode=${mode}`, req.url))

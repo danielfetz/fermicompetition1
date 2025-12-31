@@ -8,7 +8,7 @@ type Props = {
 
 export default function DeleteStudentButton({ studentId, classId, mode }: Props) {
   async function handleDelete() {
-    if (!confirm('Are you sure you want to delete this student? This cannot be undone.')) {
+    if (!confirm('Are you sure you want to delete this student? This will remove the student across all competition modes and school years. This cannot be undone.')) {
       return
     }
 
