@@ -73,8 +73,17 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     .eq('school_year', schoolYear)
 
   // Get ALL students from ALL previous years (to reuse all usernames/names)
-  // Order by school_year descending so more recent names take precedence
-  const { data: allPreviousStudents } = await service
+  // First get official mode students (preferred for full_name)
+  const { data: realPreviousStudents } = await service
+    .from('students')
+    .select('username, full_name, school_year')
+    .eq('class_id', cls.id)
+    .eq('competition_mode', 'real')
+    .neq('school_year', schoolYear)
+    .order('school_year', { ascending: false })
+
+  // Then get mock mode students
+  const { data: mockPreviousStudents } = await service
     .from('students')
     .select('username, full_name, school_year')
     .eq('class_id', cls.id)
@@ -83,11 +92,24 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     .order('school_year', { ascending: false })
 
   // Build a map of all unique usernames from all previous years
-  // More recent full_name takes precedence (since we ordered by school_year desc)
+  // Official mode (real) full_name takes precedence, then mock mode
+  // Within each mode, more recent school_year takes precedence
   let previousStudentsMap = new Map<string, string | null>()
-  if (allPreviousStudents) {
-    for (const s of allPreviousStudents) {
+
+  // First add mock students (these will be overwritten by real if available)
+  if (mockPreviousStudents) {
+    for (const s of mockPreviousStudents) {
       if (!previousStudentsMap.has(s.username)) {
+        previousStudentsMap.set(s.username, s.full_name)
+      }
+    }
+  }
+
+  // Then add/overwrite with real students (official mode takes precedence)
+  if (realPreviousStudents) {
+    for (const s of realPreviousStudents) {
+      // Only overwrite if real mode has a non-null full_name, or if username doesn't exist yet
+      if (!previousStudentsMap.has(s.username) || s.full_name) {
         previousStudentsMap.set(s.username, s.full_name)
       }
     }
