@@ -32,14 +32,23 @@ export default async function ClassDetail({ params, searchParams }: Params) {
   // Check class exists, belongs to current user, and is not the system guest class
   if (!cls || cls.teacher_id !== user.id || cls.name === '__guest_class__') return notFound()
 
-  // Fetch students for the current school year (both mock and real modes)
+  // Fetch students for the current school year
+  // Only include real mode students if teacher has access
   const schoolYear = cls.school_year || '2025-26'
-  const { data: students } = await service
+  const { data: allStudents } = await service
     .from('students')
     .select('id, username, full_name, has_completed_exam, plain_password, competition_mode')
     .eq('class_id', cls.id)
     .eq('school_year', schoolYear)
     .order('username')
+
+  // Filter out real mode credentials if teacher doesn't have access
+  const students = (allStudents || []).map(s => {
+    if (s.competition_mode === 'real' && !realUnlocked) {
+      return { ...s, plain_password: null }
+    }
+    return s
+  })
 
   // Check if students exist from the most recent previous school year (for auto-generation)
   const { data: mostRecentPrevYear } = await service
