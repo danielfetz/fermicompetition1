@@ -310,7 +310,7 @@ export default async function EditStudent({ params }: Params) {
                       />
                     </td>
                     <td className="py-2 pr-4">
-                      <select name={`conf_${cq.id}`} defaultValue={a?.confidence_pct ?? 50} className="select py-2 px-3 w-full min-w-[110px] sm:w-32">
+                      <select name={`conf_${cq.id}`} defaultValue={a?.confidence_pct ?? 50} className="input select py-2 px-3 w-full min-w-[110px] sm:w-32">
                         {[10,30,50,70,90].map(c => <option key={c} value={c}>{getConfidenceLabel(c)}</option>)}
                       </select>
                     </td>
@@ -343,7 +343,7 @@ export default async function EditStudent({ params }: Params) {
       <div className="card border-duo-red/30 bg-duo-red/5">
         <h3 className="font-bold text-eel mb-2">Danger Zone</h3>
         <p className="text-sm text-wolf mb-4">
-          Permanently delete this student and all their answers. This action cannot be undone.
+          Permanently delete this student and all their answers. This will also delete the student from all school years and both practice/official competition modes. This action cannot be undone.
         </p>
         <DeleteStudentButton
           studentId={student.id}

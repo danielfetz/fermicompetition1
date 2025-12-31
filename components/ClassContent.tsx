@@ -184,6 +184,8 @@ export default function ClassContent({
     }
     const data = await res.json()
     setAddResult(data.credentials)
+    // Refresh the page in the background so the student list updates
+    router.refresh()
   }
 
   function copyAddedCredentials() {
@@ -208,10 +210,7 @@ export default function ClassContent({
 
   function closeAddStudentsModal() {
     setShowAddStudentsModal(false)
-    if (addResult) {
-      resetAddStudentsForm()
-      router.refresh()
-    }
+    resetAddStudentsForm()
   }
 
   // Check access client-side on mount using API endpoint for reliability
