@@ -30,8 +30,9 @@ function formatNumberReadable(num: number): string {
   for (const unit of units) {
     if (absNum >= unit.value) {
       const value = absNum / unit.value
-      // Format with up to 2 decimal places, removing trailing zeros
-      const formatted = value.toFixed(2).replace(/\.?0+$/, '')
+      // Truncate to 2 decimal places (don't round up to avoid showing incorrect values)
+      const truncated = Math.floor(value * 100) / 100
+      const formatted = truncated.toFixed(2).replace(/\.?0+$/, '')
       return `${sign}${formatted} ${unit.name}`
     }
   }
