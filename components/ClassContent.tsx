@@ -227,7 +227,10 @@ export default function ClassContent({
           <p className="text-wolf">Checking access...</p>
         </div>
       ) : mode === 'real' && !realUnlocked ? (
-        <OfficialCompetitionCodeEntry onSuccess={() => setRealUnlocked(true)} />
+        <OfficialCompetitionCodeEntry onSuccess={() => {
+          setRealUnlocked(true)
+          router.refresh()
+        }} />
       ) : mode === 'real' && !competitionStarted ? (
         <CompetitionCountdown />
       ) : autoGenerating ? (
