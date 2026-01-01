@@ -542,12 +542,12 @@ export default function StudentExam() {
                       const confidenceLabel = { 10: '0-20%', 30: '20-40%', 50: '40-60%', 70: '60-80%', 90: '80-100%' }[confidence] ?? '40-60%'
                       return (
                         <p className="text-wolf">
-                          With your current estimate at {confidenceLabel} confidence, you&apos;ll earn <span className="font-semibold text-duo-green">+{correctPoints}</span> points if the correct answer is anywhere from {formatNumberReadable(lowRange)} to {formatNumberReadable(highRange)}, or lose <span className="font-semibold text-duo-red">{wrongPoints}</span> if outside that range.
+                          With your current estimate at {confidenceLabel} confidence, you&apos;ll earn <span className="font-semibold text-duo-green">+{correctPoints}</span> points if the correct answer is anywhere from {formatNumberReadable(lowRange)} to {formatNumberReadable(highRange)}, or lose <span className="font-semibold text-duo-red">{wrongPoints > 0 ? `-${wrongPoints}` : '0'}</span> if outside that range.
                         </p>
                       )
                     })() : (
                       <p className="text-wolf">
-                        Hints unlock at halftime (35 min). Use new info to update your estimates—find the balance between overreacting and underreacting!
+                        Hints unlock at halftime (35 min). Use the new information to update your estimates, find the balance between overreacting and underreacting!
                       </p>
                     )}
                   </div>
