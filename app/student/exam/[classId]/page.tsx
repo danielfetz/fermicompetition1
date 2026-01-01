@@ -542,7 +542,7 @@ export default function StudentExam() {
                       const confidenceLabel = { 10: '0-20%', 30: '20-40%', 50: '40-60%', 70: '60-80%', 90: '80-100%' }[confidence] || '40-60%'
                       return (
                         <p className="text-wolf">
-                          With your current estimate of <span className="font-semibold text-eel">{estimate.toLocaleString()}</span> at <span className="font-semibold text-eel">{confidenceLabel}</span> confidence, you&apos;ll earn <span className="font-semibold text-duo-green">+{correctPoints}</span> points if the answer falls between {lowRange.toLocaleString()} and {highRange.toLocaleString()}, or lose <span className="font-semibold text-duo-red">{wrongPoints > 0 ? `-${wrongPoints}` : '0'}</span> points if outside that range.
+                          With your current estimate of <span className="font-semibold text-eel">{estimate.toLocaleString()}</span> at <span className="font-semibold text-eel">{confidenceLabel}</span> confidence, you&apos;ll earn <span className="font-semibold text-duo-green">+{correctPoints}</span> points if the correct answer is anywhere from {lowRange.toLocaleString()} to {highRange.toLocaleString()}, or lose <span className="font-semibold text-duo-red">{wrongPoints > 0 ? `-${wrongPoints}` : '0'}</span> points if outside that range.
                         </p>
                       )
                     })() : (
