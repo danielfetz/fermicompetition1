@@ -78,7 +78,12 @@ function TeacherLoginContent() {
           </div>
 
           <div className="form-group">
-            <label className="label" htmlFor="password">Password</label>
+            <div className="flex items-center justify-between">
+              <label className="label" htmlFor="password">Password</label>
+              <Link href="/teacher/forgot-password" className="text-sm text-duo-blue hover:underline">
+                Forgot password?
+              </Link>
+            </div>
             <input
               id="password"
               type="password"
