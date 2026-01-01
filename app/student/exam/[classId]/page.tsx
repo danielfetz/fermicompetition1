@@ -525,26 +525,35 @@ export default function StudentExam() {
                   value={answers[currentQuestion.id]?.confidence_pct || 50}
                   onChange={updateConfidence}
                 />
+
+                {/* Dynamic Info Section */}
+                <div className="mt-6 pt-4 border-t border-swan">
+                  <div className="flex gap-3 text-sm">
+                    <svg className="w-5 h-5 text-duo-blue flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {answers[currentQuestion.id]?.value ? (() => {
+                      const estimate = answers[currentQuestion.id].value
+                      const confidence = answers[currentQuestion.id]?.confidence_pct || 50
+                      const lowRange = Math.round(estimate * 0.5)
+                      const highRange = Math.round(estimate * 2)
+                      const correctPoints = { 10: 3, 30: 7, 50: 10, 70: 12, 90: 13 }[confidence] || 10
+                      const wrongPoints = { 10: 0, 30: 1, 50: 3, 70: 6, 90: 10 }[confidence] || 3
+                      return (
+                        <p className="text-wolf">
+                          With your current estimate of <span className="font-semibold text-eel">{estimate.toLocaleString()}</span> at <span className="font-semibold text-eel">{confidence}%</span> confidence, you&apos;ll earn <span className="font-semibold text-duo-green">+{correctPoints}</span> points if the answer falls between {lowRange.toLocaleString()} and {highRange.toLocaleString()}, or lose <span className="font-semibold text-duo-red">{wrongPoints > 0 ? `-${wrongPoints}` : '0'}</span> points if outside that range.
+                        </p>
+                      )
+                    })() : (
+                      <p className="text-wolf">
+                        Hints unlock at halftime (35 min). Use new info to update your estimates—find the balance between overreacting and underreacting!
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           )}
-
-          {/* Hints Info Card */}
-          <div className="card bg-duo-blue/5 border-duo-blue/20">
-            <div className="flex gap-3">
-              <div className="flex-shrink-0 w-10 h-10 bg-duo-blue/20 rounded-full flex items-center justify-center">
-                <svg className="w-5 h-5 text-duo-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-bold text-duo-blue">Learn more about hints</h3>
-                <p className="text-wolf mt-1" style={{ fontSize: '0.9375rem', lineHeight: '1.25rem' }}>
-                  Hints are unlocked at halftime (35 minutes). Use the new information to update your estimates and confidence, but find the balance between overreacting and underreacting!
-                </p>
-              </div>
-            </div>
-          </div>
 
           {/* Error Message */}
           {error && (
