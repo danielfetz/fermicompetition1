@@ -566,7 +566,7 @@ export default function StudentExam() {
 
       {/* Fixed Navigation Footer */}
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t-2 border-swan">
-        <div className="max-w-2xl mx-auto px-4 pt-4 flex items-center justify-between" style={{ paddingBottom: '1.125rem' }}>
+        <div className="max-w-2xl mx-auto px-4 pt-6 flex items-center justify-between" style={{ paddingBottom: '1.625rem' }}>
           <button
             onClick={prevQuestion}
             disabled={currentIndex === 0}
