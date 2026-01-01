@@ -183,7 +183,9 @@ CREATE TABLE public.teacher_profiles (
 
 -- 4.1: Updated at trigger function
 CREATE OR REPLACE FUNCTION public.set_updated_at()
-RETURNS trigger LANGUAGE plpgsql AS $$
+RETURNS trigger LANGUAGE plpgsql
+SET search_path = ''
+AS $$
 BEGIN
   new.updated_at = now();
   RETURN new;
@@ -191,13 +193,17 @@ END$$;
 
 -- 4.2: Helper function to get current user's master code ID (bypasses RLS)
 CREATE OR REPLACE FUNCTION public.get_current_user_master_code_id()
-RETURNS uuid LANGUAGE sql SECURITY DEFINER STABLE AS $$
+RETURNS uuid LANGUAGE sql SECURITY DEFINER STABLE
+SET search_path = ''
+AS $$
   SELECT master_code_id FROM public.teacher_profiles WHERE user_id = auth.uid();
 $$;
 
 -- 4.3: Seed class questions function
 CREATE OR REPLACE FUNCTION public.seed_class_questions(p_class_id uuid, p_mode public.competition_mode DEFAULT 'mock', p_school_year text DEFAULT '2025-26')
-RETURNS void LANGUAGE plpgsql AS $$
+RETURNS void LANGUAGE plpgsql
+SET search_path = ''
+AS $$
 BEGIN
   INSERT INTO public.class_questions (class_id, fermi_question_id, "order", competition_mode, school_year)
   SELECT p_class_id, fq.id, fq."order", p_mode, p_school_year
@@ -212,7 +218,9 @@ CREATE OR REPLACE FUNCTION public.student_has_completed_mode(
   p_student_id uuid,
   p_mode public.competition_mode
 )
-RETURNS boolean LANGUAGE plpgsql AS $$
+RETURNS boolean LANGUAGE plpgsql
+SET search_path = ''
+AS $$
 DECLARE
   v_submitted boolean;
 BEGIN
@@ -225,7 +233,9 @@ END$$;
 
 -- 4.5: Claim teacher code function
 CREATE OR REPLACE FUNCTION public.claim_teacher_code(p_code text)
-RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER AS $$
+RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
+AS $$
 DECLARE
   v_code_record record;
   v_user_id uuid;
@@ -269,7 +279,9 @@ END$$;
 
 -- 4.6: Claim master code function
 CREATE OR REPLACE FUNCTION public.claim_master_code(p_code text)
-RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER AS $$
+RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
+AS $$
 DECLARE
   v_code_record record;
   v_user_id uuid;
@@ -304,7 +316,9 @@ END$$;
 
 -- 4.7: Claim any code (tries both types)
 CREATE OR REPLACE FUNCTION public.claim_code(p_code text)
-RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER AS $$
+RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
+AS $$
 DECLARE
   v_result jsonb;
 BEGIN
@@ -321,7 +335,9 @@ END$$;
 
 -- 4.8: Generate teacher code (for coordinators)
 CREATE OR REPLACE FUNCTION public.generate_teacher_code(p_name text DEFAULT NULL)
-RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER AS $$
+RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
+AS $$
 DECLARE
   v_user_id uuid;
   v_master_code_id uuid;
@@ -363,17 +379,20 @@ END$$;
 
 -- 4.9: Get username max numbers (efficient lookup for username generation)
 CREATE OR REPLACE FUNCTION get_username_max_numbers()
-RETURNS TABLE (base text, max_num int) AS $$
+RETURNS TABLE (base text, max_num int)
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
+AS $$
 BEGIN
   RETURN QUERY
   SELECT
     regexp_replace(username, '\d+$', '') AS base,
     MAX(CAST(regexp_replace(username, '^.*?(\d+)$', '\1') AS int)) AS max_num
-  FROM students
+  FROM public.students
   WHERE username ~ '\d+$'
   GROUP BY regexp_replace(username, '\d+$', '');
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- =====================================================
 -- SECTION 5: CREATE TRIGGERS
@@ -499,52 +518,63 @@ CREATE POLICY "anyone_can_read_questions" ON public.fermi_questions
 
 -- 8.2: classes
 CREATE POLICY "teacher_select_own_classes" ON public.classes
-  FOR SELECT USING (auth.uid() = teacher_id);
+  FOR SELECT USING ((SELECT auth.uid()) = teacher_id);
 CREATE POLICY "teacher_insert_classes" ON public.classes
-  FOR INSERT WITH CHECK (auth.uid() = teacher_id);
+  FOR INSERT WITH CHECK ((SELECT auth.uid()) = teacher_id);
 CREATE POLICY "teacher_update_own_classes" ON public.classes
-  FOR UPDATE USING (auth.uid() = teacher_id);
+  FOR UPDATE USING ((SELECT auth.uid()) = teacher_id);
 CREATE POLICY "teacher_delete_own_classes" ON public.classes
-  FOR DELETE USING (auth.uid() = teacher_id);
+  FOR DELETE USING ((SELECT auth.uid()) = teacher_id);
 
 -- 8.3: students
 CREATE POLICY "teacher_select_students" ON public.students
-  FOR SELECT USING (EXISTS (SELECT 1 FROM public.classes c WHERE c.id = class_id AND c.teacher_id = auth.uid()));
+  FOR SELECT USING (EXISTS (SELECT 1 FROM public.classes c WHERE c.id = class_id AND c.teacher_id = (SELECT auth.uid())));
 CREATE POLICY "teacher_insert_students" ON public.students
-  FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM public.classes c WHERE c.id = class_id AND c.teacher_id = auth.uid()));
+  FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM public.classes c WHERE c.id = class_id AND c.teacher_id = (SELECT auth.uid())));
 CREATE POLICY "teacher_update_students" ON public.students
-  FOR UPDATE USING (EXISTS (SELECT 1 FROM public.classes c WHERE c.id = class_id AND c.teacher_id = auth.uid()));
+  FOR UPDATE USING (EXISTS (SELECT 1 FROM public.classes c WHERE c.id = class_id AND c.teacher_id = (SELECT auth.uid())));
 CREATE POLICY "teacher_delete_students" ON public.students
-  FOR DELETE USING (EXISTS (SELECT 1 FROM public.classes c WHERE c.id = class_id AND c.teacher_id = auth.uid()));
+  FOR DELETE USING (EXISTS (SELECT 1 FROM public.classes c WHERE c.id = class_id AND c.teacher_id = (SELECT auth.uid())));
 
--- 8.4: class_questions
-CREATE POLICY "teacher_manage_class_questions" ON public.class_questions
-  FOR ALL USING (EXISTS (SELECT 1 FROM public.classes c WHERE c.id = class_id AND c.teacher_id = auth.uid()));
+-- 8.4: class_questions (public read, teacher write)
+-- Note: Using single SELECT policy for public read; teacher writes handled separately
 CREATE POLICY "anyone_can_read_class_questions" ON public.class_questions
   FOR SELECT USING (true);
+CREATE POLICY "teacher_insert_class_questions" ON public.class_questions
+  FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM public.classes c WHERE c.id = class_id AND c.teacher_id = (SELECT auth.uid())));
+CREATE POLICY "teacher_update_class_questions" ON public.class_questions
+  FOR UPDATE USING (EXISTS (SELECT 1 FROM public.classes c WHERE c.id = class_id AND c.teacher_id = (SELECT auth.uid())));
+CREATE POLICY "teacher_delete_class_questions" ON public.class_questions
+  FOR DELETE USING (EXISTS (SELECT 1 FROM public.classes c WHERE c.id = class_id AND c.teacher_id = (SELECT auth.uid())));
 
 -- 8.5: student_exam_sessions
-CREATE POLICY "teacher_manage_sessions" ON public.student_exam_sessions
-  FOR ALL USING (EXISTS (SELECT 1 FROM public.classes c WHERE c.id = class_id AND c.teacher_id = auth.uid()));
+CREATE POLICY "teacher_select_sessions" ON public.student_exam_sessions
+  FOR SELECT USING (EXISTS (SELECT 1 FROM public.classes c WHERE c.id = class_id AND c.teacher_id = (SELECT auth.uid())));
+CREATE POLICY "teacher_insert_sessions" ON public.student_exam_sessions
+  FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM public.classes c WHERE c.id = class_id AND c.teacher_id = (SELECT auth.uid())));
+CREATE POLICY "teacher_update_sessions" ON public.student_exam_sessions
+  FOR UPDATE USING (EXISTS (SELECT 1 FROM public.classes c WHERE c.id = class_id AND c.teacher_id = (SELECT auth.uid())));
+CREATE POLICY "teacher_delete_sessions" ON public.student_exam_sessions
+  FOR DELETE USING (EXISTS (SELECT 1 FROM public.classes c WHERE c.id = class_id AND c.teacher_id = (SELECT auth.uid())));
 
 -- 8.6: answers
 CREATE POLICY "teacher_select_answers" ON public.answers
   FOR SELECT USING (EXISTS (
     SELECT 1 FROM public.students s
     JOIN public.classes c ON c.id = s.class_id
-    WHERE s.id = student_id AND c.teacher_id = auth.uid()
+    WHERE s.id = student_id AND c.teacher_id = (SELECT auth.uid())
   ));
 CREATE POLICY "teacher_upsert_answers" ON public.answers
   FOR INSERT WITH CHECK (EXISTS (
     SELECT 1 FROM public.students s
     JOIN public.classes c ON c.id = s.class_id
-    WHERE s.id = student_id AND c.teacher_id = auth.uid()
+    WHERE s.id = student_id AND c.teacher_id = (SELECT auth.uid())
   ));
 CREATE POLICY "teacher_update_answers" ON public.answers
   FOR UPDATE USING (EXISTS (
     SELECT 1 FROM public.students s
     JOIN public.classes c ON c.id = s.class_id
-    WHERE s.id = student_id AND c.teacher_id = auth.uid()
+    WHERE s.id = student_id AND c.teacher_id = (SELECT auth.uid())
   ));
 
 -- 8.7: master_codes
@@ -552,42 +582,42 @@ CREATE POLICY "coordinator_select_own_master_code" ON public.master_codes
   FOR SELECT USING (
     EXISTS (
       SELECT 1 FROM public.teacher_profiles tp
-      WHERE tp.user_id = auth.uid() AND tp.master_code_id = id
+      WHERE tp.user_id = (SELECT auth.uid()) AND tp.master_code_id = id
     )
   );
 
 -- 8.8: teacher_codes
-CREATE POLICY "teacher_select_own_code" ON public.teacher_codes
-  FOR SELECT USING (claimed_by = auth.uid());
-CREATE POLICY "coordinator_select_codes" ON public.teacher_codes
+-- Combined policy for SELECT to avoid multiple permissive policies
+CREATE POLICY "teacher_or_coordinator_select_codes" ON public.teacher_codes
   FOR SELECT USING (
-    EXISTS (
+    claimed_by = (SELECT auth.uid())
+    OR EXISTS (
       SELECT 1 FROM public.teacher_profiles tp
-      WHERE tp.user_id = auth.uid() AND tp.master_code_id = master_code_id
+      WHERE tp.user_id = (SELECT auth.uid()) AND tp.master_code_id = master_code_id
     )
   );
 CREATE POLICY "coordinator_insert_codes" ON public.teacher_codes
   FOR INSERT WITH CHECK (
     EXISTS (
       SELECT 1 FROM public.teacher_profiles tp
-      WHERE tp.user_id = auth.uid() AND tp.master_code_id = master_code_id
+      WHERE tp.user_id = (SELECT auth.uid()) AND tp.master_code_id = master_code_id
     )
   );
 CREATE POLICY "coordinator_update_codes" ON public.teacher_codes
   FOR UPDATE USING (
     EXISTS (
       SELECT 1 FROM public.teacher_profiles tp
-      WHERE tp.user_id = auth.uid() AND tp.master_code_id = master_code_id
+      WHERE tp.user_id = (SELECT auth.uid()) AND tp.master_code_id = master_code_id
     )
   );
 
 -- 8.9: teacher_profiles (simple policies to avoid recursion)
 CREATE POLICY "select_own_profile" ON public.teacher_profiles
-  FOR SELECT USING (user_id = auth.uid());
+  FOR SELECT USING (user_id = (SELECT auth.uid()));
 CREATE POLICY "insert_own_profile" ON public.teacher_profiles
-  FOR INSERT WITH CHECK (user_id = auth.uid());
+  FOR INSERT WITH CHECK (user_id = (SELECT auth.uid()));
 CREATE POLICY "update_own_profile" ON public.teacher_profiles
-  FOR UPDATE USING (user_id = auth.uid());
+  FOR UPDATE USING (user_id = (SELECT auth.uid()));
 
 -- =====================================================
 -- SECTION 9: GRANT PERMISSIONS
