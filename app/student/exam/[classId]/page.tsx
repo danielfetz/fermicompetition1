@@ -542,7 +542,7 @@ export default function StudentExam() {
                       const confidenceLabel = { 10: '0-20%', 30: '20-40%', 50: '40-60%', 70: '60-80%', 90: '80-100%' }[confidence] ?? '40-60%'
                       return (
                         <p className="text-wolf">
-                          At {confidenceLabel} confidence, you&apos;ll earn <span className="font-semibold text-duo-green">+{correctPoints}</span> points if the correct answer is anywhere from {formatNumberReadable(lowRange)} to {formatNumberReadable(highRange)}{wrongPoints > 0 ? <>, or lose <span className="font-semibold text-duo-red">-{wrongPoints}</span> if outside that range</> : ''}.
+                          With your current estimate at {confidenceLabel} confidence, you&apos;ll earn <span className="font-semibold text-duo-green">+{correctPoints}</span> points if the correct answer is anywhere from {formatNumberReadable(lowRange)} to {formatNumberReadable(highRange)}, or lose <span className="font-semibold text-duo-red">{wrongPoints}</span> if outside that range.
                         </p>
                       )
                     })() : (
