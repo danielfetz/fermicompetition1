@@ -82,8 +82,9 @@ export default function NewClass() {
     setLoading(false)
     if (error) setError(error.message)
     else {
+      // Keep loading state during redirect
+      setLoading(true)
       router.push(`/teacher/class/${data!.id}`)
-      router.refresh()
     }
   }
 

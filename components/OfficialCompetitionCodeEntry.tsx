@@ -11,6 +11,7 @@ export default function OfficialCompetitionCodeEntry({ onSuccess }: Props) {
   const [code, setCode] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -32,20 +33,46 @@ export default function OfficialCompetitionCodeEntry({ onSuccess }: Props) {
       if (rpcError) throw rpcError
 
       if (data?.success) {
-        // Call onSuccess callback if provided, otherwise reload
-        if (onSuccess) {
-          onSuccess()
-        } else {
-          window.location.reload()
-        }
+        setSuccess(true)
+        // Keep loading state and call onSuccess after brief delay to show success
+        setTimeout(() => {
+          if (onSuccess) {
+            onSuccess()
+          } else {
+            window.location.reload()
+          }
+        }, 1000)
       } else {
         setError(data?.error || 'Invalid code')
+        setIsSubmitting(false)
       }
     } catch (err) {
       setError('Failed to verify code. Please try again.')
-    } finally {
       setIsSubmitting(false)
     }
+  }
+
+  if (success) {
+    return (
+      <div className="card text-center py-12">
+        <div className="max-w-md mx-auto">
+          <div className="w-20 h-20 mx-auto mb-6 bg-duo-green/10 rounded-full flex items-center justify-center">
+            <svg className="w-10 h-10 text-duo-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 className="text-2xl font-extrabold text-duo-green mb-2">Code Activated!</h3>
+          <p className="text-wolf mb-4">Official competition is now unlocked.</p>
+          <div className="flex items-center justify-center gap-2 text-wolf">
+            <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            Loading...
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

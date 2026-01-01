@@ -1,4 +1,12 @@
 import bcrypt from 'bcryptjs'
+import { randomBytes } from 'crypto'
+
+// Cryptographically secure random integer in range [0, max)
+function secureRandomInt(max: number): number {
+  const randomBuffer = randomBytes(4)
+  const randomValue = randomBuffer.readUInt32BE(0)
+  return randomValue % max
+}
 
 export async function hashPassword(plain: string) {
   const salt = await bcrypt.genSalt(10)
@@ -15,7 +23,7 @@ export function generateReadablePassword(length = 8) {
   const chars = 'ABCDEFGHJKLMNPQRTUVWXYZ23456789'
   let out = ''
   for (let i = 0; i < length; i++) {
-    out += chars[Math.floor(Math.random() * chars.length)]
+    out += chars[secureRandomInt(chars.length)]
   }
   return out
 }
@@ -83,7 +91,7 @@ export function generateFunUsername(index: number): string {
   // Use modulo to cycle through scientists
   const scientist = SCIENTISTS[index % SCIENTISTS.length]
   // Add a random adjective for extra fun
-  const adjective = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)]
+  const adjective = ADJECTIVES[secureRandomInt(ADJECTIVES.length)]
   // Add a number suffix based on index
   const number = (index + 1).toString().padStart(2, '0')
 
@@ -119,8 +127,8 @@ export async function generateStudentCredentials(
 
   for (let i = 0; i < count; i++) {
     // Pick random adjective and scientist
-    const adjective = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)]
-    const scientist = SCIENTISTS[Math.floor(Math.random() * SCIENTISTS.length)]
+    const adjective = ADJECTIVES[secureRandomInt(ADJECTIVES.length)]
+    const scientist = SCIENTISTS[secureRandomInt(SCIENTISTS.length)]
     const baseUsername = `${adjective}${scientist}`.toLowerCase()
 
     // Get the next available number for this base

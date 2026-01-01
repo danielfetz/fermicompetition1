@@ -7,8 +7,6 @@ type CalibrationDataPoint = {
   count: number
 }
 
-type CalibrationStatus = 'well-calibrated' | 'overconfident' | 'underconfident' | 'insufficient-data'
-
 type DetailedCalibrationStatus =
   | 'decisive-overconfidence'
   | 'very-strong-overconfidence'
@@ -25,7 +23,6 @@ type DetailedCalibrationStatus =
 
 type BucketStatus = {
   confidence: number
-  status: CalibrationStatus
   detailedStatus?: DetailedCalibrationStatus
   probBelow?: number
   probAbove?: number
@@ -34,7 +31,6 @@ type BucketStatus = {
 
 interface CalibrationCurveProps {
   data: CalibrationDataPoint[]
-  status: CalibrationStatus
   bucketStatuses?: BucketStatus[]
 }
 
@@ -62,7 +58,7 @@ const DETAILED_STATUS_DESCRIPTIONS: Record<DetailedCalibrationStatus, string> = 
   'insufficient-data': 'there is insufficient evidence to judge'
 }
 
-export default function CalibrationCurve({ data, status, bucketStatuses }: CalibrationCurveProps) {
+export default function CalibrationCurve({ data, bucketStatuses }: CalibrationCurveProps) {
   // Chart dimensions - increased bottom padding for axis label spacing
   const width = 300
   const height = 240

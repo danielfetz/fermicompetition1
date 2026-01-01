@@ -101,16 +101,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     }
   }
 
-  // Also get current year students to know which usernames already exist
-  const { data: currentYearStudents } = await service
-    .from('students')
-    .select('username')
-    .eq('class_id', cls.id)
-    .eq('competition_mode', 'mock')
-    .eq('school_year', schoolYear)
-
-  const currentYearUsernames = new Set(currentYearStudents?.map(s => s.username) || [])
-
   // If no students exist for current year but previous year students exist, reuse them
   if (currentYearCount === 0 && previousStudentsMap.size > 0) {
     // Reuse usernames/names from previous years with new passwords
@@ -153,31 +143,29 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     // Parse names array (ensure it's an array of strings)
     const namesList: string[] = Array.isArray(names) ? names.filter((n: unknown) => typeof n === 'string' && n.trim()) : []
 
-    let studentsToCreate = count
-    let nameIndex = 0
+    // Efficiently get max numbers for each base username pattern
+    const { data: maxNumbers } = await service.rpc('get_username_max_numbers')
 
-    // First, reuse any usernames from previous years that don't exist in current year yet
-    const missingFromCurrentYear: Array<{ username: string; full_name: string | null }> = []
-    for (const [username, fullName] of previousStudentsMap) {
-      if (!currentYearUsernames.has(username)) {
-        missingFromCurrentYear.push({ username, full_name: fullName })
+    // Build map of base -> max number
+    const existingMaxNumbers = new Map<string, number>()
+    if (maxNumbers) {
+      for (const row of maxNumbers as { base: string; max_num: number }[]) {
+        existingMaxNumbers.set(row.base, row.max_num)
       }
     }
 
-    // Reuse missing usernames first (up to the requested count)
-    for (const { username, full_name } of missingFromCurrentYear) {
-      if (studentsToCreate <= 0) break
+    // Generate fun scientist-themed credentials with globally unique usernames
+    const generatedCredentials = await generateStudentCredentials(count, existingMaxNumbers)
 
-      const fullName = namesList[nameIndex] || full_name || undefined
-      const plainPassword = generateReadablePassword(8)
-      const passwordHash = await hashPassword(plainPassword)
-
-      credentials.push({ username, password: plainPassword, full_name: fullName || undefined })
+    for (let i = 0; i < generatedCredentials.length; i++) {
+      const cred = generatedCredentials[i]
+      const fullName = namesList[i] || undefined
+      credentials.push({ username: cred.username, password: cred.plainPassword, full_name: fullName })
       rows.push({
         class_id: cls.id,
-        username,
-        password_hash: passwordHash,
-        plain_password: plainPassword,
+        username: cred.username,
+        password_hash: cred.passwordHash,
+        plain_password: cred.plainPassword,
         competition_mode: competition_mode,
         school_year: schoolYear,
         full_name: fullName
@@ -188,7 +176,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       const otherPasswordHash = await hashPassword(otherPlainPassword)
       otherModeRows.push({
         class_id: cls.id,
-        username,
+        username: cred.username,
         password_hash: otherPasswordHash,
         plain_password: otherPlainPassword,
         competition_mode: otherMode,
@@ -196,58 +184,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         full_name: fullName
       })
 
-      studentsToCreate--
-      nameIndex++
-    }
-
-    // If we still need more students, generate new ones
-    if (studentsToCreate > 0) {
-      // Efficiently get max numbers for each base username pattern
-      const { data: maxNumbers } = await service.rpc('get_username_max_numbers')
-
-      // Build map of base -> max number
-      const existingMaxNumbers = new Map<string, number>()
-      if (maxNumbers) {
-        for (const row of maxNumbers as { base: string; max_num: number }[]) {
-          existingMaxNumbers.set(row.base, row.max_num)
-        }
-      }
-
-      // Generate fun scientist-themed credentials with globally unique usernames
-      const generatedCredentials = await generateStudentCredentials(studentsToCreate, existingMaxNumbers)
-
-      for (let i = 0; i < generatedCredentials.length; i++) {
-        const cred = generatedCredentials[i]
-        const fullName = namesList[nameIndex] || undefined
-        credentials.push({ username: cred.username, password: cred.plainPassword, full_name: fullName })
-        rows.push({
-          class_id: cls.id,
-          username: cred.username,
-          password_hash: cred.passwordHash,
-          plain_password: cred.plainPassword,
-          competition_mode: competition_mode,
-          school_year: schoolYear,
-          full_name: fullName
-        })
-
-        // Also create student in the other mode with a different password
-        const otherPlainPassword = generateReadablePassword(8)
-        const otherPasswordHash = await hashPassword(otherPlainPassword)
-        otherModeRows.push({
-          class_id: cls.id,
-          username: cred.username,
-          password_hash: otherPasswordHash,
-          plain_password: otherPlainPassword,
-          competition_mode: otherMode,
-          school_year: schoolYear,
-          full_name: fullName
-        })
-
-        // Track new students to add to other school years
-        newStudentUsernames.push({ username: cred.username, full_name: fullName })
-
-        nameIndex++
-      }
+      // Track new students to add to other school years
+      newStudentUsernames.push({ username: cred.username, full_name: fullName })
     }
   }
 
@@ -316,7 +254,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     }
   }
 
-  // Update class num_students to reflect unique student count for this school year (count only one mode since both have same students)
+  // Update class num_students (count for class's school year, one mode since both have same students)
   const { count: totalStudents } = await service
     .from('students')
     .select('*', { count: 'exact', head: true })
