@@ -535,8 +535,8 @@ export default function StudentExam() {
                     {answers[currentQuestion.id]?.value ? (() => {
                       const estimate = answers[currentQuestion.id].value
                       const confidence = answers[currentQuestion.id]?.confidence_pct || 50
-                      const lowRange = Math.round(estimate * 0.5)
-                      const highRange = Math.round(estimate * 2)
+                      const lowRange = Math.ceil(estimate * 0.5)
+                      const highRange = Math.floor(estimate * 2)
                       const correctPoints = { 10: 3, 30: 7, 50: 10, 70: 12, 90: 13 }[confidence] ?? 10
                       const wrongPoints = { 10: 0, 30: 1, 50: 3, 70: 6, 90: 10 }[confidence] ?? 3
                       const confidenceLabel = { 10: '0-20%', 30: '20-40%', 50: '40-60%', 70: '60-80%', 90: '80-100%' }[confidence] ?? '40-60%'
