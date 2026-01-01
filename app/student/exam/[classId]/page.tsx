@@ -241,20 +241,6 @@ export default function StudentExam() {
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
-  // Redirect to results if user returns to tab after time expired
-  useEffect(() => {
-    if (!deadline) return
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && Date.now() > deadline) {
-        router.push('/student/done')
-      }
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [deadline, router])
-
   // Save when answers change (debounced)
   useEffect(() => {
     if (Object.keys(answers).length === 0) return
@@ -282,8 +268,8 @@ export default function StudentExam() {
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}))
       console.error('Submit error:', errorData)
-      // If time has expired, still go to results - answers were already auto-saved
-      if (errorData.error === 'Exam time has expired') {
+      // If time has expired or already submitted, still go to results - answers were already auto-saved
+      if (errorData.error === 'Exam time has expired' || errorData.error === 'Exam already submitted') {
         router.push('/student/done')
         return
       }
@@ -296,6 +282,21 @@ export default function StudentExam() {
   const handleTimeUp = useCallback(() => {
     submit()
   }, [submit])
+
+  // Redirect to results if user returns to tab after time expired
+  useEffect(() => {
+    if (!deadline) return
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && Date.now() > deadline) {
+        // Try to submit when returning - this will redirect to results
+        submit()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [deadline, submit])
 
   const currentQuestion = questions[currentIndex]
 
