@@ -28,15 +28,17 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to fetch score' }, { status: 500 })
   }
 
-  // Get detailed answer data for calibration calculation
-  // We need to know for each answer: confidence_pct and whether it was correct
+  // Get detailed answer data for calibration calculation and question details
+  // We need to know for each answer: confidence_pct, value, and question details
   const { data: answers, error: answersError } = await supa
     .from('answers')
     .select(`
       confidence_pct,
       value,
       class_question:class_questions!inner (
+        order,
         fermi_question:fermi_questions!inner (
+          prompt,
           correct_value
         )
       )
@@ -86,6 +88,32 @@ export async function GET(req: NextRequest) {
   // Assess calibration per bucket using Bayesian Beta Distribution
   const bucketStatuses = assessAllBuckets(calibrationData as CalibrationDataPoint[])
 
+  // Build questions array with details for the accordion
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const questions = (answers || []).map((a: any) => {
+    const classQuestion = a.class_question
+    const correctValue = classQuestion?.fermi_question?.correct_value as number | null
+    const isCorrect = correctValue !== null && correctValue !== undefined
+      ? a.value >= correctValue * 0.5 && a.value <= correctValue * 2.0
+      : null
+
+    // Calculate orders of magnitude difference (log10 ratio)
+    let ordersDiff: number | null = null
+    if (correctValue !== null && correctValue !== undefined && correctValue > 0 && a.value > 0) {
+      ordersDiff = Math.round((Math.log10(a.value) - Math.log10(correctValue)) * 10) / 10
+    }
+
+    return {
+      order: classQuestion?.order || 0,
+      prompt: classQuestion?.fermi_question?.prompt || '',
+      studentAnswer: a.value,
+      confidence: a.confidence_pct,
+      correctAnswer: correctValue,
+      isCorrect,
+      ordersDiff
+    }
+  }).sort((a: { order: number }, b: { order: number }) => a.order - b.order)
+
   return NextResponse.json({
     score: {
       confidencePoints: scoreData?.confidence_points || 250,
@@ -96,6 +124,7 @@ export async function GET(req: NextRequest) {
     calibration: {
       data: calibrationData,
       bucketStatuses
-    }
+    },
+    questions
   })
 }
