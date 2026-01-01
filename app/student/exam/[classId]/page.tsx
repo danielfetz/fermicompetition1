@@ -548,7 +548,7 @@ export default function StudentExam() {
                       )
                     })() : (
                       <p className="text-wolf">
-                        Hints unlock at halftime (35 min). Use the new information to update your estimates, find the balance between overreacting and underreacting!
+                        Hints unlock at halftime (35 min). Use the new information to update your confidence and/or estimate, find the balance between overreacting and underreacting!
                       </p>
                     )}
                   </div>
