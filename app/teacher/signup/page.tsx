@@ -70,8 +70,8 @@ export default function TeacherSignup() {
           </div>
           <h1 className="text-2xl font-extrabold text-eel">Check Your Email!</h1>
           <p className="text-wolf">
-            We&apos;ve sent a confirmation link to <span className="font-semibold text-eel">{email}</span>.
-            Click the link to activate your account.
+            If <span className="font-semibold text-eel">{email}</span> isn&apos;t already registered,
+            you&apos;ll receive a confirmation link shortly.
           </p>
         </div>
 
@@ -83,18 +83,24 @@ export default function TeacherSignup() {
               </svg>
             </div>
             <div>
-              <p className="font-semibold text-duo-green-dark">Registration Successful</p>
+              <p className="font-semibold text-duo-green-dark">Check Your Inbox</p>
               <p className="text-sm text-wolf mt-1">
-                After confirming, you&apos;ll be able to create classes and generate student credentials.
+                Click the confirmation link to activate your account. Don&apos;t forget to check your spam folder.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="text-center">
+        <div className="text-center space-y-3">
           <Link href="/teacher/login" className="btn btn-secondary">
             Go to Login
           </Link>
+          <p className="text-sm text-wolf">
+            Already have an account?{' '}
+            <Link href="/teacher/forgot-password" className="text-duo-blue hover:underline">
+              Reset your password
+            </Link>
+          </p>
         </div>
       </div>
     )
