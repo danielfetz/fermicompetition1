@@ -537,12 +537,12 @@ export default function StudentExam() {
                       const confidence = answers[currentQuestion.id]?.confidence_pct || 50
                       const lowRange = Math.round(estimate * 0.5)
                       const highRange = Math.round(estimate * 2)
-                      const correctPoints = { 10: 3, 30: 7, 50: 10, 70: 12, 90: 13 }[confidence] || 10
-                      const wrongPoints = { 10: 0, 30: 1, 50: 3, 70: 6, 90: 10 }[confidence] || 3
-                      const confidenceLabel = { 10: '0-20%', 30: '20-40%', 50: '40-60%', 70: '60-80%', 90: '80-100%' }[confidence] || '40-60%'
+                      const correctPoints = { 10: 3, 30: 7, 50: 10, 70: 12, 90: 13 }[confidence] ?? 10
+                      const wrongPoints = { 10: 0, 30: 1, 50: 3, 70: 6, 90: 10 }[confidence] ?? 3
+                      const confidenceLabel = { 10: '0-20%', 30: '20-40%', 50: '40-60%', 70: '60-80%', 90: '80-100%' }[confidence] ?? '40-60%'
                       return (
                         <p className="text-wolf">
-                          With your current estimate of <span className="font-semibold text-eel">{estimate.toLocaleString()}</span> at <span className="font-semibold text-eel">{confidenceLabel}</span> confidence, you&apos;ll earn <span className="font-semibold text-duo-green">+{correctPoints}</span> points if the correct answer is anywhere from {lowRange.toLocaleString()} to {highRange.toLocaleString()}, or lose <span className="font-semibold text-duo-red">{wrongPoints > 0 ? `-${wrongPoints}` : '0'}</span> points if outside that range.
+                          At {confidenceLabel} confidence, you&apos;ll earn <span className="font-semibold text-duo-green">+{correctPoints}</span> points if the correct answer is anywhere from {formatNumberReadable(lowRange)} to {formatNumberReadable(highRange)}{wrongPoints > 0 ? <>, or lose <span className="font-semibold text-duo-red">-{wrongPoints}</span> if outside that range</> : ''}.
                         </p>
                       )
                     })() : (
