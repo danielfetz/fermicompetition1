@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import DeleteStudentButton from '@/components/DeleteStudentButton'
 import CalibrationAccordion from '@/components/CalibrationAccordion'
+import StudentAnswersForm from '@/components/StudentAnswersForm'
 
 type Params = { params: { id: string, studentId: string } }
 
@@ -277,66 +278,22 @@ export default async function EditStudent({ params }: Params) {
       )}
 
       <div className="card overflow-x-auto">
-        <form action={`/api/teacher/student/${student.id}/answers`} method="post" className="space-y-4">
-          <div className="flex items-center gap-3">
-            <label className="text-sm text-gray-600 w-28">Full name</label>
-            <input name="full_name" defaultValue={student.full_name ?? ''} className="input flex-1" placeholder="Full name" />
-          </div>
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="text-left text-gray-600">
-                <th className="py-2 pr-4">#</th>
-                <th className="py-2 pr-4">Question</th>
-                <th className="py-2 pr-4">Answer</th>
-                <th className="py-2 pr-4">Confidence</th>
-                <th className="py-2">Correct</th>
-              </tr>
-            </thead>
-            <tbody>
-              {questions.map((cq, i) => {
-                const fq = getFermiQuestion(cq.fermi_questions)
-                const a = answerMap.get(cq.id)
-                return (
-                  <tr key={cq.id} className="border-t align-top">
-                    <td className="py-2 pr-4">{i+1}</td>
-                    <td className="py-2 pr-4 max-w-xl">{fq?.prompt || 'Unknown question'}</td>
-                    <td className="py-2 pr-4">
-                      <input
-                        name={`value_${cq.id}`}
-                        defaultValue={a?.value ?? ''}
-                        className="input w-full min-w-[120px] sm:w-40 py-2 px-3"
-                        type="number"
-                        step="any"
-                      />
-                    </td>
-                    <td className="py-2 pr-4">
-                      <select name={`conf_${cq.id}`} defaultValue={a?.confidence_pct ?? 50} className="input select py-2 px-3 w-full min-w-[110px] sm:w-32">
-                        {[10,30,50,70,90].map(c => <option key={c} value={c}>{getConfidenceLabel(c)}</option>)}
-                      </select>
-                    </td>
-                    <td className="py-2">
-                      <div className="font-mono text-wolf">{fq?.correct_value ?? '—'}</div>
-                      {(() => {
-                        const diff = getOrdersOfMagnitude(a?.value, fq?.correct_value)
-                        return diff ? (
-                          <div className={`text-xs mt-0.5 ${diff.color}`}>
-                            {diff.label}
-                          </div>
-                        ) : null
-                      })()}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-          <input type="hidden" name="class_id" value={params.id} />
-          <input type="hidden" name="mode" value={studentMode} />
-          <div className="flex items-center gap-4">
-            <button className="btn btn-primary">Save Changes</button>
-            <span className="text-sm text-wolf">Remember to save before leaving</span>
-          </div>
-        </form>
+        <StudentAnswersForm
+          studentId={student.id}
+          classId={params.id}
+          mode={studentMode}
+          fullName={student.full_name}
+          questions={questions.map(cq => ({
+            id: cq.id,
+            order: cq.order,
+            fermi_questions: getFermiQuestion(cq.fermi_questions)
+          }))}
+          answers={answers?.map(a => ({
+            class_question_id: a.class_question_id,
+            value: a.value,
+            confidence_pct: a.confidence_pct
+          })) || []}
+        />
       </div>
 
       {/* Delete Student Section */}
