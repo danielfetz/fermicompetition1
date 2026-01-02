@@ -261,37 +261,8 @@ export default function Done() {
             />
           </div>
 
-          {/* Point System Explanation */}
-          <div className="card bg-duo-blue/10 border-duo-blue/30">
-            <div className="flex items-start gap-3 text-left">
-              <div className="flex-shrink-0 text-2xl">📊</div>
-              <div>
-                <h3 className="font-bold text-duo-blue-dark">How Points Work</h3>
-                <p className="text-sm text-eel mt-1">
-                  You start with 250 points. Correct answers earn more points at higher confidence levels,
-                  but wrong answers at high confidence cost you points. The best strategy is to be well-calibrated:
-                  confident when you&apos;re likely right, and less confident when uncertain.
-                </p>
-              </div>
-            </div>
-          </div>
         </>
       )}
-
-      {/* Fun Fact */}
-      <div className="card bg-duo-yellow/10 border-duo-yellow/30">
-        <div className="flex items-start gap-3 text-left">
-          <div className="flex-shrink-0 text-2xl">💡</div>
-          <div>
-            <h3 className="font-bold text-duo-yellow-dark">Fun Fact</h3>
-            <p className="text-sm text-eel mt-1">
-              Enrico Fermi was known for making remarkably accurate estimations
-              using only simple reasoning. He famously estimated the yield of the
-              first atomic bomb by dropping pieces of paper!
-            </p>
-          </div>
-        </div>
-      </div>
 
       {/* Navigation */}
       <div className="pt-4">
