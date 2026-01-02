@@ -55,7 +55,7 @@ const DETAILED_STATUS_DESCRIPTIONS: Record<DetailedCalibrationStatus, string> = 
   'good-calibration': 'good calibration is supported',
   'slight-good-calibration': 'there is a slight tendency towards good calibration',
   'no-miscalibration-evidence': 'we don\'t have enough evidence to confirm good calibration, but we also found no evidence of miscalibration',
-  'insufficient-data': 'there is insufficient evidence to judge'
+  'insufficient-data': 'there are too few responses for assessing calibration reliably'
 }
 
 export default function CalibrationCurve({ data, bucketStatuses }: CalibrationCurveProps) {
