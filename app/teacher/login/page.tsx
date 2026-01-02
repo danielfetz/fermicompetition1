@@ -122,7 +122,7 @@ function TeacherLoginContent() {
         </form>
 
         {/* Divider */}
-        <div className="flex items-center gap-4 mt-5">
+        <div className="flex items-center gap-4 mt-5 mb-4">
           <div className="flex-1 h-px bg-hare"></div>
           <span className="text-wolf text-sm">or</span>
           <div className="flex-1 h-px bg-hare"></div>
