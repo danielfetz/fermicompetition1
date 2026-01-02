@@ -91,8 +91,8 @@ export default function TeacherSignup() {
           </div>
         </div>
 
-        <div className="text-center space-y-3">
-          <p className="text-sm text-wolf">
+        <div className="text-center">
+          <p className="text-sm text-wolf mb-3">
             Already have an account?{' '}
             <Link href="/teacher/forgot-password" className="text-duo-blue hover:underline">
               Reset your password
@@ -189,7 +189,7 @@ export default function TeacherSignup() {
         </form>
 
         {/* Divider */}
-        <div className="flex items-center gap-4 my-4">
+        <div className="flex items-center gap-4 mt-5">
           <div className="flex-1 h-px bg-hare"></div>
           <span className="text-wolf text-sm">or</span>
           <div className="flex-1 h-px bg-hare"></div>
@@ -200,7 +200,7 @@ export default function TeacherSignup() {
           type="button"
           onClick={handleGoogleSignUp}
           disabled={loading || googleLoading}
-          className="btn btn-outline w-full flex items-center justify-center gap-2 !text-[#1cb0f6]"
+          className="btn btn-outline w-full flex items-center justify-center gap-2 !text-[#1cb0f6] !normal-case"
         >
           {googleLoading ? (
             <span className="flex items-center gap-2">

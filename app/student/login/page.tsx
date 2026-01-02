@@ -125,6 +125,24 @@ export default function StudentLogin() {
         </form>
       </div>
 
+      {/* Info Card */}
+      <div className="card bg-duo-blue/5 border-duo-blue/20">
+        <div className="flex gap-3">
+          <div className="flex-shrink-0 w-10 h-10 bg-duo-blue/20 rounded-full flex items-center justify-center">
+            <svg className="w-5 h-5 text-duo-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="font-bold text-eel">Need your credentials?</h3>
+            <p className="text-wolf mt-1" style={{ fontSize: '0.9375rem', lineHeight: '1.25rem' }}>
+              Ask your teacher for your username and password.
+              They look something like &quot;cosmicfermi01&quot;.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Guest Play Card */}
       <div className="card bg-duo-purple/5 border-duo-purple/20">
         <div className="flex gap-3">
@@ -162,24 +180,6 @@ export default function StudentLogin() {
                 </>
               )}
             </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Info Card */}
-      <div className="card bg-duo-blue/5 border-duo-blue/20">
-        <div className="flex gap-3">
-          <div className="flex-shrink-0 w-10 h-10 bg-duo-blue/20 rounded-full flex items-center justify-center">
-            <svg className="w-5 h-5 text-duo-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div>
-            <h3 className="font-bold text-eel">Need your credentials?</h3>
-            <p className="text-wolf mt-1" style={{ fontSize: '0.9375rem', lineHeight: '1.25rem' }}>
-              Ask your teacher for your username and password.
-              They look something like &quot;cosmicfermi01&quot;.
-            </p>
           </div>
         </div>
       </div>

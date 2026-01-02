@@ -122,7 +122,7 @@ function TeacherLoginContent() {
         </form>
 
         {/* Divider */}
-        <div className="flex items-center gap-4 my-4">
+        <div className="flex items-center gap-4 mt-5">
           <div className="flex-1 h-px bg-hare"></div>
           <span className="text-wolf text-sm">or</span>
           <div className="flex-1 h-px bg-hare"></div>
@@ -133,7 +133,7 @@ function TeacherLoginContent() {
           type="button"
           onClick={handleGoogleSignIn}
           disabled={loading || googleLoading}
-          className="btn btn-outline w-full flex items-center justify-center gap-2 !text-[#1cb0f6]"
+          className="btn btn-outline w-full flex items-center justify-center gap-2 !text-[#1cb0f6] !normal-case"
         >
           {googleLoading ? (
             <span className="flex items-center gap-2">
