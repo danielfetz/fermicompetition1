@@ -133,7 +133,7 @@ function TeacherLoginContent() {
           type="button"
           onClick={handleGoogleSignIn}
           disabled={loading || googleLoading}
-          className="btn btn-ghost w-full flex items-center justify-center gap-2 border-2 border-hare hover:border-wolf"
+          className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold border-2 border-[#1cb0f6] text-[#1cb0f6] hover:bg-[#1cb0f6]/10 transition-colors disabled:opacity-50"
         >
           {googleLoading ? (
             <span className="flex items-center gap-2">

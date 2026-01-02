@@ -92,15 +92,15 @@ export default function TeacherSignup() {
         </div>
 
         <div className="text-center space-y-3">
-          <Link href="/teacher/login" className="btn btn-secondary">
-            Go to Login
-          </Link>
           <p className="text-sm text-wolf">
             Already have an account?{' '}
             <Link href="/teacher/forgot-password" className="text-duo-blue hover:underline">
               Reset your password
             </Link>
           </p>
+          <Link href="/teacher/login" className="btn btn-secondary">
+            Go to Login
+          </Link>
         </div>
       </div>
     )
@@ -200,7 +200,7 @@ export default function TeacherSignup() {
           type="button"
           onClick={handleGoogleSignUp}
           disabled={loading || googleLoading}
-          className="btn btn-ghost w-full flex items-center justify-center gap-2 border-2 border-hare hover:border-wolf"
+          className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold border-2 border-[#1cb0f6] text-[#1cb0f6] hover:bg-[#1cb0f6]/10 transition-colors disabled:opacity-50"
         >
           {googleLoading ? (
             <span className="flex items-center gap-2">
