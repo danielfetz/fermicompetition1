@@ -33,7 +33,7 @@ const FAQ_ITEMS: FAQItem[] = [
     answer: (
       <div className="space-y-4">
         <p>A Fermi question asks you to estimate something that seems unknowable but yields to structured reasoning. Example: &quot;How many dentists work in the US?&quot;</p>
-        <p>You don&apos;t guess randomly. You decompose the problem into smaller, estimable parts. US population is roughly 300 million. How often does the average person visit a dentist? Maybe 1.5 times per year. That gives about 450 million dental visits annually. How many patients can one dentist see? Perhaps 15 per day, working 200 days per year, so roughly 3,000 patients annually. Divide 450 million by 3000 and you get about 150,000 dentists. The actual answer is around 200,000. Within a factor of 2. Excellent.</p>
+        <p>You don&apos;t guess randomly. You decompose the problem into smaller, estimable parts. US population is roughly 300 million. How often does the average person visit a dentist? Maybe 1.5 times per year. That gives about 450 million dental visits annually. How many patients can one dentist see? Perhaps 15 per day, working 200 days per year, so roughly 3,000 patients annually. Divide 450 million by 3,000 and you get about 150,000 dentists. The actual answer is around 200,000. Your estimate is between half and double the true value, so it&apos;s deemed correct.</p>
         <p>Several techniques help:</p>
         <p><strong>Decomposition.</strong> Break the problem into parts you can estimate separately, then combine them. Each piece should be something you can reason about.</p>
         <p><strong>Reference classes.</strong> Ask: what&apos;s a similar quantity I already know? If you&apos;re estimating the number of hospitals in a country, you might anchor on knowing roughly how many exist in your city or state, then scale up.</p>
@@ -56,7 +56,7 @@ const FAQ_ITEMS: FAQItem[] = [
     question: 'How does scoring work?',
     answer: (
       <div className="space-y-4">
-        <p>An answer is correct if it&apos;s within a factor of 2 of the true value. If the answer is 200,000, anything from half to double is still deemed correct.</p>
+        <p>An answer is correct if it falls between half and double the true value. If the answer is 200,000, anything from 100,000 to 400,000 is deemed correct.</p>
         <p>You assign a confidence bucket to each answer:</p>
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
