@@ -56,7 +56,7 @@ const FAQ_ITEMS: FAQItem[] = [
     question: 'How does scoring work?',
     answer: (
       <div className="space-y-4">
-        <p>An answer is correct if it falls between half and double the true value. If the true value is 200,000, anything from 100,000 to 400,000 is deemed correct.</p>
+        <p>An answer is correct if it falls between half and double the true value. If the actual answer is 200,000, anything from 100,000 to 400,000 is deemed correct.</p>
         <p>You assign a confidence bucket to each answer:</p>
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
