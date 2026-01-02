@@ -250,9 +250,9 @@ export default function CalibrationCurve({ data, bucketStatuses }: CalibrationCu
           </text>
           <text
             x={6}
-            y={108}
+            y={106}
             textAnchor="middle"
-            transform={`rotate(-90, 6, 108)`}
+            transform="rotate(-90, 6, 103)"
             className="text-xs fill-eel font-semibold"
           >
             Actual Accuracy
