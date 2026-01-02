@@ -150,7 +150,7 @@ export default function Home() {
                 <span className="flex-shrink-0 w-8 h-8 bg-duo-blue text-white rounded-full flex items-center justify-center font-bold">2</span>
                 <div>
                   <p className="font-semibold">Answer Questions</p>
-                  <p className="text-sm text-wolf">Up to 25 Fermi questions, 70 minutes. Rate your confidence!</p>
+                  <p className="text-sm text-wolf">Up to 25 Fermi questions, 70 minutes. State your confidence!</p>
                 </div>
               </li>
               <li className="flex gap-4">

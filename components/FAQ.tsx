@@ -33,7 +33,7 @@ const FAQ_ITEMS: FAQItem[] = [
     answer: (
       <div className="space-y-4">
         <p>A Fermi question asks you to estimate something that seems unknowable but yields to structured reasoning. Example: &quot;How many dentists work in the US?&quot;</p>
-        <p>You don&apos;t guess randomly. You decompose the problem into smaller, estimable parts. US population is roughly 300 million. How often does the average person visit a dentist? Maybe 1.5 times per year. That gives about 450 million dental visits annually. How many patients can one dentist see? Perhaps 15 per day, working 200 days per year, so roughly 3,000 patients annually. Divide 450 million by 3,000 and you get about 150,000 dentists. The actual answer is around 200,000. Your estimate is between half and double the true value, so it&apos;s deemed correct.</p>
+        <p>You don&apos;t guess randomly. You decompose the problem into smaller, estimable parts. US population is roughly 300 million. How often does the average person visit a dentist? Maybe 1.5 times per year. That gives about 450 million dental visits annually. How many patients can one dentist see? Perhaps 15 per day, working 200 days per year, so roughly 3,000 patients annually. Divide 450 million by 3,000 and you get about 150,000 dentists. The actual answer is around 200,000. The estimate is between half and double the true value, so it&apos;s deemed correct.</p>
         <p>Several techniques help:</p>
         <p><strong>Decomposition.</strong> Break the problem into parts you can estimate separately, then combine them. Each piece should be something you can reason about.</p>
         <p><strong>Reference classes.</strong> Ask: what&apos;s a similar quantity I already know? If you&apos;re estimating the number of hospitals in a country, you might anchor on knowing roughly how many exist in your city or state, then scale up.</p>
@@ -47,7 +47,7 @@ const FAQ_ITEMS: FAQItem[] = [
     question: 'Are calculators allowed?',
     answer: (
       <div className="space-y-4">
-        <p>Yes. The competition tests numeracy, but numeracy means far more than fast arithmetic. You can be a quick calculator and still be somewhat innumerate if you lack intuition for orders of magnitude, can&apos;t distinguish meaningfully between millions and billions, or don&apos;t notice when an answer is off by a factor of 1,000.</p>
+        <p>Yes. The competition tests numeracy, but numeracy means far more than fast arithmetic. You can be quick with mental calculation and still be somewhat innumerate if you lack intuition for orders of magnitude, can&apos;t distinguish meaningfully between millions and billions, or don&apos;t notice when an answer is off by a factor of 1,000.</p>
         <p>The skills that matter here are higher-level: making good assumptions, decomposing problems, examining your mental model of the world, and calibrating your confidence. A calculator doesn&apos;t materially help with any of that. It just removes a distraction so you can concentrate on what actually matters. And if you round aggressively, you won&apos;t need it much anyway.</p>
       </div>
     ),
@@ -56,7 +56,7 @@ const FAQ_ITEMS: FAQItem[] = [
     question: 'How does scoring work?',
     answer: (
       <div className="space-y-4">
-        <p>An answer is correct if it falls between half and double the true value. If the answer is 200,000, anything from 100,000 to 400,000 is deemed correct.</p>
+        <p>An answer is correct if it falls between half and double the true value. If the true value is 200,000, anything from 100,000 to 400,000 is deemed correct.</p>
         <p>You assign a confidence bucket to each answer:</p>
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
@@ -97,7 +97,7 @@ const FAQ_ITEMS: FAQItem[] = [
           </table>
         </div>
         <p>Everyone starts with 250 base points, so you can&apos;t go negative even if everything goes wrong.</p>
-        <p>The 0–20% bucket is special: +3 if right, 0 if wrong. No downside for admitting you&apos;re guessing. This teaches that honest uncertainty is valuable.</p>
+        <p>The 0–20% bucket is special: +3 if right, 0 if wrong. There&apos;s no downside for admitting you&apos;re genuinely uncertain. Knowing that you don&apos;t know is a skill, and we don&apos;t punish it.</p>
         <p>Skipping gives 0 points. There is no penalty, but even a wild guess at 0–20% has positive expected value.</p>
         <p>This is a proper scoring rule: the math guarantees that honest reporting maximizes your expected score. If you&apos;re uncertain which bucket fits, pick whichever feels closest to your true belief.</p>
       </div>
