@@ -43,6 +43,10 @@ export async function GET(request: NextRequest) {
       console.error('Auth callback error (code):', error.message)
       return NextResponse.redirect(`${origin}/auth/error?message=${encodeURIComponent(error.message)}`)
     }
+    // Redirect to reset password page if this is a recovery flow
+    if (type === 'recovery') {
+      return NextResponse.redirect(`${origin}/teacher/reset-password`)
+    }
     return NextResponse.redirect(`${origin}/teacher/dashboard`)
   }
 
@@ -56,6 +60,10 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error('Auth callback error (token_hash):', error.message)
       return NextResponse.redirect(`${origin}/auth/error?message=${encodeURIComponent(error.message)}`)
+    }
+    // Redirect to reset password page if this is a recovery flow
+    if (type === 'recovery') {
+      return NextResponse.redirect(`${origin}/teacher/reset-password`)
     }
     return NextResponse.redirect(`${origin}/teacher/dashboard`)
   }

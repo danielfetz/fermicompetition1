@@ -36,6 +36,7 @@ export default async function Dashboard() {
       masterCodeId={profile?.master_code_id}
       masterCodeName={profile?.master_codes?.name}
       userId={user.id}
+      userEmail={user.email}
     />
   )
 }
