@@ -195,7 +195,7 @@ export default function Home() {
 
       {/* Pedagogical Value Section */}
       <section id="pedagogical-value" className="space-y-6 scroll-mt-20">
-        <h2 className="text-3xl font-extrabold text-center">Why does this matter?</h2>
+        <h2 className="text-3xl font-extrabold text-center">Why It Matters</h2>
         <div className="card">
           <div className="space-y-4">
             <p className="text-wolf leading-relaxed">
