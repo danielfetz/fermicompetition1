@@ -88,7 +88,7 @@ export default function Home() {
         <div className="text-center">
           <h2 className="text-3xl font-extrabold">How It Works</h2>
           <p className="text-wolf mt-2">
-            To participate in the official competition, request a code by emailing{' '}
+            You can start with the practice competition right away. For the official competition, request a code by emailing{' '}
             <a href="mailto:daniel@fermi.org" className="text-duo-blue hover:underline">daniel@fermi.org</a>
           </p>
         </div>
@@ -149,15 +149,15 @@ export default function Home() {
               <li className="flex gap-4">
                 <span className="flex-shrink-0 w-8 h-8 bg-duo-blue text-white rounded-full flex items-center justify-center font-bold">2</span>
                 <div>
-                  <p className="font-semibold">Enter Your Name</p>
-                  <p className="text-sm text-wolf">Tell us who you are on your first login.</p>
+                  <p className="font-semibold">Answer Questions</p>
+                  <p className="text-sm text-wolf">Up to 25 Fermi questions, 70 minutes. State your confidence!</p>
                 </div>
               </li>
               <li className="flex gap-4">
                 <span className="flex-shrink-0 w-8 h-8 bg-duo-blue text-white rounded-full flex items-center justify-center font-bold">3</span>
                 <div>
-                  <p className="font-semibold">Answer Questions</p>
-                  <p className="text-sm text-wolf">25 Fermi questions, 70 minutes. Rate your confidence!</p>
+                  <p className="font-semibold">Receive Hints</p>
+                  <p className="text-sm text-wolf">At halftime, hints are revealed to help you update your estimates.</p>
                 </div>
               </li>
               <li className="flex gap-4">
@@ -175,34 +175,20 @@ export default function Home() {
       {/* Who was Enrico Fermi Section */}
       <section id="about-fermi" className="space-y-6 scroll-mt-20">
         <h2 className="text-3xl font-extrabold text-center">Who was Enrico Fermi?</h2>
-        <div className="card bg-gradient-to-br from-duo-green/5 to-duo-blue/5">
-          <div className="space-y-4">
-            <p className="text-wolf leading-relaxed">
-              <strong className="text-eel">Enrico Fermi (1901–1954)</strong> was an Italian-American physicist and one of the most influential scientists of the 20th century. He won the Nobel Prize in Physics in 1938 for his work on induced radioactivity and later played a key role in developing the first nuclear reactor.
-            </p>
-            <p className="text-wolf leading-relaxed">
-              Fermi was legendary for his ability to make quick, accurate estimates with minimal information—a skill now called &ldquo;Fermi estimation.&rdquo; His most famous example was estimating the number of piano tuners in Chicago using only basic reasoning and rough approximations.
-            </p>
-            <p className="text-wolf leading-relaxed">
-              This competition honors Fermi&apos;s legacy by challenging students to think quantitatively, break down complex problems, and honestly assess their own uncertainty—skills that are valuable in science, business, and everyday decision-making.
-            </p>
-          </div>
-        </div>
-
-        {/* What is a Fermi Question - now nested */}
         <div className="card">
           <div className="space-y-4">
-            <h3 className="text-2xl font-extrabold">What is a Fermi Question?</h3>
             <p className="text-wolf leading-relaxed">
-              A Fermi question is an estimation problem that seems impossible to answer at first. The key is breaking it down into smaller, manageable parts.
+              <strong className="text-eel">Enrico Fermi (1901&ndash;1954)</strong> was an Italian-American physicist and one of the most influential scientists of the 20th century. He won the Nobel Prize in Physics in 1938 for his work on induced radioactivity and later played a key role in developing the first nuclear reactor.
             </p>
-            <div className="bg-snow rounded-duo p-4 border-2 border-swan">
-              <p className="font-semibold text-duo-blue-dark mb-2">Example:</p>
-              <p className="text-eel italic">&ldquo;How many piano tuners are there in Chicago?&rdquo;</p>
-              <p className="text-sm text-wolf mt-2">
-                Think about: population, households with pianos, tuning frequency, time per tuning...
-              </p>
-            </div>
+            <p className="text-wolf leading-relaxed">
+              Fermi was also a legendary teacher. A number of his students went on to become Nobel laureates themselves. He had a gift for making complex ideas accessible and for posing questions that stretched students&apos; thinking.
+            </p>
+            <p className="text-wolf leading-relaxed">
+              He was famous for his ability to make quick, accurate estimates with minimal information, a skill now called &ldquo;Fermi estimation.&rdquo; His most famous example, estimating the number of piano tuners in Chicago, was first posed to his students during a lecture. Using only basic reasoning and rough approximations, he showed how seemingly impossible questions yield to structured thinking.
+            </p>
+            <p className="text-wolf leading-relaxed">
+              This competition honors Fermi&apos;s legacy by challenging students to think quantitatively, break down complex problems, and honestly assess their own uncertainty. These are skills valuable in science, business, and everyday decision-making.
+            </p>
           </div>
         </div>
       </section>
@@ -210,10 +196,10 @@ export default function Home() {
       {/* Pedagogical Value Section */}
       <section id="pedagogical-value" className="space-y-6 scroll-mt-20">
         <h2 className="text-3xl font-extrabold text-center">Why It Matters</h2>
-        <div className="card bg-gradient-to-br from-duo-purple/5 to-duo-blue/5">
+        <div className="card">
           <div className="space-y-4">
             <p className="text-wolf leading-relaxed">
-              The Fermi Competition brings together three powerful cognitive skills that are typically confined to elite professional contexts—intelligence analysis, quantitative finance, and forecasting tournaments—and makes them accessible to secondary education students.
+              The Fermi Competition brings together three powerful cognitive skills that are typically confined to elite professional contexts like intelligence analysis, quantitative finance, and forecasting tournaments.
             </p>
 
             <div className="space-y-4 mt-6">
@@ -225,7 +211,7 @@ export default function Home() {
                 </div>
                 <div>
                   <h4 className="font-bold text-eel">Fermi Estimation</h4>
-                  <p className="text-sm text-wolf">Breaking down complex, seemingly impossible questions into manageable components. This skill builds quantitative intuition and structured problem-solving abilities.</p>
+                  <p className="text-sm text-wolf">Breaking down complex, seemingly impossible questions into manageable components. This builds quantitative intuition and structured problem-solving abilities.</p>
                 </div>
               </div>
 
@@ -237,7 +223,7 @@ export default function Home() {
                 </div>
                 <div>
                   <h4 className="font-bold text-eel">Calibration Training</h4>
-                  <p className="text-sm text-wolf">Learning to honestly assess your own uncertainty. When you say you&apos;re 80% confident, you should be right about 80% of the time—a skill that prevents overconfidence and improves decision-making.</p>
+                  <p className="text-sm text-wolf">Learning to honestly assess your own uncertainty. When you say you&apos;re 60–80% confident, you should be right 60–80% of the time. This is the foundation of good judgment: knowing what you know, knowing what you don&apos;t know, and being able to communicate the difference clearly without hiding behind vague terms like &ldquo;maybe&rdquo; or &ldquo;possibly.&rdquo;</p>
                 </div>
               </div>
 
@@ -249,7 +235,7 @@ export default function Home() {
                 </div>
                 <div>
                   <h4 className="font-bold text-eel">Bayesian Updating</h4>
-                  <p className="text-sm text-wolf">The halftime hint mechanism teaches dynamic belief revision—how to appropriately update your estimates when new information arrives, finding the balance between overreacting and underreacting.</p>
+                  <p className="text-sm text-wolf">The halftime hint mechanism teaches dynamic belief revision. How do you appropriately update your estimates when new information arrives? The challenge is finding the balance between overreacting and underreacting.</p>
                 </div>
               </div>
 
@@ -261,13 +247,13 @@ export default function Home() {
                 </div>
                 <div>
                   <h4 className="font-bold text-eel">Refining Your World-Model</h4>
-                  <p className="text-sm text-wolf">Each question challenges students to build and refine their mental model of how the world works—developing intuitions about quantities, scales, and relationships that lead to more accurate reasoning across all domains.</p>
+                  <p className="text-sm text-wolf">Each question is an opportunity to test and refine your mental model of how the world works. If you assumed people visit the dentist five times per year and discover the actual number is closer to 1.5, you&apos;ve discovered an opportunity to fix some aspect of your model of the world.</p>
                 </div>
               </div>
             </div>
 
             <p className="text-wolf leading-relaxed mt-4 pt-4 border-t border-swan">
-              This combination is unique at the secondary education level. Students develop the same analytical frameworks used by professional forecasters, while having fun with engaging estimation challenges.</p>
+              This combination is unique. Students develop the same analytical frameworks used by professional forecasters, while engaging with fun estimation challenges. For educators interested in teaching estimation, probability, and judgment under uncertainty, the Fermi Competition is a resource worth exploring.</p>
           </div>
         </div>
       </section>

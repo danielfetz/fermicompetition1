@@ -1,64 +1,134 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, ReactNode } from 'react'
 
 interface FAQItem {
   question: string
-  answer: string
+  answer: ReactNode
 }
 
 const FAQ_ITEMS: FAQItem[] = [
   {
     question: 'What is the Fermi Competition?',
-    answer: 'The Fermi Competition is an annual estimation challenge where students tackle real-world quantitative problems. Participants answer Fermi questions, assign confidence levels to their estimates, and have the opportunity to update their thinking after receiving hints at halftime. The competition emphasizes calibrated reasoning and Bayesian updating over pure accuracy.',
-  },
-  {
-    question: 'Why is the competition named after Enrico Fermi?',
-    answer: 'Enrico Fermi (1901–1954) was a Nobel Prize-winning physicist famous for his ability to make remarkably accurate estimates with limited information. His legendary "back-of-the-envelope" calculations—like estimating the number of piano tuners in Chicago—demonstrated that complex problems can be solved through logical decomposition and educated approximation. This competition honors his legacy of quantitative thinking.',
-  },
-  {
-    question: 'What is a Fermi question?',
-    answer: 'A Fermi question is an estimation problem that seems impossible to answer precisely, but can be reasoned through by breaking it down into smaller, estimable parts. Named after physicist Enrico Fermi, these questions help develop quantitative reasoning skills.',
+    answer: (
+      <div className="space-y-4">
+        <p>The Fermi Competition trains three cognitive skills rarely taught: Fermi estimation (breaking complex problems into smaller parts), calibration (accurately assessing your own uncertainty), and Bayesian updating (revising beliefs in the light of new information). Students answer estimation questions, assign confidence levels to each answer, and at halftime receive hints that let them update their estimates.</p>
+        <p>These are skills used by intelligence analysts, quantitative traders, and professional forecasters. The Fermi Competition makes them accessible to students at the secondary and university level.</p>
+        <p>There is no cost to participate. The official competition launches in Spring 2026, with prizes worth thousands of dollars. Practice mode is available now and requires no special permission to access. You can start within minutes.</p>
+      </div>
+    ),
   },
   {
     question: 'How long does the competition take?',
-    answer: 'The competition is 70 minutes long. At the 35-minute halftime mark, hints are revealed for each question, giving students an opportunity to update their estimates and confidence levels.',
+    answer: (
+      <div className="space-y-4">
+        <p>The competition is 70 minutes. At the 35-minute mark, hints are revealed for each question, giving you additional information that may help you refine your estimates and adjust your confidence levels. You can finish earlier if you wish. Schools should allow some buffer time for setup and instructions.</p>
+        <p>There are up to 25 questions. You don&apos;t have to answer all of them. You can attempt many questions quickly with rough estimates, or focus on fewer questions with careful reasoning. Neither strategy is obviously better. It depends on your strengths and how confident you are in your answers.</p>
+        <p>One useful approach: if you encounter a question where you&apos;re struggling to make good assumptions or find a way to break it down, consider moving on and returning to it after the halftime hints are revealed. The hints often provide exactly the kind of anchor or starting point that makes a difficult question tractable.</p>
+      </div>
+    ),
   },
   {
-    question: 'How is scoring calculated?',
-    answer: 'Students earn points based on both accuracy and confidence calibration. Higher confidence on correct answers earns more points, while overconfidence on incorrect answers results in point deductions. This encourages honest self-assessment.',
+    question: 'What are Fermi questions and how do I best answer them?',
+    answer: (
+      <div className="space-y-4">
+        <p>A Fermi question asks you to estimate something that seems unknowable but yields to structured reasoning. Example: &quot;How many dentists work in the US?&quot;</p>
+        <p>You don&apos;t guess randomly. You decompose the problem into smaller, estimable parts. US population is roughly 300 million. How often does the average person visit a dentist? Maybe 1.5 times per year. That gives about 450 million dental visits annually. How many patients can one dentist see? Perhaps 15 per day, working 200 days per year, so roughly 3,000 patients annually. Divide 450 million by 3,000 and you get about 150,000 dentists. The actual answer is around 200,000. The estimate is between half and double the true value, so it&apos;s deemed correct.</p>
+        <p>Several techniques help:</p>
+        <p><strong>Decomposition.</strong> Break the problem into parts you can estimate separately, then combine them. Each piece should be something you can reason about.</p>
+        <p><strong>Reference classes.</strong> Ask: what&apos;s a similar quantity I already know? If you&apos;re estimating the number of hospitals in a country, you might anchor on knowing roughly how many exist in your city or state, then scale up.</p>
+        <p><strong>Rounding.</strong> Use round numbers. 300 million is easier to work with than 340 million, and the small errors often cancel each other out. Fermi estimation is about getting in the right ballpark, not precise arithmetic. Round aggressively and keep the math simple.</p>
+        <p><strong>Bounding.</strong> Think about what would be implausibly high and implausibly low. There can&apos;t be 3 million dentists in the US (that would be 1 in 100 people). There can&apos;t be only 1,000 (that would mean each dentist serves 300,000 people). Your answer should fall somewhere between these bounds.</p>
+        <p><strong>Sanity-checking.</strong> After calculating, ask: does this make sense? If your answer implies something absurd (every household owns 50 pianos, or one dentist serves an entire metropolis), you&apos;ve made an error somewhere.</p>
+      </div>
+    ),
   },
   {
-    question: 'Is this a proper scoring rule?',
-    answer: 'Yes! Our scoring system is mathematically equivalent to a linearly transformed reverse Brier score, evaluated at the midpoint of each confidence bracket (10%, 30%, 50%, 70%, 90%). The formula is: Score = 1/8 − (25/2) × Brier. This means the optimal strategy is always to report your true beliefs—there is no benefit to over- or under-stating your confidence.',
+    question: 'Are calculators allowed?',
+    answer: (
+      <div className="space-y-4">
+        <p>Yes. The competition tests numeracy, but numeracy means far more than fast arithmetic. You can be quick with mental calculation and still be somewhat innumerate if you lack intuition for orders of magnitude, can&apos;t distinguish meaningfully between millions and billions, or don&apos;t notice when an answer is off by a factor of 1,000.</p>
+        <p>The skills that matter here are higher-level: making good assumptions, decomposing problems, examining your mental model of the world, and calibrating your confidence. A calculator doesn&apos;t materially help with any of that. It just removes a distraction so you can concentrate on what actually matters. And if you round aggressively, you won&apos;t need it much anyway.</p>
+      </div>
+    ),
   },
   {
-    question: 'What does this have to do with calibration training?',
-    answer: 'Calibration is the skill of accurately assessing your own uncertainty. Well-calibrated people are right about 70% of the time when they say they\'re 70% confident. This competition trains calibration by rewarding honest confidence assessments and penalizing overconfidence. After the competition, students see their calibration curve—a visual comparison of their stated confidence versus actual accuracy—helping them identify whether they tend to be overconfident or underconfident.',
+    question: 'How does scoring work?',
+    answer: (
+      <div className="space-y-4">
+        <p>An answer is correct if it falls between half and double the true value. If the actual answer is 200,000, anything from 100,000 to 400,000 is deemed correct.</p>
+        <p>You assign a confidence bucket to each answer:</p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="border-b-2 border-swan">
+                <th className="text-left py-2 pr-4 font-bold">Confidence Bucket</th>
+                <th className="text-left py-2 pr-4 font-bold">If Correct</th>
+                <th className="text-left py-2 font-bold">If Wrong</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-swan">
+                <td className="py-2 pr-4">0–20%</td>
+                <td className="py-2 pr-4 text-green-600">+3</td>
+                <td className="py-2">0</td>
+              </tr>
+              <tr className="border-b border-swan">
+                <td className="py-2 pr-4">20–40%</td>
+                <td className="py-2 pr-4 text-green-600">+7</td>
+                <td className="py-2 text-red-600">−1</td>
+              </tr>
+              <tr className="border-b border-swan">
+                <td className="py-2 pr-4">40–60%</td>
+                <td className="py-2 pr-4 text-green-600">+10</td>
+                <td className="py-2 text-red-600">−3</td>
+              </tr>
+              <tr className="border-b border-swan">
+                <td className="py-2 pr-4">60–80%</td>
+                <td className="py-2 pr-4 text-green-600">+12</td>
+                <td className="py-2 text-red-600">−6</td>
+              </tr>
+              <tr>
+                <td className="py-2 pr-4">80–100%</td>
+                <td className="py-2 pr-4 text-green-600">+13</td>
+                <td className="py-2 text-red-600">−10</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Everyone starts with 250 base points, so you can&apos;t go negative even if everything goes wrong.</p>
+        <p>The 0–20% bucket is special: +3 if right, 0 if wrong. There&apos;s no downside for admitting you&apos;re genuinely uncertain. Knowing that you don&apos;t know is a skill, and we don&apos;t punish it.</p>
+        <p>Skipping gives 0 points. There is no penalty, but even a wild guess at 0–20% has positive expected value.</p>
+        <p>This is a proper scoring rule: the math guarantees that honest reporting maximizes your expected score. If you&apos;re uncertain which bucket fits, pick whichever feels closest to your true belief.</p>
+      </div>
+    ),
   },
   {
-    question: 'How is the calibration assessment calculated?',
-    answer: 'We use Bayesian inference with a Beta distribution to assess calibration at each confidence level. For each bucket (0-20%, 20-40%, 40-60%, 60-80%, 80-100%), we calculate the posterior probability that your true accuracy falls within, below, or above that range. Evidence thresholds for miscalibration: >99% = decisive, >97% = very strong, >91% = strong, >75% = substantial, >50% = slight tendency. For good calibration: P(in range) > 75% = good calibration supported, > 50% = slight tendency towards good calibration. If no probability exceeds 50%, we report that there\'s no evidence of miscalibration but insufficient evidence to confirm good calibration. Minimum samples required: 2 answers for 0-20% and 80-100% buckets, 3 for 20-40% and 60-80%, and 4 for the 40-60% bucket (since middle ranges need more data to distinguish from chance).',
-  },
-  {
-    question: 'Can students change their answers?',
-    answer: 'Yes! Students can navigate between questions and update their answers and confidence levels at any time during the competition. All progress is automatically saved.',
-  },
-  {
-    question: 'What is the difference between Practice and Official mode?',
-    answer: 'Practice mode is available to everyone and uses a separate set of questions for training. Official mode requires a special code and uses the official competition questions with results counting toward prizes.',
-  },
-  {
-    question: 'How do I get an official competition code?',
-    answer: 'To participate in the official competition with your class, request a code by emailing daniel@fermi.org. Codes are provided to verified teachers and coordinators.',
+    question: 'What is calibration and why does it matter?',
+    answer: (
+      <div className="space-y-4">
+        <p>Calibration is the skill of accurately knowing what you know. A well-calibrated person who selects the 60–80% confidence bucket should be right somewhere between 60 and 80 times out of 100.</p>
+        <p>Even trained professionals struggle with this. In a study by Professor Jeffrey A. Friedman, national security officials from more than forty NATO allies and partners were overwhelmingly overconfident. When officials said there was a 90% chance that a statement was true, those statements were actually true just 57% of the time.</p>
+        <p>Calibration is trainable, and this competition trains it through repeated practice with clear feedback. After competing, you&apos;ll see your calibration curve: stated confidence vs. actual accuracy. If you selected 60–80% and were right only 25% of the time, you&apos;re overconfident at that level. This feedback is rare and valuable.</p>
+        <p>Why train low confidence (0–20%, 20–40%)? Most calibration tools start at 50% because they use binary yes/no questions. Fermi estimation is different. You can&apos;t flip your answer. You might be genuinely, irreducibly uncertain. Learning to express &quot;I don&apos;t know&quot; with appropriate confidence is an invaluable skill almost never taught.</p>
+      </div>
+    ),
   },
 ]
 
 export default function FAQ() {
-  const [openIndex, setOpenIndex] = useState<number | null>(null)
+  const [openIndices, setOpenIndices] = useState<Set<number>>(new Set())
 
   const toggleItem = (index: number) => {
-    setOpenIndex(openIndex === index ? null : index)
+    setOpenIndices((prev) => {
+      const next = new Set(prev)
+      if (next.has(index)) {
+        next.delete(index)
+      } else {
+        next.add(index)
+      }
+      return next
+    })
   }
 
   return (
@@ -74,8 +144,8 @@ export default function FAQ() {
           >
             <span className="font-bold text-eel">{item.question}</span>
             <svg
-              className={`w-5 h-5 text-wolf transition-transform duration-200 ${
-                openIndex === index ? 'rotate-180' : ''
+              className={`w-5 h-5 text-wolf transition-transform duration-200 flex-shrink-0 ${
+                openIndices.has(index) ? 'rotate-180' : ''
               }`}
               fill="none"
               stroke="currentColor"
@@ -91,11 +161,11 @@ export default function FAQ() {
           </button>
           <div
             className={`overflow-hidden transition-all duration-200 ${
-              openIndex === index ? 'max-h-96' : 'max-h-0'
+              openIndices.has(index) ? 'max-h-[2000px]' : 'max-h-0'
             }`}
           >
-            <div className="px-4 py-3 bg-white border-t border-swan">
-              <p className="text-wolf">{item.answer}</p>
+            <div className="px-4 py-3 bg-white border-t border-swan text-wolf">
+              {item.answer}
             </div>
           </div>
         </div>

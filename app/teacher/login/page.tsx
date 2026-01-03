@@ -124,7 +124,7 @@ function TeacherLoginContent() {
         {/* Divider */}
         <div className="flex items-center gap-4 mt-5 mb-4">
           <div className="flex-1 h-px bg-swan"></div>
-          <span className="text-sm" style={{ color: '#e5e5e5' }}>or</span>
+          <span className="text-sm text-hare">or</span>
           <div className="flex-1 h-px bg-swan"></div>
         </div>
 

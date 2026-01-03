@@ -161,7 +161,7 @@ export default function CalibrationCurve({ data, bucketStatuses }: CalibrationCu
                 y={yScale(tick)}
                 textAnchor="end"
                 dominantBaseline="middle"
-                className="text-xs fill-wolf"
+                className="text-[10px] fill-wolf"
               >
                 {tick}%
               </text>
@@ -241,8 +241,8 @@ export default function CalibrationCurve({ data, bucketStatuses }: CalibrationCu
 
           {/* Axis title labels */}
           <text
-            x={width / 2}
-            y={height - 8}
+            x={150}
+            y={227}
             textAnchor="middle"
             className="text-xs fill-eel font-semibold"
           >
@@ -250,9 +250,9 @@ export default function CalibrationCurve({ data, bucketStatuses }: CalibrationCu
           </text>
           <text
             x={6}
-            y={padding.top + chartHeight / 2}
+            y={106}
             textAnchor="middle"
-            transform={`rotate(-90, 6, ${padding.top + chartHeight / 2})`}
+            transform="rotate(-90, 6, 103)"
             className="text-xs fill-eel font-semibold"
           >
             Actual Accuracy
