@@ -199,7 +199,7 @@ export default function Home() {
         <div className="card">
           <div className="space-y-4">
             <p className="text-wolf leading-relaxed">
-              The Fermi Competition brings together three powerful cognitive skills that are typically confined to elite professional contexts—intelligence analysis, quantitative finance, and forecasting tournaments—and makes them accessible to secondary education students.
+              The Fermi Competition brings together three powerful cognitive skills that are typically confined to elite professional contexts—intelligence analysis, quantitative finance, and forecasting tournaments—and makes them accessible to students. Our primary focus is secondary education, but university-level students are also welcome to participate.
             </p>
 
             <div className="space-y-4 mt-6">

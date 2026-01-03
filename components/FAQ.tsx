@@ -24,7 +24,7 @@ const FAQ_ITEMS: FAQItem[] = [
       <div className="space-y-4">
         <p>The competition is 70 minutes. At the 35-minute mark, hints are revealed for each question, giving you additional information that may help you refine your estimates and adjust your confidence levels. You can finish earlier if you wish. Schools should allow some buffer time for setup and instructions.</p>
         <p>There are up to 25 questions. You don&apos;t have to answer all of them. You can attempt many questions quickly with rough estimates, or focus on fewer questions with careful reasoning. Neither strategy is obviously better. It depends on your strengths and how confident you are in your answers.</p>
-        <p>One useful approach: if you encounter a question where you&apos;re struggling to find good assumptions or a way to decompose it, consider moving on and returning to it after the halftime hints are revealed. The hints often provide exactly the kind of anchor or starting point that makes a difficult question tractable.</p>
+        <p>One useful approach: if you encounter a question where you&apos;re struggling to make good assumptions or find a way to break it down, consider moving on and returning to it after the halftime hints are revealed. The hints often provide exactly the kind of anchor or starting point that makes a difficult question tractable.</p>
       </div>
     ),
   },
